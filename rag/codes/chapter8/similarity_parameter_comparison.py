@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from scipy.linalg import norm
 import sys
 import heapq
 from typing import List, Tuple
@@ -14,15 +14,17 @@ from lazyllm.tools.rag import Document
 def tfidf_similarity(query: str, nodes: List[DocNode], **kwargs) -> List[Tuple[DocNode, float]]:
     def add_space(s):
         return ' '.join(list(s))
-    corpus_tokens = [add_space(node.get_text()) for node in nodes]
+    corpus = [add_space(node.get_text()) for node in nodes]
     query = add_space(query)
     topk = min(len(nodes), kwargs.get("topk", sys.maxsize))
-    datasets = [[query, corpus] for corpus in corpus_tokens]
     cv = TfidfVectorizer(tokenizer=lambda s: s.split())
-    vectors = [cv.fit_transform(corpus).toarray() for corpus in datasets]
-    scores = [np.dot(vector[0], vector[1]) / (norm(vector[0]) * norm(vector[1])) for vector in vectors]
-    indexes = heapq.nlargest(topk, range(len(scores)), scores.__getitem__)
-    results = [(nodes[idx], score) for idx, score in zip(indexes, scores)]
+    tfidf_matrix = cv.fit_transform(corpus + [query])
+    query_vec = tfidf_matrix[-1]
+    doc_vecs = tfidf_matrix[:-1]
+    similairyties = cosine_similarity(query_vec, doc_vecs).flatten()
+
+    indexes = heapq.nlargest(topk, range(len(similairyties)), similairyties.__getitem__)
+    results = [(nodes[i], similairyties[i]) for i in indexes]
     return results
 
 
@@ -42,7 +44,7 @@ func1 = lazyllm.tools.rag.register_similarity(euclidean_distance, mode="text")
 func2 = lazyllm.tools.rag.register_similarity(euclidean_distance, mode="embedding")
 query_t = "hello world."
 node_t = [DocNode(text="hello lazyllm.")]
-query_e = [1.0, 0.4, 2.1]
+query_e = {"key": [1.0, 0.4, 2.1]}
 node_e = [DocNode(embedding={"key": [4.2, 2.1, 3.9]})]
 
 # Use func1 to calculate the similarity of text
