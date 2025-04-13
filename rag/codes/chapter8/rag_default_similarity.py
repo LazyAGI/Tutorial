@@ -21,4 +21,4 @@ with pipeline() as ppl:
     ppl.llm = lazyllm.OnlineChatModule(source='glm',
                                        model='glm-4',
                                        stream=False).prompt(lazyllm.ChatPrompter(prompt, extra_keys=["context_str"]))
-print(ppl("全国住房城乡建设工作会议的主要内容"))
+print(ppl("为什么需要RAG"))

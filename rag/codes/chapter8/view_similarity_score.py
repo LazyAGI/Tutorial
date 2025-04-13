@@ -1,6 +1,5 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
-import numpy as np
-from scipy.linalg import norm
+from sklearn.metrics.pairwise import cosine_similarity
 import sys
 import heapq
 from typing import List, Tuple
@@ -15,15 +14,17 @@ from lazyllm.tools.rag import Document
 def tfidf_similarity(query: str, nodes: List[DocNode], **kwargs) -> List[Tuple[DocNode, float]]:
     def add_space(s):
         return ' '.join(list(s))
-    corpus_tokens = [add_space(node.get_text()) for node in nodes]
+    corpus = [add_space(node.get_text()) for node in nodes]
     query = add_space(query)
     topk = min(len(nodes), kwargs.get("topk", sys.maxsize))
-    datasets = [[query, corpus] for corpus in corpus_tokens]
     cv = TfidfVectorizer(tokenizer=lambda s: s.split())
-    vectors = [cv.fit_transform(corpus).toarray() for corpus in datasets]
-    scores = [np.dot(vector[0], vector[1]) / (norm(vector[0]) * norm(vector[1])) for vector in vectors]
-    indexes = heapq.nlargest(topk, range(len(scores)), scores.__getitem__)
-    results = [(nodes[idx], score) for idx, score in zip(indexes, scores)]
+    tfidf_matrix = cv.fit_transform(corpus + [query])
+    query_vec = tfidf_matrix[-1]
+    doc_vecs = tfidf_matrix[:-1]
+    similairyties = cosine_similarity(query_vec, doc_vecs).flatten()
+
+    indexes = heapq.nlargest(topk, range(len(similairyties)), similairyties.__getitem__)
+    results = [(nodes[i], similairyties[i]) for i in indexes]
     return results
 
 
@@ -35,9 +36,9 @@ documents = Document(dataset_path=os.path.join(os.getcwd(), "rag_data"),
 documents.create_node_group(name="sentences", transform=SentenceSplitter, chunk_size=1024, chunk_overlap=100)
 
 # similarity_cut_off is 0.003
-ppl = Retriever(documents, group_name="CoarseChunk", similarity="tfidf_similarity", similarity_cut_off=0.003, topk=3)
-# similarity_cut_off is 0.04
-# ppl = Retriever(documents, group_name="CoarseChunk", similarity="tfidf_similarity", similarity_cut_off=0.04, topk=3)
+# ppl = Retriever(documents, group_name="CoarseChunk", similarity="tfidf_similarity", similarity_cut_off=0.003, topk=3)
+# similarity_cut_off is 0.21
+ppl = Retriever(documents, group_name="CoarseChunk", similarity="tfidf_similarity", similarity_cut_off=0.21, topk=3)
 
 nodes = ppl("全国住房城乡建设工作会议的主要内容")
 print(f"nodes: {nodes}")
