@@ -1,24 +1,15 @@
 import lazyllm
-from lazyllm import bind
-from lazyllm.tools import IntentClassifier
 
+prompt = ('You will act as an AI question-answering assistant and complete a dialogue task.'
+          'In this task, you need to provide your answers based on the given context and questions.')
 
-template = "请用下面的文段的原文来回答问题\n\n### 已知文段：{context}\n\n### 问题：{question}\n"
-base_model = '/home/mnt/sunxiaoye/myworks/Dist/Finetune2/save_ckpt/internlm2-chat-7b-chinese-math2'
-base_llm = lazyllm.TrainableModule(base_model)
-
-# 文档加载
 documents = lazyllm.Document(dataset_path="/mnt/lustre/share_data/dist/cmrc2018/data_kb")
-
 with lazyllm.pipeline() as ppl:
-    # 检索组件定义
-    ppl.retriever = lazyllm.Retriever(doc=documents, group_name="CoarseChunk", similarity="bm25_chinese", topk=3)
-    ppl.formatter = (lambda nodes, query: template.format(context="".join([node.get_content() for node in nodes]), question=query)) | bind(query=ppl.input)
-    # 生成组件定义
-    ppl.llm = base_llm
+    ppl.retriever = lazyllm.Retriever(doc=documents, group_name="CoarseChunk", similarity="bm25_chinese", 
+                              topk=3, output_format='content', join='') 
+    ppl.formatter = (lambda nodes, query: dict(context_str=nodes, query=query)) | bind(query=ppl.input)
+    ppl.llm = lazyllm.OnlineChatModule(source="sensenova").prompt(lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
 
-with IntentClassifier(lazyllm.OnlineChatModule()) as ic:
-    ic.case['Math', base_llm]
-    ic.case['Default', ppl]
-
-lazyllm.WebModule(ic, port=23496).start().wait()
+query = input('请输入您的问题\n')
+res = ppl(query)
+print(f'With RAG Answer: {res}')
