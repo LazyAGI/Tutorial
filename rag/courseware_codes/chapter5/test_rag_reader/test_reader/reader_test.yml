@@ -1,0 +1,5 @@
+# 极简测试用 YAML 文件
+test_data:
+  message: "Hello, RAG Reader!"
+  values: [1, 2, 3]
+  is_valid: true
