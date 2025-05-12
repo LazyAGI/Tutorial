@@ -70,9 +70,9 @@ Document.create_node_group(name="dfa_filter", parent="sentences", transform=DFAT
 # =============================
 
 # 定义知识库路径
-law_data_path = "path1"
-product_data_path = "path2"
-support_data_path = "path3"
+law_data_path = ""
+product_data_path = ""
+support_data_path = ""
 
 # 再注册一个 sentences 用来对比
 Document.create_node_group('sentences', transform=SentenceSplitter, chunk_size=512, chunk_overlap=100)
@@ -104,23 +104,24 @@ retriever_support = Retriever(
     topk=1                
 )
 
-product_question = "A产品功能参数和产品合规性声明"
-product_response = retriever_product(product_question)
-print()
-print(f"========== 🚀 query: {product_question } 🚀 ===========")
-print()
-print(f"========== 🚀 retrieve nodes 🚀 ===============================")
-for node in product_response:
-    print(node.text)
-    print("="*100)
+if __name__ == "__main__":
+    product_question = "A产品功能参数和产品合规性声明"
+    product_response = retriever_product(product_question)
+    print()
+    print(f"========== 🚀 query: {product_question } 🚀 ===========")
+    print()
+    print(f"========== 🚀 retrieve nodes 🚀 ===============================")
+    for node in product_response:
+        print(node.text)
+        print("="*100)
 
-support_question = "B产品的主要成分的投诉的处理方式"
-support_response = retriever_support(support_question)
-print()
-print(f"========== 🚀 query: {product_question } 🚀 ===========")
-print()
-print(f"========== 🚀 retrieve nodes 🚀 ===============================")
-for node in support_response:
-    print(node.text)
-    print("="*100)
+    support_question = "B产品的主要成分的投诉的处理方式"
+    support_response = retriever_support(support_question)
+    print()
+    print(f"========== 🚀 query: {product_question } 🚀 ===========")
+    print()
+    print(f"========== 🚀 retrieve nodes 🚀 ===============================")
+    for node in support_response:
+        print(node.text)
+        print("="*100)
     
