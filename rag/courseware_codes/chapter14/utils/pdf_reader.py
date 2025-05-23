@@ -1,10 +1,14 @@
 import os
-import torch.multiprocessing as mp
-import torch
 import copy
+import unicodedata
 from pathlib import Path
 from bs4 import BeautifulSoup
 from typing import List, Optional
+
+
+import torch
+import torch.multiprocessing as mp
+
 from magic_pdf.data.data_reader_writer import FileBasedDataWriter, FileBasedDataReader
 from magic_pdf.data.dataset import PymuDocDataset
 from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze
@@ -15,20 +19,38 @@ from magic_pdf.config.ocr_content_type import BlockType, ContentType
 from magic_pdf.libs.commons import join_path
 from magic_pdf.libs import config_reader    # noqa: F811
 from magic_pdf.dict2md import ocr_mkcontent
-import unicodedata
+
 import lazyllm
-from lazyllm.tools.rag.doc_node import DocNode
-from lazyllm.tools.rag import DocField, DataType
-from lazyllm import bind
+from lazyllm.tools.rag import DocNode
+from lazyllm.tools.rag.doc_node import ImageDocNode
+from lazyllm.tools.rag.readers import ReaderBase
+from lazyllm.components.formatter import encode_query_with_filepaths
 
-def get_cache_path():
-    return os.path.join(lazyllm.config['home'], 'rag_for_qa')
-
-def get_image_path():
-    return os.path.join(get_cache_path(), "images")
 
 mp.set_start_method('spawn', force=True)
 model_config.__use_inside_model__ = True
+
+vlm_prompt_zh = """你是一个专业的图像内容分析助手，请严格按照以下要求执行任务：
+
+1. 输出规范
+- 仅输出图像内容的客观描述，禁止添加任何解释性、总结性或推测性内容
+- 描述必须基于图像中明确可见的内容，禁止任何形式的想象或补充
+- 采用简洁的陈述句式，不使用比喻、夸张等修辞手法
+
+2. 描述要求
+- 按视觉显著性顺序描述（主体→背景→细节）
+- 包含以下要素（如存在）：
+  * 主要对象：数量、位置、形态特征
+  * 场景环境：场景类型、空间关系
+  * 显著细节：文字内容、特殊图案、异常特征
+  * 色彩构成：主色调、对比色
+
+3. 禁止行为
+- 禁止任何主观判断（如"美丽""重要"等）
+- 禁止推测图像外的信息（如时间、意图等）
+- 禁止使用"包含""显示"等元描述词汇
+
+请现在开始分析："""
 
 # add patchs to magic-pdf
 def read_config():
@@ -58,7 +80,9 @@ def read_config():
     config["device-mode"] = "cuda" if torch.cuda.is_available() else "cpu"
     return config
 
+
 config_reader.read_config = read_config
+
 
 def parse_line_spans(para_block, page_idx):
     lines_metas = []
@@ -73,6 +97,7 @@ def parse_line_spans(para_block, page_idx):
             line_meta['page'] = page + 1 if if_cross_page else page
             lines_metas.append(line_meta)
     return lines_metas
+
 
 def para_to_standard_format_v2(para_block, img_buket_path, page_idx, drop_reason=None):     # noqa: C901
     para_type = para_block['type']
@@ -148,12 +173,24 @@ def para_to_standard_format_v2(para_block, img_buket_path, page_idx, drop_reason
 
     return para_content
 
+
 ocr_mkcontent.para_to_standard_format_v2 = para_to_standard_format_v2
 
-class MagicPDFReader:
-    def __init__(self):
-        self.image_save_path = get_image_path()
-        self.model = None
+
+class MagicPDFReader(ReaderBase):
+    def __init__(self, image_path=None, use_vlm=False):
+        super().__init__()
+        if image_path is None:
+            default_path = os.path.join(os.getcwd(), 'images', 'pdf_reader')
+            os.makedirs(default_path, exist_ok=True)
+            self.image_save_path = default_path
+        else:
+            self.image_save_path = image_path
+        self.use_vlm = use_vlm
+        if self.use_vlm:
+            self.vlm = lazyllm.TrainableModule('internvl-chat-v1-5').start()
+        else:
+            self.vlm = None
 
     def _clean_content(self, content):
         if isinstance(content, str):
@@ -197,6 +234,15 @@ class MagicPDFReader:
                 block["image_path"] = os.path.basename(content["img_path"])     # 只能从路径里面读取图像，不能直接从block里面解析图像本身
                 block['img_caption'] = self._clean_content(content['img_caption'])
                 block['img_footnote'] = self._clean_content(content['img_footnote'])
+
+                if self.use_vlm:
+                    encode_query = encode_query_with_filepaths(
+                        vlm_prompt_zh, os.path.join(self.image_save_path, block["image_path"]))
+                    block['img_desc'] = self.vlm(encode_query)
+                    print(f"Parse Image >>>>>>>>>>>>>>>>>>>>>\n{block['img_desc']}\n\n")
+                else:
+                    block['img_desc'] = ' '
+
                 if cur_title:
                     block["title"] = cur_title
                 blocks.append(block)
@@ -376,7 +422,21 @@ class MagicPDFReader:
                     # if k == 'title' and "text" in element:
                     #     element["text"] = element["title"] + element["text"]
                     metadata[k] = v
-                docs.append(DocNode(text=element["text"] if "text" in element else "", metadata=metadata))
+                # docs.append(DocNode(text=element["text"] if "text" in element else "", metadata=metadata))
+                if "text" in element:
+                    docs.append(DocNode(text=element["text"], metadata=metadata))
+                    # print('##############')
+                elif "img_desc" in element:
+                    # print('==============')
+                    # import pdb; pdb.set_trace()
+                    image_node = ImageDocNode(
+                        text=element["img_desc"],
+                        image_path=os.path.join(self.image_save_path, element["image_path"]),
+                        global_metadata=metadata
+                    )
+                    docs.append(image_node)
+                else:
+                    docs.append(DocNode(text="", metadata=metadata))
 
         else:
             metadata = {"file_name": file.name}
@@ -386,83 +446,3 @@ class MagicPDFReader:
             docs.append(DocNode(text="\n".join(text_chunks), global_metadata=metadata))
 
         return docs
-
-class TmpDir:
-    def __init__(self):
-        self.root_dir = os.path.expanduser(os.path.join(lazyllm.config['home'], 'rag_for_qa'))
-        self.rag_dir = os.path.join(self.root_dir, "rag_master")
-        os.makedirs(self.rag_dir, exist_ok=True)
-        self.store_file = os.path.join(self.root_dir, "milvus.db")
-        self.image_path = get_image_path()
-        # atexit.register(self.cleanup)
-
-    def cleanup(self):
-        if os.path.isfile(self.store_file):
-            os.remove(self.store_file)
-        for filename in os.listdir(self.image_path):
-            filepath = os.path.join(self.image_path, filename)
-            if os.path.isfile(filepath):
-                os.remove(filepath)
-tmp_dir = TmpDir()
-
-# 本地存储
-milvus_store_conf = {
-    "type": "milvus",
-    "kwargs": {
-        'uri': tmp_dir.store_file,
-        'index_kwargs': {
-            'index_type': 'HNSW',
-            'metric_type': "COSINE",
-        }
-    },
-}
-
-# 在线服务
-# milvus_store_conf = {
-#     "type": "milvus",
-#     "kwargs": {
-#         'uri': "http://your-milvus-server",
-#         'index_kwargs': {
-#             'index_type': 'HNSW',
-#             'metric_type': "COSINE",
-#         }
-#     },
-# }
-
-doc_fields = {
-    'comment': DocField(data_type=DataType.VARCHAR, max_size=65535, default_value=' '),
-    'signature': DocField(data_type=DataType.VARCHAR, max_size=32, default_value=' '),
-}
-
-
-if __name__ == "__main__":
-    prompt = 'You will play the role of an AI Q&A assistant and complete a dialogue task.'\
-        ' In this task, you need to provide your answer based on the given context and question.'\
-        ' If an image can better convey the information being expressed, please include the image reference'\
-        ' in the text in Markdown format. Keep the image path in its original format.'
-
-    documents = lazyllm.Document(dataset_path=tmp_dir.rag_dir,
-                                 embed=lazyllm.TrainableModule("bge-large-zh-v1.5"),
-                                 manager=False,
-                                 store_conf=milvus_store_conf,
-                                 doc_fields=doc_fields)
-
-    documents.add_reader("*.pdf", MagicPDFReader)
-    documents.create_node_group(name="block", transform=lambda s: s.split("\n") if s else '')
-
-    with lazyllm.pipeline() as ppl:
-        ppl.retriever = lazyllm.Retriever(doc=documents, group_name="block", topk=3)
-        ppl.reranker = lazyllm.Reranker(name='ModuleReranker',
-                                        model="bge-reranker-large",
-                                        topk=1,
-                                        output_format='content',
-                                        join=True) | bind(query=ppl.input)
-
-        ppl.formatter = (
-            lambda nodes, query: dict(context_str=nodes, query=query)
-        ) | bind(query=ppl.input)
-
-        ppl.llm = lazyllm.TrainableModule('internlm2-chat-7b').prompt(
-            lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
-
-    lazyllm.WebModule(ppl, port=23456, static_paths=get_cache_path()).start().wait()
