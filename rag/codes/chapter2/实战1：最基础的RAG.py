@@ -8,7 +8,7 @@ import os
 
 # 将LazyLLM路径加入环境变量
 # import sys
-# sys.path.append("/home/mnt/chenzhe1/Code/LazyLLM")
+# sys.path.append("path/to/LazyLLM")
 # # 设置环境变量
 # import os
 # os.environ["LAZYLLM_SENSENOVA_API_KEY"] = ""
@@ -17,16 +17,16 @@ import os
 # 1.文档加载 📚
 # RAG 文档读取
 # 传入绝对路径
-doc = Document("/home/mnt/chenzhe1/Code/Other/rag_master/")
+doc = Document("/path/to/rag_master/")
 print(f"实际传入路径为：{doc.manager._dataset_path}")
 
 # 传入相对路径
-# 需配置环境变量：export LAZYLLM_DATA_PATH="/home/mnt/chenzhe1/Code"
+# 需配置环境变量：export LAZYLLM_DATA_PATH="your_path"
 # doc = Document("/paper/")
 
 # 2.检查组件 🕵
 # 传入绝对路径
-doc = Document("/home/mnt/chenzhe1/Code/Other/rag_master/")
+doc = Document("/path/to/rag_master/")
 
 # 使用Retriever组件，传入文档doc，节点组名称这里采用内置切分策略"CoarseChunk"，相似度计算函数bm25_Chinese
 retriever = Retriever(doc, group_name=Document.CoarseChunk, similarity="bm25_chinese", topk=3)
@@ -88,7 +88,7 @@ with open('data_kb/part_1.txt') as f:
 
 # 实现最基础的 RAG
 # 文档加载
-documents = lazyllm.Document(dataset_path="/home/mnt/chenzhe1/Code/Other/rag_master/")
+documents = lazyllm.Document(dataset_path="/path/to/rag_master/")
 
 # 检索组件定义
 retriever = lazyllm.Retriever(doc=documents, group_name="CoarseChunk", similarity="bm25_chinese", topk=3)
