@@ -5,7 +5,6 @@ from lazyllm import OnlineChatModule, pipeline, _0, OnlineEmbeddingModule, bind
 import lazyllm
 from lazyllm.tools import IntentClassifier
 from lazyllm.tools.agent import ReactAgent
-from lazyrag.components.embedding import LazyEmbeddingFactory
 from utils import bi_tools
 
 
