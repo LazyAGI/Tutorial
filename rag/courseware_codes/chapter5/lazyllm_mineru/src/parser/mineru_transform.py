@@ -5,9 +5,9 @@ from lazyllm.tools.rag import NodeTransform, DocNode
 from typing import Union
 
 
-class MagicPDFTransform(NodeTransform):
+class MineruTransform(NodeTransform):
     """
-    专门用于magic-pdf解析结果的节点转换方法
+    专门用于Mineru解析结果的节点转换方法
     可自定义节点转化方法
     现根据章节标题和限定长度进行节点聚合
     """
