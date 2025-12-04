@@ -27,7 +27,7 @@ llm = lazyllm.TrainableModule('internlm2-chat-20b').deploy_method(lazyllm.deploy
 prompt = '你是一个友好的 AI 问答助手，你需要根据给定的上下文和问题提供答案。\
           根据以下资料回答问题：\
           {context_str} \n '
-llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extro_keys=['context_str']))
+llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
 
 # 执行推理
 query = "2008年有哪些赛事？"

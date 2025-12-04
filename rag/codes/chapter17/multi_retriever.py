@@ -54,7 +54,7 @@ for node in product_response:
 support_question = "B产品的主要成分的投诉的处理方式"
 support_response = retriever_support(support_question)
 print()
-print(f"========== 🚀 query: {product_question } 🚀 ===========")
+print(f"========== 🚀 query: {support_question } 🚀 ===========")
 print()
 print(f"========== 🚀 retrieve nodes 🚀 ===============================")
 for node in support_response:

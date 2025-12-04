@@ -73,7 +73,7 @@ def extract_boxed_content(text):
     contents = re.findall(pattern, text)
     return contents
 
-def caculate_score(eval_set, infer_set):
+def calculate_score(eval_set, infer_set):
     assert len(eval_set) == len(infer_set)
     score = 0
     for index, eval_item in enumerate(eval_set):

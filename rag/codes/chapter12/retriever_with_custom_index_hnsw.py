@@ -9,7 +9,7 @@ from lazyllm import LOG
 
 from online_models import embedding_model
 
-from lazyllm.tools.rag import IndexBase, StoreBase, DocNode
+from lazyllm.tools.rag import IndexBase, LazyLLMStoreBase, DocNode
 from lazyllm.tools.rag.utils import parallel_do_embedding
 from lazyllm.common import override
 
@@ -20,7 +20,7 @@ class HNSWIndex(IndexBase):
     def __init__(
             self,
             embed: Dict[str, Callable],
-            store: StoreBase,
+            store: LazyLLMStoreBase,
             max_elements: int = 10000, # 定义索引最大容量
             ef_construction: int = 200,    # 平衡索引构建速度和搜索准确率，越大准确率越高但是构建速度越慢
             M: int = 16,    # 表示在建表期间每个向量的边数目量，M越高，内存占用越大，准确率越高，同时构建速度越慢
