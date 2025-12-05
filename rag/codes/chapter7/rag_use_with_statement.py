@@ -35,6 +35,6 @@ with lazyllm.pipeline() as ppl:
         )
     ) | bind(query=ppl.input)
 
-    ppl.llm = llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extro_keys=['context_str']))
+    ppl.llm = llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
 
 lazyllm.WebModule(ppl, port=23491, stream=True).start().wait()

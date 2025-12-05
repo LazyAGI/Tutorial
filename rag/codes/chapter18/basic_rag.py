@@ -10,7 +10,7 @@ with pipeline() as ppl:
     ppl.retriever = Retriever(documents, group_name="sentences", similarity="cosine", topk=1)
     ppl.reranker = Reranker("ModuleReranker", model=OnlineEmbeddingModule(type="rerank"), topk=1, output_format='content', join=True) | bind(query=ppl.input)
     ppl.formatter = (lambda nodes, query: dict(context_str=nodes, query=query)) | bind(query=ppl.input)
-    ppl.llm = lazyllm.OnlineChatModule(stream=False).prompt(lazyllm.ChatPrompter(prompt, extro_keys=["context_str"]))
+    ppl.llm = lazyllm.OnlineChatModule(stream=False).prompt(lazyllm.ChatPrompter(prompt, extra_keys=["context_str"]))
 
 if __name__ == "__main__":
     lazyllm.WebModule(ppl, port=range(23467, 24000)).start().wait()

@@ -25,7 +25,7 @@ tools = ["search_knowledge_base"]
 with pipeline() as ppl:
     ppl.retriever = ReactAgent(lazyllm.OnlineChatModule(stream=False), tools)
     ppl.formatter = (lambda nodes, query: dict(context_str=nodes, query=query)) | bind(query=ppl.input)
-    ppl.llm = lazyllm.OnlineChatModule(stream=False).prompt(lazyllm.ChatPrompter(prompt, extro_keys=["context_str"]))
+    ppl.llm = lazyllm.OnlineChatModule(stream=False).prompt(lazyllm.ChatPrompter(prompt, extra_keys=["context_str"]))
 
 if __name__ == "__main__":
     lazyllm.WebModule(ppl, port=range(23467, 24000)).start().wait()
