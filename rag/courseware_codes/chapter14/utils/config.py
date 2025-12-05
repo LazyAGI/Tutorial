@@ -10,7 +10,6 @@ from lazyllm.tools.rag import DocField, DataType
 from lazyllm.tools.rag.doc_node import ImageDocNode
 from lazyllm.components.formatter import encode_query_with_filepaths
 
-from utils.pdf_reader import MagicPDFReader
 
 ## Prompt:
 gen_prompt = (

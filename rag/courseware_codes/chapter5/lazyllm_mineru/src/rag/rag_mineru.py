@@ -4,8 +4,8 @@
 import lazyllm
 from lazyllm import LOG
 from lazyllm import pipeline, parallel, bind, OnlineEmbeddingModule, SentenceSplitter, Document, Retriever, Reranker
-from src.reader.magic_pdf_reader import MagicPDFReader
-from src.parser.magic_pdf_transform import MagicPDFTransform
+from lazyllm.tools.rag.readers import MineruPDFReader
+from src.parser.mineru_transform import MineruTransform
 from dotenv import load_dotenv
 import os
 
@@ -16,13 +16,13 @@ prompt = 'You will play the role of an AI question-answering assistant and compl
 
 documents = Document(dataset_path=os.path.join(os.getcwd(), 'rag_pdf_data'), embed=OnlineEmbeddingModule(source="qwen"), manager=False)
 
-documents.add_reader("**/*.pdf", MagicPDFReader)
-documents.create_node_group(name="magic-pdf", transform=MagicPDFTransform) 
+documents.add_reader("**/*.pdf", MineruPDFReader)
+documents.create_node_group(name="mineru", transform=MineruTransform) 
 
 with pipeline() as ppl:
     with parallel().sum as ppl.prl:
-        prl.retriever1 = Retriever(documents, group_name="magic-pdf", similarity="cosine", topk=3)
-        prl.retriever2 = Retriever(documents, group_name="magic-pdf",  similarity="bm25_chinese", topk=3)
+        prl.retriever1 = Retriever(documents, group_name="mineru", similarity="cosine", topk=3)
+        prl.retriever2 = Retriever(documents, group_name="mineru",  similarity="bm25_chinese", topk=3)
     ppl.reranker = Reranker("ModuleReranker",
                             model=OnlineEmbeddingModule(type="rerank"),        # model=OnlineEmbeddingModule(type="rerank")
                             topk=1, output_format='content',
