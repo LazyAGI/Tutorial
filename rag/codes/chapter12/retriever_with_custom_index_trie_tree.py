@@ -7,7 +7,7 @@ from lazyllm import LOG
 
 from online_models import custom_embedding_model as embedding_model # 使用线上模型
 
-from lazyllm.tools.rag import IndexBase, StoreBase, DocNode
+from lazyllm.tools.rag import IndexBase, LazyLLMStoreBase, DocNode
 from lazyllm.common import override
 
 DOC_PATH = "/mnt/lustre/share_data/dist/index"
@@ -21,7 +21,7 @@ class TrieNode:
 
 
 class TrieTreeIndex(IndexBase):
-    def __init__(self, store: 'StoreBase'):
+    def __init__(self, store: 'LazyLLMStoreBase'):
         self.store = store
         self.root = TrieNode()
         self.uid_to_word: Dict[str, str] = {}
