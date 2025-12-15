@@ -17,7 +17,7 @@ import os
 # 1.文档加载 📚
 # RAG 文档读取
 # 传入绝对路径
-doc = Document("/path/to/rag_master/")
+doc = Document("/home/mnt/huangchongjin/my_rag_data")
 print(f"实际传入路径为：{doc.manager._dataset_path}")
 
 # 传入相对路径
@@ -26,7 +26,7 @@ print(f"实际传入路径为：{doc.manager._dataset_path}")
 
 # 2.检查组件 🕵
 # 传入绝对路径
-doc = Document("/path/to/rag_master/")
+doc = Document("/home/mnt/huangchongjin/my_rag_data")
 
 # 使用Retriever组件，传入文档doc，节点组名称这里采用内置切分策略"CoarseChunk"，相似度计算函数bm25_Chinese
 retriever = Retriever(doc, group_name=Document.CoarseChunk, similarity="bm25_chinese", topk=3)

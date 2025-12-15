@@ -1,11 +1,7 @@
 import os
-import sys
 from lazyllm.tools.rag import DocField, DataType
-from lazyllm import OnlineChatModule, pipeline, _0, OnlineEmbeddingModule, bind
+from lazyllm import OnlineEmbeddingModule, bind
 import lazyllm
-from lazyllm.tools import IntentClassifier
-from lazyllm.tools.agent import ReactAgent
-from utils import bi_tools
 
 
 class TmpDir:

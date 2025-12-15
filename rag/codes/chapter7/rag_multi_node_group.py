@@ -17,7 +17,7 @@ retriever2 = lazyllm.Retriever(doc=documents, group_name="sentences", similarity
 prompt = '你是一个友好的 AI 问答助手，你需要根据给定的上下文和问题提供答案。\
           根据以下资料回答问题：\
           {context_str} \n '
-robot = llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extro_keys=['context_str']))
+robot = llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
 
 # 推理
 query = "亚硫酸盐有什么作用？"

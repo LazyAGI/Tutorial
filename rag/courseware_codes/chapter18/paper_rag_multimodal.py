@@ -9,8 +9,7 @@ from lazyllm import bind, _0
 from lazyllm.tools.rag import DocField, DataType
 from lazyllm.tools.rag.doc_node import ImageDocNode
 from lazyllm.components.formatter import encode_query_with_filepaths
-
-from utils.pdf_reader import MagicPDFReader
+from lazyllm.tools.rag.readers import MineruPDFReader
 
 ## Prompt:
 gen_prompt = (
@@ -151,7 +150,7 @@ def build_paper_rag():
     summary_llm = lazyllm.LLMParser(lazyllm.OnlineChatModule(stream=False), language="zh", task_type="summary") 
 
     documents = lazyllm.Document(dataset_path=tmp_dir.rag_dir, embed=embeds, manager=False)
-    documents.add_reader("*.pdf", MagicPDFReader(get_image_path()))
+    documents.add_reader("*.pdf", MineruPDFReader(url="http://127.0.0.1:8888"))   # url 需替换为已启动的 MinerU 服务地址    
     documents.create_node_group(name="block", transform=lambda s: s.split("\n") if s else '')
     documents.create_node_group(name="summary", transform=lambda d: summary_llm(d), trans_node=True)
     documents.create_node_group(name='qapair', transform=lambda d: qapair_llm(d), trans_node=True)

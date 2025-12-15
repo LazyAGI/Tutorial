@@ -20,7 +20,7 @@ retriever = Retriever(doc=documents, group_name="CoarseChunk", similarity="bm25_
 llm = TrainableModule('internlm2-chat-20b').deploy_method(deploy.Vllm).start()  # 调用大模型
 
 query_rewriter = llm.share(ChatPrompter(instruction=rewrite_prompt))  # 通过 llm.share 复用大模型
-robot = llm.share(ChatPrompter(instruction=robot_prompt, extro_keys=['context_str']))
+robot = llm.share(ChatPrompter(instruction=robot_prompt, extra_keys=['context_str']))
 
 # 推理
 query = "MIT OpenCourseWare是啥？"

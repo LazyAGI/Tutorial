@@ -1,7 +1,7 @@
 # flake8: noqa: E501
 import lazyllm
 from lazyllm import bind, _0
-from utils.pdf_reader import MagicPDFReader
+from lazyllm.tools.rag.readers import MineruPDFReader
 from utils.config import tmp_dir, gen_prompt, build_vlm_prompt, get_image_path
 
 
@@ -12,7 +12,7 @@ def build_paper_rag():
     embeds = {'vec1': embed_text, 'vec2': embed_multimodal}
     documents = lazyllm.Document(
         dataset_path=tmp_dir.rag_dir, embed=embeds, manager=False)
-    documents.add_reader("*.pdf", MagicPDFReader)
+    documents.add_reader("*.pdf", MineruPDFReader(url="http://127.0.0.1:8888"))   # url 需替换为已启动的 MinerU 服务地址    
     documents.create_node_group(name="block", transform=lambda s: s.split("\n") if s else '')
 
     with lazyllm.pipeline() as ppl:
