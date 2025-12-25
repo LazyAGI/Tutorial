@@ -34,10 +34,10 @@
     -   **显存优化技术**：ZeRO (1/2/3) 系列，FlashAttention-2/3 加速原理，Gradient Checkpointing (重计算)，CPU Offload。
     -   **分布式对数据的影响**：Global Batch Size 缩放规律，Micro Batch 流水线填充，数据分片 (Sharding) 与断点续训 (Checkpointing) 策略。
 -   **第4课时：模型部署与推理加速**
-    -   推理引擎架构：vLLM (PagedAttention), TGI, TensorRT-LLM 核心原理。
+    -   推理引擎架构：vLLM (PagedAttention) 核心原理。
     -   吞吐优化技术：Continuous Batching, Speculative Decoding (投机采样/Medusa), KV Cache Quantization。
     -   部署中的量化策略：AWQ, GPTQ, SmoothQuant 及其对模型精度的影响。
-       **实践**：LazyLLM 的基础使用，部署一个LLM推理服务。
+    - **实践**：LazyLLM 的基础使用，部署一个LLM推理服务。
 -   **第5课时：Agent-Based Data Processing (基于Agent的数据处理)**
     -   Agent 概述：定义、类型 (单Agent vs Multi-Agent)、核心能力 (工具调用、规划与决策)。
     -   Agent 策略：function-call, react, plan-and-solve, rewoo 等主流方法解析。
