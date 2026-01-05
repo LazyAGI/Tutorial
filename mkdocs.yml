@@ -9,6 +9,7 @@ theme:
   name: material
   features:
   - navigation.tabs
+  - navigation.expand
   - navigation.footer
   - navigation.top
   - search.highlight
@@ -67,6 +68,8 @@ plugins:
   - search
 extra_javascript:
   - 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+extra_css:
+  - 'data:text/css,.md-grid{max-width:90%25!important}'
 nav:
   - 课程内容:
     - 大纲: index.md
