@@ -1,11 +1,9 @@
 from typing import Literal
 import json
 import lazyllm
-from lazyllm.tools import fc_register, FunctionCall, FunctionCallAgent
-from lazyllm.components.prompter import ChatPrompter
+from lazyllm.tools import fc_register, ReactAgent
 import re
 import json5
-
 
 llm = lazyllm.OnlineChatModule()
 
@@ -96,39 +94,46 @@ def self_correction(qa_pair: dict, content: str) -> dict:
 
     print()
     print("自我修正function被调用：")
-    print(judge)
+    if judge['query'] == qa_pair['query']:
+        print("QA对未被修改")
+        return qa_pair
+    else:
+        print(f"修改后的QA对：{judge}")
     return judge
 
 
 
-llm = lazyllm.OnlineChatModule()
-
 tools = ["data_synthesis", "self_correction"]
-fc = FunctionCall(llm, tools)
-query = input("请输入原文本： \n")
+agent = ReactAgent(
+    llm=llm,
+    tools=tools,
+    max_retries=5
+)
+
+# =========================
+# Prompt
+# =========================
+content = input("请输入原文本：\n")
 
 agent_prompt = f"""
-    你需要根据客户输入进来的需求进行数据生成和自检查。
-    客户需求：{query}
-    你必须严格按照以下步骤完成任务：
+你是一个数据构建 Agent，需要完成「生成 + 自检」的数据流水线。
 
-    Step 1:
-    调用 tool: data_synthesis
-    生成一个 QA 对。
+你的目标：
+1. 根据原始文本生成一个 QA 对
+2. 对生成的 QA 对进行自我修正，确保严格基于原文
 
-    Step 2:
-    无论 Step 1 的结果如何，
-    必须调用 tool: self_correction
-    对生成的 QA 进行自我修正。
+规则：
+- 你必须先调用 data_synthesis
+- 然后必须调用 self_correction
+- 最终只返回修正后的 QA 结果
 
-    只有在 Step 2 完成后，任务才算结束。
+原始文本：
+{content}
 """
 
-print("模型启动：")
-# ret = fc(query)
-# print(f"ret: {ret}")
-agent = FunctionCallAgent(llm, tools)
-ret = agent(agent_prompt)
-# print(f"ret: {ret}")
+print("\n模型启动：\n")
+result = agent(agent_prompt)
+# print("\n最终输出：")
+# print(result)
 
 # 根据以下内容生成sft微调训练内容 "LazyLLM是一款高性能的开源人工智能框架。"
