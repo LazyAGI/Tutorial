@@ -1,0 +1,104 @@
+site_name: From Data to LLM
+site_description: End-to-end LLM training and data engineering course built on LazyLLM.
+site_author: LazyLLM Community
+repo_url: https://github.com/LazyAGI/LazyLLM
+repo_name: LazyAGI/LazyLLM
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  features:
+  - navigation.tabs
+  - navigation.footer
+  - navigation.top
+  - search.highlight
+  - search.suggest
+  - content.code.select
+  - content.code.copy
+  - content.code.annotate
+  palette:
+  - accent: white
+    primary: white
+    scheme: default
+    toggle:
+      icon: material/brightness-auto
+      name: Switch to light mode
+  - accent: white
+    media: '(prefers-color-scheme: light)'
+    primary: white
+    scheme: default
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  - accent: black
+    media: '(prefers-color-scheme: dark)'
+    primary: black
+    scheme: slate
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  logo: assets/logo.png
+  favicon: https://img.icons8.com/?size=100&id=121346&format=png&color=000000
+  icon:
+    repo: fontawesome/brands/github
+extra:
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/LazyAGI/LazyLLM
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - attr_list
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - toc:
+      permalink: true
+plugins:
+  - search
+extra_javascript:
+  - 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+nav:
+  - 课程内容:
+    - 大纲: index.md
+    - 第一部分：大模型基础:
+        - 第1课时：Transformer 核心与 Self-Attention 深度剖析: chapter1/1.md
+        - 第2课时：LLM 训练范式与数据工程全景: chapter2/2.md
+    - 第二部分：系统工程基础:
+        - 第3课时：分布式训练技术概览: chapter3/3.md
+        - 第4课时：模型部署与推理加速: chapter4/4.md
+        - 第5课时：基于Agent的数据处理: chapter5/5.md
+        - 第6课时：基于 LazyLLM 的全流程实践: chapter6/6.md
+    - 第三部分：预训练数据工程:
+        - 第7课时：预训练原理、策略与评测: chapter7/7.md
+        - 第8课时：预训练数据构建全流程: chapter8/8.md
+        - 第9课时：基于 LazyLLM 的预训练实战: chapter9/9.md
+        - 第10课时：多模态 LLM 架构与预训练实战: chapter10/10.md
+    - 第四部分：微调数据工程:
+        - 第11课时：指令微调原理与策略: chapter11/11.md
+        - 第12课时：通用指令数据构建、合成与蒸馏: chapter12/12.md
+        - 第13课时：基于 LazyLLM 的微调实战: chapter13/13.md
+        - 第14课时：多模态指令微调与实战: chapter14/14.md
+    - 第五部分：特定领域数据:
+        - 第15课时：推理、代码与数学能力增强: chapter15/15.md
+        - 第16课时：Agent 能力增强 (Tools & Planning): chapter16/16.md
+        - 第17课时：长上下文与结构化提取: chapter17/17.md
+        - 第18课时：行业领域模型实战: chapter18/18.md
+    - 第六部分：对齐数据工程:
+        - 第19课时：对齐算法原理 (RLHF & GRPO): chapter19/19.md
+        - 第20课时：偏好数据构建: chapter20/20.md
+        - 第21课时：模型风险、合规与伦理: chapter21/21.md
+        - 第22课时：基于 LazyLLM 的对齐实战: chapter22/22.md
+    - 第七部分：RAG 数据工程:
+        - 第23课时：RAG 架构原理与数据处理: chapter23/23.md
+        - 第24课时：Embedding 模型微调与实战: chapter24/24.md
+        - 第25课时：Reranker 模型微调与实战: chapter25/25.md
