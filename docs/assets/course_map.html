@@ -49,15 +49,11 @@
         }
 
         /* Brighten SVG arrows in dark mode */
-        [data-theme="dark"] .arrow-down::before,
-        [data-theme="dark"] .level-main-flow .card::after,
-        [data-theme="dark"] .fork-connector::before,
-        [data-theme="dark"] .fork-connector::after,
-        [data-theme="dark"] .fork-leg::before,
-        [data-theme="dark"] .fork-leg::after {
-            filter: brightness(1.5);
+        [data-theme="dark"] .connector-path {
+            opacity: 0.8; 
+            filter: brightness(1.2);
         }
-
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -199,96 +195,51 @@
             gap: 40px;
         }
 
-        /* Connectors (Arrows) */
-        .arrow-down {
+        /* Connectors (SVG) */
+        .connector-container {
+            width: 100%;
+            height: 60px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 40px;
-            position: relative;
+            overflow: visible;
+            position: relative; /* For absolute positioning of arrow tips */
         }
 
-        .arrow-down::after {
-            content: '';
-            width: 2px;
-            height: 100%;
-            background: var(--arrow-color);
-            position: absolute;
-        }
-
-        .arrow-down::before {
-            content: '';
-            border: 6px solid transparent;
-            border-top-color: var(--arrow-color);
-            position: absolute;
-            bottom: -6px;
-            z-index: 1;
-        }
-
-        /* Complex Fork Connector */
-        .fork-connector {
-            height: 40px;
-            position: relative;
+        .connector-svg {
             width: 100%;
-        }
-        
-        /* Vertical line from top center */
-        .fork-connector::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            height: 20px;
-            width: 2px;
-            background: var(--arrow-color);
-            transform: translateX(-50%);
-        }
-
-        /* Horizontal bar - Modified for 1-to-2 split (25% and 75% centers) */
-        .fork-connector::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 25%;
-            right: 25%;
-            height: 2px;
-            background: var(--arrow-color);
-        }
-
-        /* Vertical lines down to children */
-        .fork-legs {
-            display: flex;
-            justify-content: space-between;
-            padding: 0 25%; /* Match horizontal bar ends */
-            height: 20px;
-            margin-bottom: -1px; /* Overlap nicely */
-        }
-        
-        .fork-leg {
-            width: 2px;
             height: 100%;
-            background: var(--arrow-color);
-            position: relative;
+            overflow: visible;
         }
 
-        .fork-leg::after {
-            content: '';
-            border: 6px solid transparent;
-            border-top-color: var(--arrow-color);
-            position: absolute;
-            bottom: -11px;
-            left: -5px;
+        .connector-path {
+            fill: none;
+            stroke: var(--arrow-color);
+            stroke-width: 2px;
+            vector-effect: non-scaling-stroke; /* Keep line thickness constant on resize */
         }
-        
+
+        /* CSS Arrow Tips (prevents distortion from SVG scaling) */
+        .arrow-tip {
+            position: absolute;
+            bottom: 0px;
+            width: 0; 
+            height: 0; 
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 8px solid var(--arrow-color); /* Points down */
+            transform: translateX(-50%);
+            z-index: 1; /* Ensure on top of line end */
+        }
+
         /* Responsive */
-        @media (min-width: 901px) {
+        @media (min-width: 701px) { /* Changed from 901px to keep layout on medium screens */
              /* Add horizontal arrows between main flow cards */
             .level-main-flow .card:not(:last-child)::after {
                 content: '';
                 position: absolute;
-                right: -30px; /* Inside the gap */
+                right: -42px; /* Increased reach */
                 top: 50%;
-                width: 20px;
+                width: 38px; /* Fill grid gap */
                 height: 2px;
                 background: var(--arrow-color);
                 transform: translateY(-50%);
@@ -297,7 +248,7 @@
             .level-main-flow .card:not(:last-child)::before {
                 content: '';
                 position: absolute;
-                right: -34px;
+                right: -46px;
                 top: 50%;
                 border: 6px solid transparent;
                 border-left-color: var(--arrow-color);
@@ -306,11 +257,11 @@
             }
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 700px) { /* Lowered breakpoint from 900px */
             .level-foundation, .level-main-flow, .level-extensions {
                 grid-template-columns: 1fr;
             }
-            .fork-connector, .arrow-down {
+            .connector-container {
                 display: none; /* Hide complex arrows on mobile, just stack */
             }
             .stage-container {
@@ -323,6 +274,7 @@
                 margin-top: 10px;
                 color: var(--arrow-color);
                 font-weight: bold;
+                font-size: 20px;
             }
             .card:last-child::after {
                 display: none;
@@ -334,6 +286,8 @@
     </style>
 </head>
 <body>
+
+<!-- SVG Defs removed as markers are replaced by CSS elements for better aspect ratio control -->
 
 <div class="container">
     <div class="main-title">LLM 模型训练与数据工程课程架构图</div>
@@ -378,8 +332,15 @@
             </div>
         </div>
 
-        <!-- Connector -->
-        <div class="arrow-down"></div>
+        <!-- Connector: Simple Down Arrow -->
+        <div class="connector-container">
+            <svg class="connector-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
+                <!-- Straight line down from center, shortened slightly to not poke through tip -->
+                <path class="connector-path" d="M50,0 L50,55" />
+            </svg>
+            <!-- CSS Arrow Tip -->
+            <div class="arrow-tip" style="left: 50%;"></div>
+        </div>
 
         <!-- Level 2: Main Workflow (Pre-training -> SFT -> Alignment) -->
         <div class="level-main-flow">
@@ -429,7 +390,7 @@
                 </div>
             </div>
 
-            <!-- P6 (Moved here) -->
+            <!-- P6 -->
             <div class="card" style="border-left: 4px solid #28a745;">
                 <div class="card-header">Part 6: 价值对齐 (Alignment)</div>
                 <div class="lesson-list">
@@ -453,11 +414,21 @@
             </div>
         </div>
 
-        <!-- Fork Connector (From SFT to Domain/RAG) -->
-        <div class="fork-connector"></div>
-        <div class="fork-legs">
-            <div class="fork-leg"></div>
-            <div class="fork-leg"></div>
+        <!-- Connector: Fork SFT (Center) -> Domain (Left) & RAG (Right) -->
+        <!-- Logic: Top Center (50%) -> Bottom 25% and Bottom 75% -->
+        <div class="connector-container" style="height: 80px;">
+            <svg class="connector-svg" viewBox="0 0 100 80" preserveAspectRatio="none">
+                <!-- Path to Left Child (Domain) -->
+                <!-- Bezier: Start(50,0) -> End(25,75) shortened -->
+                <path class="connector-path" d="M50,0 C50,50 25,30 25,75" />
+                
+                <!-- Path to Right Child (RAG) -->
+                <!-- Bezier: Start(50,0) -> End(75,75) shortened -->
+                <path class="connector-path" d="M50,0 C50,50 75,30 75,75" />
+            </svg>
+            <!-- CSS Arrow Tips -->
+            <div class="arrow-tip" style="left: 25%;"></div>
+            <div class="arrow-tip" style="left: 75%;"></div>
         </div>
 
         <!-- Level 3: Applications & Specialization -->
@@ -548,13 +519,15 @@
 
         // Initialize and Observe
         syncTheme();
-        try {
-            const observer = new MutationObserver(syncTheme);
-            observer.observe(window.parent.document.body, { 
-                attributes: true, 
-                attributeFilter: ["data-md-color-scheme"] 
-            });
-        } catch (e) {}
+        
+        const observer = new MutationObserver(() => {
+            syncTheme();
+        });
+        
+        observer.observe(window.parent.document.body || document.body, { 
+            attributes: true, 
+            attributeFilter: ["data-md-color-scheme", "class"] 
+        });
     });
 </script>
 
