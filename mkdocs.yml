@@ -71,8 +71,10 @@ extra_javascript:
 extra_css:
   - 'data:text/css,.md-grid{max-width:90%25!important}'
 nav:
+  - 课程简介:
+    - 课程体系: index.md
   - 课程内容:
-    - 大纲: index.md
+    - 课程大纲: outline.md
     - 第一部分：大模型基础:
         - 第1课时：Transformer 核心与 Self-Attention 深度剖析: chapter1/1.md
         - 第2课时：LLM 训练范式与数据工程全景: chapter2/2.md
@@ -93,8 +95,8 @@ nav:
         - 第14课时：多模态指令微调与实战: chapter14/14.md
     - 第五部分：特定领域数据:
         - 第15课时：推理、代码与数学能力增强: chapter15/15.md
-        - 第16课时：Agent 能力增强 (Tools & Planning): chapter16/16.md
-        - 第17课时：长上下文与结构化提取: chapter17/17.md
+        - 第16课时：结构化输出与格式对齐: chapter17/17.md
+        - 第17课时：Agent 能力增强 (Tools & Planning): chapter16/16.md
         - 第18课时：行业领域模型实战: chapter18/18.md
     - 第六部分：对齐数据工程:
         - 第19课时：对齐算法原理 (RLHF & GRPO): chapter19/19.md
