@@ -15,7 +15,7 @@ input_list = [
 
 saved_rows = []
 @fc_register("tool")
-def regenerate_row(row: str) -> dict:
+def regenerate_row(row: dict) -> dict:
     '''
     Generate QA pairs based on the input content.
 
@@ -88,11 +88,7 @@ def evaluate_row(row: dict) -> bool:
 
 
 
-tools = ["regenerate_row", "evaluate_row"]
-agent = ReWOOAgent(
-    llm=llm,
-    tools=tools,
-)
+
 
 # =========================
 # Prompt
@@ -101,42 +97,61 @@ agent = ReWOOAgent(
 # for row in input_list:
 
 row = input_list[0]
-agent_prompt = f"""
-你是一个严格的数据质量校验 Agent。你的目标是确保 QA 对的内容与原始 Content 是一致的。
+# agent_prompt = """
+# 你是一个严格的数据质量校验 Agent。
 
-你可以使用的工具：
-- evaluate_row(row: dict) -> bool
-- regenerate_row(row: dict) -> dict
+# ⚠️ 工具调用格式必须【完全严格】：
+# Action: 工具名
+# Action Input: <单行 JSON，不能换行，不能缩进>
 
-### 核心执行逻辑：
-1. 调用 evaluate_row 检查当前的 QA 样本。
-2. 如果 第一步结果是False： 调用 regenerate_row 生成新的 QA。
-3. 对 regenerate_row 的结果再次进行校验，直到通过。
 
-### ⚠️ 工具调用【强制格式规范】（必须严格遵守）：
+# 你必须立刻调用 evaluate_row。
 
-当你调用工具时，**必须严格按照以下格式输出**：
+# 格式必须完全如下（一行）：
+# Action: evaluate_row
+# Action Input: {"row":{"query":"...","answer":"...","content":"..."}}
 
-Action: <工具名>
-Action Input:
-<一个严格合法的 JSON，对应函数参数，不允许有任何多余字符>
 
-### 输出格式规范：
-Thought: 你的逻辑思考
-Action: 工具名
-Action Input: 工具参数
-Observation: 工具返回的结果（由系统提供）
-... (重复上述步骤)
-Final Answer: 最终通过校验的 QA 结果（JSON 格式）
+# 示例（正确）：
+# Action: evaluate_row
+# Action Input: {"row":{"query":"Q","answer":"A","content":"C"}}
 
----
-### 当前待处理数据：
-{json.dumps(row, ensure_ascii=False)}
+# 示例（错误）：
+# Action Input:
+# {
+#   "row": {...}
+# }
 
-请开始你的推理。
+# 执行逻辑：
+# 1. evaluate_row
+# 2. False → regenerate_row
+# 3. 直到 True
+# """
+
+
+agent_prompt = """
+你必须立刻调用 evaluate_row。
+
+格式必须完全如下（一行）：
+Action: evaluate_row
+Action Input: {"row":{"query":"...","answer":"...","content":"..."}}
 """
 
-result = agent(agent_prompt)
+
+tools = ["regenerate_row", "evaluate_row"]
+agent = ReactAgent(
+    llm=llm,
+    tools=tools,
+    prompt=agent_prompt
+)
+
+
+query = f'''
+当前数据（必须原样使用，不要格式化）：
+{json.dumps(row, ensure_ascii=False, separators=(',', ':'))}
+'''
+
+result = agent(query)
 print(result)
 
 # print(saved_rows)
