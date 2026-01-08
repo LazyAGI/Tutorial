@@ -5,6 +5,8 @@
 
 课程不仅涵盖了纯文本、多模态、Embedding 等多维度的技术原理，更引入了**系统工程**视角，详解分布式训练、高效部署与模型合规。特别值得一提的是，本课程贯穿了 **LazyLLM** 全流程实战与 **Agent（智能体）** 的双重应用：既教授如何构建具备 Agent 能力的模型，也演示如何利用 Agent 自动化流水线来清洗和合成高质量数据，助力企业构建闭环的“数据飞轮”。
 
+<iframe src="../assets/course_map.html" width="100%" style="border:none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 600px;" onload="this.style.height = this.contentWindow.document.documentElement.scrollHeight + 'px'" scrolling="no"></iframe>
+
 ## 课程大纲
 
 ### 第一部分：大模型基础：架构、训练与数据范式 (2课时)
@@ -103,14 +105,15 @@
     -   **数学数据集 (Math Data)**：增加推理步骤 (Step-by-step), 格式化数学公式 (LaTeX), 过程验证 (Process Verification)。
     -   **代码数据集 (Code Data)**：GitHub 代码清洗, 单元测试生成 (Execution-based), 代码解释与补全数据构建。
     -   验证驱动的数据过滤 (利用解释器/求解器验证数据正确性)。
--   **第16课时：Agent 能力增强 (Tools & Planning)**
+-   **第16课时：结构化输出与格式对齐**
+    -   **数据构建流水线**：Schema 设计 (JSON/Pydantic) -> 逆向合成 (基于 Schema 生成 JSON 再反推文本) -> 自动化校验与清洗 -> 负样本构建。
+    -   **关键技术**：TypeScript 风格提示工程，语法引导解码 (Grammar-guided Decoding) 原理与基于 Trie 树的推理约束。
+    -   **评测指标**：格式错误率、字段级准确率与幻觉率。
+    -   **LazyLLM 实战**：训练一个结构化信息抽取模型，完成从数据准备、SFT 微调到能够稳定输出JSON 的全流程。
+-   **第17课时：Agent 能力增强 (Tools & Planning)**
     -   **工具调用数据集 (Tool Use Data)**：API 定义、参数生成、调用轨迹 (Trace) 数据构建。
     -   **规划能力数据集 (Planning Data)**：合成 ReAct, Plan-and-Solve 等模式的思考-行动轨迹。
     -   多轮对话中的状态保持与环境反馈模拟数据。
--   **第17课时：长上下文与结构化提取**
-    -   **长文本数据集 (Long Context Data)**：书籍/财报/法律文档处理，"大海捞针" (Needle in a Haystack) 合成数据。
-    -   **长窗口扩展 (Context Extension)**：RoPE Scaling (Linear/NTK/YaRN) 算法与长文本微调数据配比。
-    -   **结构化提取数据集**：构造 JSON/XML Schema 约束的指令数据，增强格式化输出能力。
 -   **第18课时：行业领域模型实战 (Industry Domain Training)**
     -   **行业数据集准备**：垂直领域（如医疗、法律、金融）的数据清洗、脱敏与知识图谱融合。
     -   **继续预训练 (CPT)**：领域知识注入的训练策略与数据配比。
