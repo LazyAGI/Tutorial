@@ -3,8 +3,7 @@ import json
 import openai
 from typing import Optional, Dict, Any
 
-# 1. 配置 Qwen API 参数 (兼容 OpenAI 格式)
-# 替换为你的阿里云 DashScope API Key
+
 client = openai.OpenAI(
     api_key="sk-your-qwen-api-key",
     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -24,13 +23,10 @@ def generate_preference_data_qwen(
                    建议设为 0.5 或 0 以保留更多数据。
     """
 
-    # 0. 预检查：如果两个回答完全一样，直接跳过，节省 Token 费用
     if response_a.strip() == response_b.strip():
         print("Skipping: Responses are identical.")
         return None
 
-    # 2. 构造裁判 Prompt (优化版)
-    # 增加 Chain-of-Thought (CoT) 引导：要求先根据多维度分析，强迫模型寻找差异
     system_message = "你是一位严格且专业的AI训练判官。即使两个回答质量接近，你也必须从逻辑严密性、排版清晰度、安全性等细节中找出优劣差异。"
     
     judge_prompt = f"""
@@ -62,7 +58,6 @@ def generate_preference_data_qwen(
     """
 
     try:
-        # 3. 调用 Qwen 模型
         response = client.chat.completions.create(
             model="qwen-max", 
             messages=[
@@ -70,24 +65,20 @@ def generate_preference_data_qwen(
                 {"role": "user", "content": judge_prompt}
             ],
             response_format={"type": "json_object"},
-            temperature=0.0  # 设置为 0 保证结果的确定性
+            temperature=0.0 
         )
 
-        # 4. 解析结果
         raw_content = response.choices[0].message.content
         result = json.loads(raw_content)
 
-        # 5. 构造标准格式
         is_a_winner = result["winner"] == "A"
         score_diff = abs(result["score_a"] - result["score_b"])
         
-        # 逻辑过滤
         if score_diff < threshold:
             print(f"Skipping: Quality difference too small ({score_diff} < {threshold})")
             print(f"Reason: {result.get('reason', 'No reason provided')}")
             return None
 
-        # 成功构造
         print(f"Success! Winner: {result['winner']} (Diff: {score_diff})")
         return {
             "prompt": prompt,
@@ -108,7 +99,6 @@ def generate_preference_data_qwen(
         print(f"Error during Qwen evaluation: {e}")
         return None
 
-# --- 使用示例 (使用了有明显差异的文本，确保能跑通) ---
 
 prompt_text = "用Python写一个Hello World"
 
@@ -118,10 +108,8 @@ resp_a = """
 print("Hello, World!")
 """
 
-#回答B：啰嗦且不仅是代码
 resp_b = "你好，这很简单。你可以用print函数。比如 print('Hello World')。希望能帮到你。"
 
-#设置阈值为 0.5，更容易通过过滤
 data = generate_preference_data_qwen(prompt_text, resp_a, resp_b, threshold=0.5)
 
 if data: print("\n--- Final Data Schema ---") 
