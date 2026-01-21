@@ -120,7 +120,7 @@ def main(techer_name, student_name, dataset_name, demo=False, sft_data_path=None
     student_model.update()
 
     # Score
-    score = caculate_score(eval_set, student_model.eval_result)
+    score = calculate_score(eval_set, student_model.eval_result)
     print("All Done. Score is: ", score)
 
 if __name__ == '__main__':
