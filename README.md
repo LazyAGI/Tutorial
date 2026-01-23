@@ -97,66 +97,82 @@
     -   **多模态指令数据集**：构造多模态 CoT 数据，交错图文 (Interleaved Image-Text) 数据处理。
     -   **LazyLLM 实战**：配置 LoRA 参数适配多模态模块，进行图文交互测试。
 
-### 第五部分：特定领域能力数据构建 (Domain-Specific Data) (4课时)
+### 第五部分：对齐数据工程与实战 (Alignment) (4课时)
+**目标**：遵循“原理-数据-实战”逻辑，掌握RLHF/GRPO核心算法、偏好数据构建、安全合规及对齐实战。
+
+-   **第15课时：对齐算法原理 (RLHF & GRPO)**
+    -   **RLHF 基础**：Reward Model (RM) 与 PPO (Proximal Policy Optimization) 算法详解。
+    -   **直接偏好优化**：DPO (Direct Preference Optimization), IPO, KTO 原理对比。
+    -   **前沿技术**：DeepSeek-R1 中的 GRPO (Group Relative Policy Optimization) 与强化推理能力。
+-   **第16课时：偏好数据 (Preference Data) 构建**
+    -   **偏好数据集构建**：构造 Chosen vs Rejected (Pairwise / Listwise) 数据格式。
+    -   标注方法：人工排序 vs 模型打分 (LLM-as-a-Judge)。
+    -   **过程监督数据集**：Process Reward Model (PRM) 的 Step-by-step 验证数据构建 (Math-Shepherd)。
+    -   **规则奖励数据集**：基于答案正确性与格式合规性的 Rule-based Reward 数据。
+-   **第17课时：模型风险、合规与伦理 (Risk, Compliance & Ethics)**
+    -   **风险图谱**：幻觉 (Hallucination)、偏见 (Bias)、毒性 (Toxicity) 与越狱 (Jailbreak) 防御。
+    -   **红队测试 (Red Teaming)**：自动化攻击提示词构建 (Attack Prompts) 与对抗样本生成。
+    -   **合规与伦理**：数据版权审查、隐私合规 (GDPR/CCPA) 与负责任的 AI (Responsible AI) 原则。
+-   **第18课时：基于 LazyLLM 的对齐全链路实战**
+    -   **RM 训练**：使用偏好数据训练奖励模型。
+    -   **RL 训练**：配置 PPO/GRPO 参数，启动强化学习训练。
+    -   **效果评估**：对比对齐前后的模型在安全性与指令遵循上的表现。
+
+
+### 第六部分：特定领域能力数据构建 (Domain-Specific Data) (6课时)
 **目标**：深入垂直领域，掌握代码、数学、Agent等高难度数据的构建，以及行业模型的全流程训练。
 
--   **第15课时：推理 (Reasoning)、代码与数学能力增强**
+-   **第19课时：推理 (Reasoning)与数学能力增强**
     -   **推理数据集 (Reasoning Data)**：构造 Chain-of-Thought (CoT) 推理路径，合成复杂逻辑数据。
     -   **数学数据集 (Math Data)**：增加推理步骤 (Step-by-step), 格式化数学公式 (LaTeX), 过程验证 (Process Verification)。
-    -   **代码数据集 (Code Data)**：GitHub 代码清洗, 单元测试生成 (Execution-based), 代码解释与补全数据构建。
     -   验证驱动的数据过滤 (利用解释器/求解器验证数据正确性)。
--   **第16课时：结构化输出与格式对齐**
+-   **第20课时：代码能力增强**
+    -   **代码数据集构建**：GitHub 仓库抓取策略，依赖解析与文件拓扑排序 (Topological Sorting) 以保持上下文逻辑。
+    -   **预训练策略**：Fill-in-the-Middle (FIM) 任务设计及其对代码补全能力的影响。
+    -   **指令微调**：构造代码数据生成，代码生成与单元测试生成 (Unit Test Generation) 数据。
+    -   **执行反馈 (Execution Feedback)**：构建基于编译器/解释器反馈的强化学习环境 (Code RL)，利用测试通过率作为 Reward。
+-   **第21课时：长上下文能力增强**
+    -   **长文本数据构建**：书籍/论文/财报的长文本拼接，跨文档上下文关联保留策略。
+    -   **合成长数据**：通过 "Needle In A Haystack" (大海捞针) 任务合成针对性训练数据，提升长窗口下的检索准确率。
+    -   **LazyLLM实战与评测**：大海捞针测试 (NIAH), LongBench 评测集与困惑度 (PPL) 的长距离衰减监控。
+-   **第22课时：结构化输出与格式对齐**
     -   **数据构建流水线**：Schema 设计 (JSON/Pydantic) -> 逆向合成 (基于 Schema 生成 JSON 再反推文本) -> 自动化校验与清洗 -> 负样本构建。
     -   **关键技术**：TypeScript 风格提示工程，语法引导解码 (Grammar-guided Decoding) 原理与基于 Trie 树的推理约束。
     -   **评测指标**：格式错误率、字段级准确率与幻觉率。
     -   **LazyLLM 实战**：训练一个结构化信息抽取模型，完成从数据准备、SFT 微调到能够稳定输出JSON 的全流程。
--   **第17课时：Agent 能力增强 (Tools & Planning)**
+-   **第23课时：Agent 能力增强 (Tools & Planning)**
     -   **工具调用数据集 (Tool Use Data)**：API 定义、参数生成、调用轨迹 (Trace) 数据构建。
     -   **规划能力数据集 (Planning Data)**：合成 ReAct, Plan-and-Solve 等模式的思考-行动轨迹。
     -   多轮对话中的状态保持与环境反馈模拟数据。
--   **第18课时：行业领域模型实战 (Industry Domain Training)**
+-   **第24课时：行业领域模型实战 (Industry Domain Training)**
     -   **行业数据集准备**：垂直领域（如医疗、法律、金融）的数据清洗、脱敏与知识图谱融合。
     -   **继续预训练 (CPT)**：领域知识注入的训练策略与数据配比。
     -   **领域指令数据集**：构建符合行业业务逻辑的 SFT 指令集。
     -   **LazyLLM 实战**：搭建“行业语料 CPT -> 业务指令 SFT”的完整训练流水线。
 
-### 第六部分：对齐数据工程与实战 (Alignment) (4课时)
-**目标**：遵循“原理-数据-实战”逻辑，掌握RLHF/GRPO核心算法、偏好数据构建、安全合规及对齐实战。
 
--   **第19课时：对齐算法原理 (RLHF & GRPO)**
-    -   **RLHF 基础**：Reward Model (RM) 与 PPO (Proximal Policy Optimization) 算法详解。
-    -   **直接偏好优化**：DPO (Direct Preference Optimization), IPO, KTO 原理对比。
-    -   **前沿技术**：DeepSeek-R1 中的 GRPO (Group Relative Policy Optimization) 与强化推理能力。
--   **第20课时：偏好数据 (Preference Data) 构建**
-    -   **偏好数据集构建**：构造 Chosen vs Rejected (Pairwise / Listwise) 数据格式。
-    -   标注方法：人工排序 vs 模型打分 (LLM-as-a-Judge)。
-    -   **过程监督数据集**：Process Reward Model (PRM) 的 Step-by-step 验证数据构建 (Math-Shepherd)。
-    -   **规则奖励数据集**：基于答案正确性与格式合规性的 Rule-based Reward 数据。
--   **第21课时：模型风险、合规与伦理 (Risk, Compliance & Ethics)**
-    -   **风险图谱**：幻觉 (Hallucination)、偏见 (Bias)、毒性 (Toxicity) 与越狱 (Jailbreak) 防御。
-    -   **红队测试 (Red Teaming)**：自动化攻击提示词构建 (Attack Prompts) 与对抗样本生成。
-    -   **合规与伦理**：数据版权审查、隐私合规 (GDPR/CCPA) 与负责任的 AI (Responsible AI) 原则。
--   **第22课时：基于 LazyLLM 的对齐全链路实战**
-    -   **RM 训练**：使用偏好数据训练奖励模型。
-    -   **RL 训练**：配置 PPO/GRPO 参数，启动强化学习训练。
-    -   **效果评估**：对比对齐前后的模型在安全性与指令遵循上的表现。
-
-### 第七部分：检索增强生成 (RAG) 数据工程 (3课时)
+### 第七部分：检索增强生成 (RAG) 数据工程 (4课时)
 **目标**：理解 RAG 核心架构，掌握从文档处理到 Embedding/Reranker 模型微调的全流程数据工程。
 
--   **第23课时：RAG 架构原理与数据处理**
+-   **第25课时：RAG 架构原理与数据处理**
     -   **核心范式**：RAG 解决幻觉与时效性问题，RAG vs Long Context 优劣分析。
     -   **架构拆解**：Retrieval (检索), Augmentation (增强), Generation (生成) 全流程。
     -   **LazyLLM 实战**：利用 Agent 进行文档的智能解析、摘要生成与元数据增强 (Metadata Enrichment) 入库。
     -   **微调必要性**：通用模型在特定领域的局限性，引出 Embedding 与 Reranker 微调的价值。
--   **第24课时：Embedding 模型微调与实战**
+-   **第26课时：Embedding 模型微调与实战**
     -   **核心原理**：Bi-encoder 架构，对比学习 (Contrastive Learning) 损失函数 (InfoNCE)。
     -   **Embedding 数据集构建**：正负样本对挖掘，难负样本 (Hard Negatives) 的重要性与挖掘策略。
     -   **LazyLLM 实战**：构建文本对数据，微调 Embedding 模型并评估 MTEB 指标。
--   **第25课时：Reranker 模型微调与实战**
+-   **第27课时：Reranker 模型微调与实战**
     -   **核心原理**：Cross-encoder 架构，相关性打分机制与计算开销分析。
     -   **Reranker 数据集构建**：利用 LLM 蒸馏生成排序数据，Listwise vs Pairwise 数据格式。
     -   **LazyLLM 实战**：训练 Reranker 模型，并搭建 RAG 流水线对比检索效果。
+-   **第28课时：Agentic RAG 能力增强**
+    -   **从 RAG 到 Agentic RAG**：引入 Planning 与 Reflection 机制解决复杂多跳问题 (Multi-hop QA)。
+    -   **数据构建**：构造 Self-RAG (自省式 RAG) 数据，包含检索意图识别、文档相关性反思 (IsRel) 与回复生成质量打分 (IsSup)。
+    -   **工具化检索**：将搜索引擎/向量库封装为 Tool，训练模型自主决定 "何时检索" (Adaptive Retrieval) 及 "如何改写查询" (Query Rewriting)。
+    -   **Graph RAG**：利用知识图谱增强检索数据，捕捉跨文档的实体关系与全局摘要能力。
+
 
 ### 课程总结
 -   **构建企业级 LLM 数据飞轮 (Data Flywheel)** —— 数据闭环的重要性。
