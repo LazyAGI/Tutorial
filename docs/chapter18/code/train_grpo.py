@@ -6,25 +6,29 @@ import re
 
 # === 配置路径与模型 ===
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"  # 演示建议用小模型
-OUTPUT_DIR = "/home/mnt/huangchongjin/LazyLLM/GRPO/qwen-grpo-output"
-DATASET_PATH = "/home/mnt/huangchongjin/LazyLLM/GRPO/dataset"
+OUTPUT_DIR = "/GRPO/qwen-grpo-output"
+DATASET_PATH = "/GRPO/dataset"
 
 # === 1. 加载数据 ===
 def get_gsm8k_dataset():
     """加载 GSM8K 数据集用于 GRPO 训练"""
-    # 直接加载已下载的本地数据集
-    dataset = load_dataset(
-        "arrow", 
-        data_files={
-            "train": f"{DATASET_PATH}/openai___gsm8k/main/0.0.0/cc7b047b6e5bb11b4f1af84efc572db110a51b3c/gsm8k-train.arrow"
-        }, 
-        split="train"
-    )
+    try:
+        # 优先从HuggingFace Hub加载
+        dataset = load_dataset("gsm8k", "main", split="train[:30%]")  
+    except Exception as e:
+        print(f"从HF Hub加载失败: {e}")
+        # 降级到本地加载
+        try:
+            dataset = load_dataset(
+                "arrow",
+                data_files="/path/to/gsm8k-train.arrow",
+                split="train"
+            )
+        except Exception as e2:
+            print(f"本地加载也失败: {e2}")
+            raise e2
     
-    # 只保留前1%用于演示（约75个样本）
-    dataset = dataset.select(range(len(dataset) // 100))
-    
-    # GRPO 训练主要需要 Prompt，映射为标准格式
+    # 数据预处理
     dataset = dataset.map(
         lambda x: {"prompt": x["question"]}, 
         remove_columns=["question", "answer"]

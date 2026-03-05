@@ -94,17 +94,20 @@ nav:
         - 第12课时：通用指令数据构建、合成与蒸馏: chapter12/12.md
         - 第13课时：基于 LazyLLM 的微调实战: chapter13/13.md
         - 第14课时：多模态指令微调与实战: chapter14/14.md
-    - 第五部分：特定领域数据:
-        - 第15课时：推理、代码与数学能力增强: chapter15/15.md
-        - 第16课时：结构化输出与格式对齐: chapter17/17.md
-        - 第17课时：Agent 能力增强 (Tools & Planning): chapter16/16.md
-        - 第18课时：行业领域模型实战: chapter18/18.md
-    - 第六部分：对齐数据工程:
-        - 第19课时：对齐算法原理 (RLHF & GRPO): chapter19/19.md
-        - 第20课时：偏好数据构建: chapter20/20.md
-        - 第21课时：模型风险、合规与伦理: chapter21/21.md
-        - 第22课时：基于 LazyLLM 的对齐实战: chapter22/22.md
+    - 第五部分：对齐数据工程:
+        - 第15课时：对齐算法原理 (RLHF & GRPO): chapter15/15.md
+        - 第16课时：偏好数据构建: chapter16/16.md
+        - 第17课时：模型风险、合规与伦理: chapter17/17.md
+        - 第18课时：基于 LazyLLM 的对齐实战: chapter18/18.md
+    - 第六部分：特定能力数据:
+        - 第19课时：推理与数学能力增强: chapter19/19.md
+        - 第20课时：代码能力增强: chapter20/20.md
+        - 第21课时：长上下文能力增强: chapter21/21.md
+        - 第22课时：结构化输出与格式对齐: chapter22/22.md
+        - 第23课时：Agent 能力增强 (Tools & Planning): chapter23/23.md
+        - 第24课时：行业领域模型实战: chapter24/24.md
     - 第七部分：RAG 数据工程:
-        - 第23课时：RAG 架构原理与数据处理: chapter23/23.md
-        - 第24课时：Embedding 模型微调与实战: chapter24/24.md
-        - 第25课时：Reranker 模型微调与实战: chapter25/25.md
+        - 第25课时：RAG 架构原理与数据处理: chapter25/25.md
+        - 第26课时：Embedding 模型微调与实战: chapter26/26.md
+        - 第27课时：Reranker 模型微调与实战: chapter27/27.md
+        - 第28课时：Agentict RAG能力增强: chapter28/28.md
