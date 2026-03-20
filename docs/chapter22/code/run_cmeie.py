@@ -45,7 +45,11 @@ def _format_cmeie_to_sft_single(item: Dict) -> Optional[Dict]:
         return None
     spo = raw_spo_list[0]
     obj_data = spo.get('object', {})
-    obj_value = obj_data.get('@value', '') if isinstance(obj_data, dict) else str(obj_data)
+    obj_value = (
+        obj_data.get('@value', '')
+        if isinstance(obj_data, dict)
+        else str(obj_data)
+    )
     sub = spo.get('subject', '').strip()
     pre = spo.get('predicate', '').strip()
     obj = obj_value.strip()
@@ -83,7 +87,11 @@ def prepare_dataset():
         print('训练集与评测集已存在，跳过生成')
         return
     print('正在从 HuggingFace 加载 CMeIE 数据集...')
-    dataset = load_dataset('Aunderline/CMeIE', split='train', trust_remote_code=True)
+    dataset = load_dataset(
+        'Aunderline/CMeIE',
+        split='train',
+        trust_remote_code=True,
+    )
     raw_list = list(dataset)
     with open(RAW_JSONL_PATH, 'w', encoding='utf-8') as f:
         for entry in raw_list:
@@ -135,7 +143,10 @@ def load_eval_samples(path: str) -> List[Dict]:
 def build_eval_prompts(samples: List[Dict]) -> List[str]:
     """根据 samples 构建评测用 prompt 列表。"""
     return [
-        PROMPT_TEMPLATE.format(instruction=s.get('instruction', INSTRUCTION), input=s.get('input', ''))
+        PROMPT_TEMPLATE.format(
+            instruction=s.get('instruction', INSTRUCTION),
+            input=s.get('input', ''),
+        )
         for s in samples
     ]
 
@@ -145,19 +156,31 @@ def _parse_triple(s: Optional[str]) -> Optional[Dict[str, str]]:
     if not s or not str(s).strip():
         return None
     raw = str(s).strip()
-    m = re.search(r'\{[^{}]*"subject"[^{}]*"predicate"[^{}]*"object"[^{}]*\}', raw, re.DOTALL)
+    m = re.search(
+        r'\{[^{}]*"subject"[^{}]*"predicate"[^{}]*"object"[^{}]*\}',
+        raw,
+        re.DOTALL,
+    )
     if m:
         raw = m.group(0)
     try:
         out = json.loads(raw)
-        if isinstance(out, dict) and all(k in out for k in ('subject', 'predicate', 'object')):
-            return {k: str(out.get(k, '')).strip() for k in ('subject', 'predicate', 'object')}
+        if isinstance(out, dict) and all(
+            k in out for k in ('subject', 'predicate', 'object')
+        ):
+            return {
+                k: str(out.get(k, '')).strip()
+                for k in ('subject', 'predicate', 'object')
+            }
     except json.JSONDecodeError:
         pass
     return None
 
 
-def _compute_metrics_from_preds(samples: List[Dict], preds: List[str]) -> Dict[str, float]:
+def _compute_metrics_from_preds(
+    samples: List[Dict],
+    preds: List[str],
+) -> Dict[str, float]:
     """根据 samples 的 output 与 preds 计算各项指标。"""
     n = len(samples)
     if not n or not preds or len(preds) != n:
@@ -201,17 +224,26 @@ def _compute_metrics_from_preds(samples: List[Dict], preds: List[str]) -> Dict[s
         'empty_pred_rate': empty_count / n if n else 0.0,
         'strict_precision': tp / (tp + fp) if (tp + fp) > 0 else 0.0,
         'strict_recall': tp / (tp + fn) if (tp + fn) > 0 else 0.0,
-        'strict_f1': 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0.0,
+        'strict_f1': (
+            2 * tp / (2 * tp + fp + fn)
+            if (2 * tp + fp + fn) > 0
+            else 0.0
+        ),
     }
 
 
 def _print_metrics(label: str, m: Dict[str, float]):
     if not m:
         return
-    print(f'[{label}] exact_match={m.get("exact_match", 0):.4f} slot_accuracy={m.get("slot_accuracy", 0):.4f} '
-          f'json_compliance={m.get("json_compliance", 0):.4f} empty_pred_rate={m.get("empty_pred_rate", 0):.4f} '
-          f'strict_precision={m.get("strict_precision", 0):.4f} strict_recall={m.get("strict_recall", 0):.4f} '
-          f'strict_f1={m.get("strict_f1", 0):.4f}')
+    print(
+        f'[{label}] exact_match={m.get("exact_match", 0):.4f} '
+        f'slot_accuracy={m.get("slot_accuracy", 0):.4f} '
+        f'json_compliance={m.get("json_compliance", 0):.4f} '
+        f'empty_pred_rate={m.get("empty_pred_rate", 0):.4f} '
+        f'strict_precision={m.get("strict_precision", 0):.4f} '
+        f'strict_recall={m.get("strict_recall", 0):.4f} '
+        f'strict_f1={m.get("strict_f1", 0):.4f}'
+    )
 
 
 def _norm_preds(raw: Any) -> List[str]:
@@ -257,8 +289,16 @@ def default_cmeie_eval(
                     'id': i + 1,
                     'input': s.get('input', ''),
                     'gold': s.get('output', ''),
-                    'base_pred': base_preds[i] if base_preds and i < len(base_preds) else '',
-                    'ckpt_pred': ckpt_preds[i] if ckpt_preds and i < len(ckpt_preds) else '',
+                    'base_pred': (
+                        base_preds[i]
+                        if base_preds and i < len(base_preds)
+                        else ''
+                    ),
+                    'ckpt_pred': (
+                        ckpt_preds[i]
+                        if ckpt_preds and i < len(ckpt_preds)
+                        else ''
+                    ),
                 }
                 f.write(json.dumps(rec, ensure_ascii=False) + '\n')
         print(f'评测结果已保存至: {save_dir}')
@@ -295,11 +335,13 @@ def main(
     eval_prompts = build_eval_prompts(samples)
 
     if mode == 'infer':
-        model = lazyllm.TrainableModule(model_path).deploy_method((deploy.vllm, {
-            'tensor_parallel_size': 1,
-            'max_num_seqs': 32,
-            'max_model_len': 512,
-        }))
+        model = lazyllm.TrainableModule(model_path).deploy_method(
+            (deploy.vllm, {
+                'tensor_parallel_size': 1,
+                'max_num_seqs': 32,
+                'max_model_len': 512,
+            })
+        )
         model.evalset(eval_prompts)
         model.start()
         model.eval()
@@ -312,11 +354,13 @@ def main(
         target_path = _gen_ckpt_dir()
         base_preds = None
         if mode == 'full':
-            base_model = lazyllm.TrainableModule(model_path).deploy_method((deploy.vllm, {
-                'tensor_parallel_size': 1,
-                'max_num_seqs': 32,
-                'max_model_len': 512,
-            }))
+            base_model = lazyllm.TrainableModule(model_path).deploy_method(
+                (deploy.vllm, {
+                    'tensor_parallel_size': 1,
+                    'max_num_seqs': 32,
+                    'max_model_len': 512,
+                })
+            )
             base_model.evalset(eval_prompts)
             base_model.start()
             base_model.eval()
@@ -352,12 +396,19 @@ def main(
         ckpt_preds = _norm_preds(getattr(model, 'eval_result', None))
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
         save_dir = os.path.join(RESULTS_DIR, ts)
-        default_cmeie_eval(samples, base_preds, ckpt_preds if ckpt_preds else None, save_dir)
+        default_cmeie_eval(
+            samples,
+            base_preds,
+            ckpt_preds if ckpt_preds else None,
+            save_dir,
+        )
         print(f'训练输出目录: {target_path}')
         return
 
     if mode == 'eval':
-        eval_res_path = eval_res_path or os.path.join(RESULTS_DIR, 'eval_cmeie_results.jsonl')
+        eval_res_path = eval_res_path or os.path.join(
+            RESULTS_DIR, 'eval_cmeie_results.jsonl'
+        )
         if not os.path.exists(eval_res_path):
             print(f'结果文件不存在: {eval_res_path}')
             return
@@ -370,7 +421,10 @@ def main(
                 if not line:
                     continue
                 rec = json.loads(line)
-                samples_from_file.append({'input': rec.get('input', ''), 'output': rec.get('gold', '')})
+                samples_from_file.append({
+                    'input': rec.get('input', ''),
+                    'output': rec.get('gold', ''),
+                })
                 base_preds.append(rec.get('base_pred', ''))
                 ckpt_preds.append(rec.get('ckpt_pred', ''))
         default_cmeie_eval(samples_from_file, base_preds, ckpt_preds, None)
@@ -378,17 +432,47 @@ def main(
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='CMeIE 医疗信息抽取：数据准备、训练、推理、评测')
-    parser.add_argument('--model_path', type=str,
-                        default='/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/Qwen2.5-0.5B-Instruct',
-                        help='基座模型路径')
-    parser.add_argument('--mode', type=str, default='full',
-                        choices=['prepare', 'infer', 'train', 'eval', 'full'],
-                        help='prepare=仅数据准备; infer=仅基座推理评测; train=训练+微调模型评测; '
-                             'eval=从结果文件重算指标; full=prepare+基座评测+训练+微调评测')
-    parser.add_argument('--eval_data_path', type=str, default=None, help='评测集 JSONL 路径')
-    parser.add_argument('--train_data_path', type=str, default=None, help='训练集 JSON 路径')
-    parser.add_argument('--eval_res_path', type=str, default=None, help='eval 模式下的结果 JSONL 路径')
+    parser = argparse.ArgumentParser(
+        description='CMeIE 医疗信息抽取：数据准备、训练、推理、评测'
+    )
+    parser.add_argument(
+        '--model_path',
+        type=str,
+        default=(
+            '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/'
+            'Qwen2.5-0.5B-Instruct'
+        ),
+        help='基座模型路径',
+    )
+    parser.add_argument(
+        '--mode',
+        type=str,
+        default='full',
+        choices=['prepare', 'infer', 'train', 'eval', 'full'],
+        help=(
+            'prepare=仅数据准备; infer=仅基座推理评测; '
+            'train=训练+微调模型评测; eval=从结果文件重算指标; '
+            'full=prepare+基座评测+训练+微调评测'
+        ),
+    )
+    parser.add_argument(
+        '--eval_data_path',
+        type=str,
+        default=None,
+        help='评测集 JSONL 路径',
+    )
+    parser.add_argument(
+        '--train_data_path',
+        type=str,
+        default=None,
+        help='训练集 JSON 路径',
+    )
+    parser.add_argument(
+        '--eval_res_path',
+        type=str,
+        default=None,
+        help='eval 模式下的结果 JSONL 路径',
+    )
     args = parser.parse_args()
     main(
         model_path=args.model_path,
