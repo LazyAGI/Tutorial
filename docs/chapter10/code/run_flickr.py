@@ -24,7 +24,7 @@ from transformers import (
     Qwen2_5_VLForConditionalGeneration,
 )
 import lazyllm
-from lazyllm import finetune, launchers, deploy, TrainableModule
+from lazyllm import finetune, launchers
 from lazyllm.tools.data.pipelines.pt_img_ppl import build_mm_pt_pipeline
 
 
@@ -42,7 +42,9 @@ TRAIN_SAMPLES = 3000
 EVAL_SAMPLES = 200
 SOURCE_LOAD_LIMIT = 4000
 
-BASE_MODEL_PATH = '/mnt/lustre/share_data/lazyllm/models/Qwen2.5-VL-3B-Instruct'
+BASE_MODEL_PATH = (
+    '/mnt/lustre/share_data/lazyllm/models/Qwen2.5-VL-3B-Instruct'
+)
 MAX_NEW_TOKENS = 128
 GEN_BATCH_SIZE = 8
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -66,7 +68,11 @@ def _load_flickr_raw(limit):
         return records
 
     print(f'正在加载 Flickr8k，取前 {limit} 条...')
-    dataset = load_dataset('clip-benchmark/wds_flickr8k', split='train', trust_remote_code=True)
+    dataset = load_dataset(
+        'clip-benchmark/wds_flickr8k',
+        split='train',
+        trust_remote_code=True,
+    )
     os.makedirs(IMAGES_DIR, exist_ok=True)
     records = []
     for idx, item in enumerate(dataset):
@@ -75,7 +81,12 @@ def _load_flickr_raw(limit):
         img_obj = item.get('jpg') or item.get('image') or item.get('png')
         if img_obj is None:
             continue
-        captions_raw = item.get('txt') or item.get('caption') or item.get('captions') or ''
+        captions_raw = (
+            item.get('txt')
+            or item.get('caption')
+            or item.get('captions')
+            or ''
+        )
         if isinstance(captions_raw, bytes):
             captions_raw = captions_raw.decode('utf-8', errors='ignore')
         captions = [c.strip() for c in captions_raw.split('\n') if c.strip()]
@@ -103,7 +114,7 @@ def _load_flickr_raw(limit):
 
 
 def _run_mm_pipeline(raw_records):
-    """对原始记录运行 build_mm_pt_pipeline，过滤无效/低质量图像，保存结果到 CLEANED_JSONL_PATH。"""
+    """运行 build_mm_pt_pipeline 并保存到 CLEANED_JSONL_PATH。"""
     # print(f'\n正在启动基座 VLM（vllm）用于图文相关性过滤...')
     # vlm = TrainableModule(BASE_MODEL_PATH).deploy_method((deploy.vllm, {
     #     'tensor_parallel_size': 1,
@@ -123,7 +134,11 @@ def _run_mm_pipeline(raw_records):
         use_dedup=True,
     )
     results = ppl(raw_records)
-    results = results if isinstance(results, list) else ([] if not results else [results])
+    results = (
+        results
+        if isinstance(results, list)
+        else ([] if not results else [results])
+    )
     print(f'pipeline 完成: 输入 {len(raw_records)} 条 → 有效 {len(results)} 条'
           f'（过滤 {len(raw_records) - len(results)} 条）')
 
@@ -171,7 +186,10 @@ def prepare_dataset():
 
     if not os.path.exists(TRAIN_JSON_PATH):
         train_data = [
-            {'image': _norm_image_path(rec.get('image_path')), 'text': rec['text']}
+            {
+                'image': _norm_image_path(rec.get('image_path')),
+                'text': rec['text'],
+            }
             for rec in train_recs
         ]
         with open(TRAIN_JSON_PATH, 'w', encoding='utf-8') as f:
@@ -179,7 +197,10 @@ def prepare_dataset():
         print(f'训练集已保存：{TRAIN_JSON_PATH}，共 {len(train_data)} 条')
 
     eval_samples = [
-        {'image_path': _norm_image_path(rec.get('image_path')), 'caption': (rec.get('captions') or [rec['text']])[0]}
+        {
+            'image_path': _norm_image_path(rec.get('image_path')),
+            'caption': (rec.get('captions') or [rec['text']])[0],
+        }
         for rec in eval_recs
     ]
     with open(EVAL_JSONL_PATH, 'w', encoding='utf-8') as f:
@@ -206,7 +227,9 @@ def prepare_dataset():
 
 def run_train():
     timestamp = datetime.now().strftime('%y%m%d%H%M%S')
-    target_path = os.path.join(PRETRAIN_CKPT_DIR, f'qwen2_5vl_3b_flickr_{timestamp}')
+    target_path = os.path.join(
+        PRETRAIN_CKPT_DIR, f'qwen2_5vl_3b_flickr_{timestamp}'
+    )
     os.makedirs(PRETRAIN_CKPT_DIR, exist_ok=True)
 
     model = lazyllm.TrainableModule(BASE_MODEL_PATH, target_path=target_path)
@@ -290,7 +313,10 @@ def load_eval_samples(path: str) -> List[Dict]:
 
 
 def load_vl_model(model_path: str):
-    processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+    )
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16 if DEVICE == 'cuda' else torch.float32,
@@ -306,11 +332,26 @@ def _generate_caption(model, processor, image_path) -> str:
         {'type': 'image', 'image': image},
         {'type': 'text', 'text': 'Describe the image in one sentence.'},
     ]}]
-    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = processor(text=[text], images=[image], return_tensors='pt').to(DEVICE)
+    text = processor.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+    inputs = processor(
+        text=[text],
+        images=[image],
+        return_tensors='pt',
+    ).to(DEVICE)
     with torch.no_grad():
-        out = model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS, do_sample=False)
-    pred = processor.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
+        out = model.generate(
+            **inputs,
+            max_new_tokens=MAX_NEW_TOKENS,
+            do_sample=False,
+        )
+    pred = processor.decode(
+        out[0][inputs.input_ids.shape[1]:],
+        skip_special_tokens=True,
+    ).strip()
     return pred
 
 
@@ -322,8 +363,16 @@ def _get_image_embedding(model, processor, image_path) -> torch.Tensor:
         {'type': 'image', 'image': image},
         {'type': 'text', 'text': '.'},
     ]}]
-    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = processor(text=[text], images=[image], return_tensors='pt').to(DEVICE)
+    text = processor.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+    inputs = processor(
+        text=[text],
+        images=[image],
+        return_tensors='pt',
+    ).to(DEVICE)
     with torch.no_grad():
         outputs = model(**inputs, output_hidden_states=True)
         hidden = outputs.hidden_states[-1][0]
@@ -411,7 +460,11 @@ def _recall_at_k(
     sim = img_mat @ txt_mat.T
     results = {}
     for k in k_list:
-        hit = sum(1 for i in range(n) if i in sim[i].topk(min(k, n)).indices.tolist())
+        hit = sum(
+            1
+            for i in range(n)
+            if i in sim[i].topk(min(k, n)).indices.tolist()
+        )
         results[f'R@{k}'] = hit / n
     return results
 
@@ -420,7 +473,9 @@ def _recall_at_k(
 # 评测主流程
 # ──────────────────────────────────────────────
 
-def run_eval_for_model(model_path: str, label: str, samples: List[Dict]) -> Dict:
+def run_eval_for_model(
+    model_path: str, label: str, samples: List[Dict]
+) -> Dict:
     print(f'\n[{label}] 加载模型: {model_path}')
     model, processor = load_vl_model(model_path)
 
@@ -440,8 +495,11 @@ def run_eval_for_model(model_path: str, label: str, samples: List[Dict]) -> Dict
     avg_clip = sum(clip_scores) / len(clip_scores) if clip_scores else 0.0
     recall = _recall_at_k(img_embs, txt_embs)
 
-    print(f'[{label}] CIDEr={cider:.4f}  CLIP Score={avg_clip:.4f}  '
-          f'R@1={recall["R@1"]:.4f}  R@5={recall["R@5"]:.4f}  R@10={recall["R@10"]:.4f}')
+    print(
+        f'[{label}] CIDEr={cider:.4f}  CLIP Score={avg_clip:.4f}  '
+        f'R@1={recall["R@1"]:.4f}  R@5={recall["R@5"]:.4f}  '
+        f'R@10={recall["R@10"]:.4f}'
+    )
 
     del model
     if DEVICE == 'cuda':
@@ -525,12 +583,18 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
     print('Flickr8k 多模态预训练评测（image → caption）')
     print('=' * 60)
     b = base_metrics
-    print(f'基座模型   CIDEr={b["cider"]:.4f}  CLIP={b["clip_score"]:.4f}'
-          f'  R@1={b["recall"]["R@1"]:.4f}  R@5={b["recall"]["R@5"]:.4f}  R@10={b["recall"]["R@10"]:.4f}')
+    print(
+        f'基座模型   CIDEr={b["cider"]:.4f}  CLIP={b["clip_score"]:.4f}'
+        f'  R@1={b["recall"]["R@1"]:.4f}  R@5={b["recall"]["R@5"]:.4f}'
+        f'  R@10={b["recall"]["R@10"]:.4f}'
+    )
     if pt_metrics:
         p = pt_metrics
-        print(f'预训练模型 CIDEr={p["cider"]:.4f}  CLIP={p["clip_score"]:.4f}'
-              f'  R@1={p["recall"]["R@1"]:.4f}  R@5={p["recall"]["R@5"]:.4f}  R@10={p["recall"]["R@10"]:.4f}')
+        print(
+            f'预训练模型 CIDEr={p["cider"]:.4f}  CLIP={p["clip_score"]:.4f}'
+            f'  R@1={p["recall"]["R@1"]:.4f}  R@5={p["recall"]["R@5"]:.4f}'
+            f'  R@10={p["recall"]["R@10"]:.4f}'
+        )
     return run_dir
 
 
@@ -539,12 +603,22 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
 # ──────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description='Flickr8k 多模态预训练：数据准备、训练、评测一体化')
-    parser.add_argument('--mode', type=str, default='full',
-                        choices=['prepare', 'train', 'eval', 'full'],
-                        help='prepare=仅准备数据; train=准备+训练; eval=仅评测; full=准备+训练+评测')
-    parser.add_argument('--pt_model_path', type=str, default=None,
-                        help='预训练模型目录（eval/full 时使用；full 未指定则用本次训练 ckpt）')
+    parser = argparse.ArgumentParser(
+        description='Flickr8k 多模态预训练：数据准备、训练、评测一体化'
+    )
+    parser.add_argument(
+        '--mode',
+        type=str,
+        default='full',
+        choices=['prepare', 'train', 'eval', 'full'],
+        help='prepare=仅准备数据; train=准备+训练; eval=仅评测; full=准备+训练+评测',
+    )
+    parser.add_argument(
+        '--pt_model_path',
+        type=str,
+        default=None,
+        help='预训练模型目录（eval/full 时使用；full 未指定则用本次训练 ckpt）',
+    )
     args = parser.parse_args()
 
     if args.mode == 'prepare':
@@ -573,7 +647,8 @@ def main():
 # 使用示例：
 # 1. 仅准备数据：     python run_flickr.py --mode=prepare
 # 2. 准备 + 训练：     python run_flickr.py --mode=train
-# 3. 仅评测：         python run_flickr.py --mode=eval [--pt_model_path=path/to/lazyllm_merge]
+# 3. 仅评测：         python run_flickr.py --mode=eval
+#                    [--pt_model_path=path/to/lazyllm_merge]
 # 4. 一步到位：       python run_flickr.py --mode=full
 if __name__ == '__main__':
     main()
