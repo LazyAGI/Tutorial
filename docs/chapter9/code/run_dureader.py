@@ -31,7 +31,9 @@ SAMPLE_SEED = 42
 PREFIX_RATIO = 0.6
 SENTENCE_END_CHARS = '。！？；\n'
 
-BASE_MODEL_PATH = '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/Qwen2.5-0.5B-Instruct'
+BASE_MODEL_PATH = (
+    '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/Qwen2.5-0.5B-Instruct'
+)
 MAX_EVAL_SAMPLES = None
 MAX_NEW_TOKENS = 256
 GEN_BATCH_SIZE = 32
@@ -61,7 +63,7 @@ def _get_context(item):
 def _split_at_sentence_boundary(text, target_ratio=0.5):
     n = len(text)
     if not n or target_ratio <= 0 or target_ratio >= 1:
-        return text[: n // 2], text[n // 2 :]
+        return text[:n // 2], text[n // 2:]
     target_pos = int(n * target_ratio)
     pattern = re.compile(f'[{re.escape(SENTENCE_END_CHARS)}]')
     matches = list(pattern.finditer(text))
@@ -91,7 +93,8 @@ def prepare_dataset():
 
     print('正在下载 DuReader robust 训练集（luozhouyang/dureader, robust）...')
     try:
-        dataset = load_dataset('luozhouyang/dureader', 'robust', trust_remote_code=True)
+        dataset = load_dataset(
+            'luozhouyang/dureader', 'robust', trust_remote_code=True)
     except Exception as e:
         print(f'下载失败: {e}')
         return
@@ -101,12 +104,17 @@ def prepare_dataset():
         print('=== 原始数据（第 1 条）===')
         for k, v in first.items():
             v_str = str(v)
-            print(f'  {k}: {v_str[:300]}{"..." if len(v_str) > 300 else ""}')
+            suf = '...' if len(v_str) > 300 else ''
+            print(f'  {k}: {v_str[:300]}{suf}')
         print()
 
     seen = set()
     all_contexts = []
-    train_split = dataset.get('train') or dataset.get('validation') or list(dataset.values())[0]
+    train_split = (
+        dataset.get('train')
+        or dataset.get('validation')
+        or list(dataset.values())[0]
+    )
     for item in train_split:
         context = _get_context(item)
         if context and context not in seen:
@@ -117,16 +125,21 @@ def prepare_dataset():
     n_eval = min(EVAL_SAMPLES, len(all_contexts) - n_train)
     train_contexts = all_contexts[:n_train]
     eval_contexts = all_contexts[:n_eval]
-    
 
     if not os.path.exists(TRAIN_JSON_PATH):
         with open(TRAIN_JSON_PATH, 'w', encoding='utf-8') as f:
-            json.dump([{'text': c} for c in train_contexts], f, ensure_ascii=False, indent=2)
+            json.dump(
+                [{'text': c} for c in train_contexts],
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
         print(f'预训练集已保存：{TRAIN_JSON_PATH}，共 {len(train_contexts)} 条')
 
     eval_samples = []
     for ctx in eval_contexts:
-        prefix, continuation = _split_at_sentence_boundary(ctx, target_ratio=PREFIX_RATIO)
+        prefix, continuation = _split_at_sentence_boundary(
+            ctx, target_ratio=PREFIX_RATIO)
         if not prefix or not continuation:
             prefix = ctx[:len(ctx) // 2]
             continuation = ctx[len(ctx) // 2:]
@@ -140,18 +153,22 @@ def prepare_dataset():
     train_sample = {'text': train_contexts[0]} if train_contexts else {}
     for k, v in train_sample.items():
         v_str = str(v)
-        print(f'  {k}: {v_str[:400]}{"..." if len(v_str) > 400 else ""}')
+        suf = '...' if len(v_str) > 400 else ''
+        print(f'  {k}: {v_str[:400]}{suf}')
     print('\n=== 处理后的评测集（第 1 条）===')
     if eval_samples:
         rec = eval_samples[0]
-        print(f'  prefix: {rec["prefix"][:300]}{"..." if len(rec["prefix"]) > 300 else ""}')
-        print(f'  continuation: {rec["continuation"][:300]}{"..." if len(rec["continuation"]) > 300 else ""}')
+        pf, ct = rec['prefix'], rec['continuation']
+        sp, sc = '...' if len(pf) > 300 else '', '...' if len(ct) > 300 else ''
+        print(f'  prefix: {pf[:300]}{sp}')
+        print(f'  continuation: {ct[:300]}{sc}')
     print()
 
 
 def run_train():
     timestamp = datetime.now().strftime('%y%m%d%H%M%S')
-    target_path = os.path.join(PRETRAIN_CKPT_DIR, f'qwen2_5_0_5b_dureader_{timestamp}')
+    target_path = os.path.join(
+        PRETRAIN_CKPT_DIR, f'qwen2_5_0_5b_dureader_{timestamp}')
     os.makedirs(PRETRAIN_CKPT_DIR, exist_ok=True)
 
     model = lazyllm.TrainableModule(BASE_MODEL_PATH, target_path=target_path)
@@ -225,7 +242,8 @@ def load_eval_samples(path: str, max_samples: int = None) -> List[Dict]:
 
 
 def load_model_and_tokenizer(model_path: str):
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_path, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16 if DEVICE == 'cuda' else torch.float32,
@@ -234,7 +252,9 @@ def load_model_and_tokenizer(model_path: str):
     return model, tokenizer
 
 
-def compute_ppl(model, tokenizer, samples: List[Dict]) -> Tuple[float, float, List[float], List[float]]:
+def compute_ppl(
+    model, tokenizer, samples: List[Dict]
+) -> Tuple[float, float, List[float], List[float]]:
     ppl_list = []
     loss_list = []
     for item in tqdm(samples, desc='PPL/loss', unit='条'):
@@ -273,7 +293,9 @@ def compute_ppl(model, tokenizer, samples: List[Dict]) -> Tuple[float, float, Li
 def _bleu_simple(ref: str, pred: str) -> float:
     def _ngrams(s, n):
         s = ''.join(s.split())
-        return [s[i:i + n] for i in range(len(s) - n + 1)] if len(s) >= n else []
+        if len(s) < n:
+            return []
+        return [s[i:i + n] for i in range(len(s) - n + 1)]
     r, p = ''.join(ref.split()), ''.join(pred.split())
     if not r or not p:
         return 0.0
@@ -289,7 +311,9 @@ def _bleu_simple(ref: str, pred: str) -> float:
     return 2 * prec * rec / (prec + rec)
 
 
-def run_generation(model, tokenizer, samples: List[Dict]) -> Tuple[float, List[Dict]]:
+def run_generation(
+    model, tokenizer, samples: List[Dict]
+) -> Tuple[float, List[Dict]]:
     results = []
     gen_config = GenerationConfig(
         max_new_tokens=MAX_NEW_TOKENS,
@@ -299,7 +323,11 @@ def run_generation(model, tokenizer, samples: List[Dict]) -> Tuple[float, List[D
         repetition_penalty=GEN_REPETITION_PENALTY,
         pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
     )
-    for start in tqdm(range(0, len(samples), GEN_BATCH_SIZE), desc='生成', unit='batch'):
+    for start in tqdm(
+        range(0, len(samples), GEN_BATCH_SIZE),
+        desc='生成',
+        unit='batch',
+    ):
         batch_items = samples[start:start + GEN_BATCH_SIZE]
         prefixes = [item['prefix'] for item in batch_items]
         prefix_lens = []
@@ -333,16 +361,21 @@ def run_generation(model, tokenizer, samples: List[Dict]) -> Tuple[float, List[D
                 'continuation_pred': pred,
                 'bleu': score,
             })
-    avg_bleu = sum(r['bleu'] for r in results) / len(results) if results else 0.0
+    avg_bleu = (
+        sum(r['bleu'] for r in results) / len(results) if results else 0.0
+    )
     return avg_bleu, results
 
 
-def run_eval_for_model(model_path: str, label: str, samples: List[Dict]) -> Dict:
+def run_eval_for_model(
+    model_path: str, label: str, samples: List[Dict]
+) -> Dict:
     print(f'\n[{label}] 加载模型: {model_path}')
     model, tokenizer = load_model_and_tokenizer(model_path)
 
     print(f'[{label}] 计算 PPL 与交叉熵损失 ...')
-    avg_ppl, avg_loss, ppl_list, loss_list = compute_ppl(model, tokenizer, samples)
+    avg_ppl, avg_loss, ppl_list, loss_list = compute_ppl(
+        model, tokenizer, samples)
     print(f'[{label}] 平均 PPL: {avg_ppl:.4f}  平均 loss: {avg_loss:.4f}')
 
     print(f'[{label}] 生成续写并计算 BLEU ...')
@@ -397,28 +430,42 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
 
     metrics = {
         'num_samples': len(samples),
-        'base': {'ppl': base_metrics['ppl'], 'loss': base_metrics['loss'], 'bleu': base_metrics['bleu']},
-        'pt': {'ppl': pt_metrics['ppl'], 'loss': pt_metrics['loss'], 'bleu': pt_metrics['bleu']} if pt_metrics else None,
+        'base': {
+            'ppl': base_metrics['ppl'],
+            'loss': base_metrics['loss'],
+            'bleu': base_metrics['bleu'],
+        },
+        'pt': (
+            {
+                'ppl': pt_metrics['ppl'],
+                'loss': pt_metrics['loss'],
+                'bleu': pt_metrics['bleu'],
+            }
+            if pt_metrics
+            else None
+        ),
     }
     with open(metrics_path, 'w', encoding='utf-8') as f:
         json.dump(metrics, f, ensure_ascii=False, indent=2)
 
     with open(results_path, 'w', encoding='utf-8') as f:
         for i in range(len(samples)):
+            bg = base_metrics['gen_results'][i]
             rec = {
                 'id': i + 1,
                 'prefix_len': len(samples[i]['prefix']),
                 'continuation_len': len(samples[i]['continuation']),
                 'base_ppl': base_metrics['ppl_per_sample'][i],
                 'base_loss': base_metrics['loss_per_sample'][i],
-                'base_pred': base_metrics['gen_results'][i]['continuation_pred'][:200],
-                'base_bleu': base_metrics['gen_results'][i]['bleu'],
+                'base_pred': bg['continuation_pred'][:200],
+                'base_bleu': bg['bleu'],
             }
             if pt_metrics:
+                ptg = pt_metrics['gen_results'][i]
                 rec['pt_ppl'] = pt_metrics['ppl_per_sample'][i]
                 rec['pt_loss'] = pt_metrics['loss_per_sample'][i]
-                rec['pt_pred'] = pt_metrics['gen_results'][i]['continuation_pred'][:200]
-                rec['pt_bleu'] = pt_metrics['gen_results'][i]['bleu']
+                rec['pt_pred'] = ptg['continuation_pred'][:200]
+                rec['pt_bleu'] = ptg['bleu']
             f.write(json.dumps(rec, ensure_ascii=False) + '\n')
 
     print(f'\n评测结果已保存至: {run_dir}')
@@ -427,17 +474,30 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
     print('\n' + '=' * 60)
     print('DuReader 预训练评测（prefix → continuation）')
     print('=' * 60)
-    print(f'基座模型   PPL={base_metrics["ppl"]:.4f}  loss={base_metrics["loss"]:.4f}  BLEU={base_metrics["bleu"]:.4f}')
+    print(
+        f'基座模型   PPL={base_metrics["ppl"]:.4f}  '
+        f'loss={base_metrics["loss"]:.4f}  '
+        f'BLEU={base_metrics["bleu"]:.4f}'
+    )
     if pt_metrics:
-        print(f'预训练模型 PPL={pt_metrics["ppl"]:.4f}  loss={pt_metrics["loss"]:.4f}  BLEU={pt_metrics["bleu"]:.4f}')
+        print(
+            f'预训练模型 PPL={pt_metrics["ppl"]:.4f}  '
+            f'loss={pt_metrics["loss"]:.4f}  '
+            f'BLEU={pt_metrics["bleu"]:.4f}'
+        )
     return run_dir
 
 
 def main():
     parser = argparse.ArgumentParser(description='DuReader 预训练：数据准备、训练、评测一体化')
-    parser.add_argument('--mode', type=str, default='full',
-                        choices=['prepare', 'train', 'eval', 'full'],
-                        help='prepare=仅准备数据; train=准备+训练; eval=仅评测; full=准备+训练+评测')
+    parser.add_argument(
+        '--mode', type=str, default='full',
+        choices=['prepare', 'train', 'eval', 'full'],
+        help=(
+            'prepare=仅准备数据; train=准备+训练; '
+            'eval=仅评测; full=准备+训练+评测'
+        ),
+    )
     parser.add_argument('--pt_model_path', type=str, default=None,
                         help='预训练模型目录（eval/full 时使用；full 未指定则用本次训练 ckpt）')
     args = parser.parse_args()
@@ -468,7 +528,8 @@ def main():
 # 使用示例：
 # 1. 仅准备数据：     python run_dureader.py --mode=prepare
 # 2. 准备 + 训练：     python run_dureader.py --mode=train
-# 3. 仅评测：         python run_dureader.py --mode=eval [--pt_model_path=path/to/lazyllm_merge]
+# 3. 仅评测：         python run_dureader.py --mode=eval
+#    [--pt_model_path=path/to/lazyllm_merge]
 # 4. 一步到位：       python run_dureader.py --mode=full
 if __name__ == '__main__':
     main()
