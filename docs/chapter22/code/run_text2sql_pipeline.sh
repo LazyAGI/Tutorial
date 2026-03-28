@@ -10,33 +10,12 @@ fi
 
 set -e  # 遇到错误立即退出
 
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# ============================================
+# 基础配置
+# ============================================
 
-# 打印带颜色的信息
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# 配置文件路径
-BASE_DIR="/home/mnt/huangchongjin/from-data-to-llm/docs/chapter22/code"
-OUTPUT_BASE_DIR="/home/mnt/huangchongjin/from-data-to-llm/docs/chapter22/test"
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+OUTPUT_BASE_DIR="<OUTPUT_BASE_DIR>"
 
 # 数据文件
 INPUT_DATA="${BASE_DIR}/hardest_5000_sql_sft.json"
@@ -55,16 +34,111 @@ TEST_OUTPUT="${OUTPUT_BASE_DIR}/spidertest/enhance_ppl.json"
 # 评估输出
 EVAL_OUTPUT_DIR="${OUTPUT_BASE_DIR}/enhance_ppl_eval_results"
 
-# 日志文件
+# 日志目录
 LOG_DIR="${BASE_DIR}/logs"
 mkdir -p "${LOG_DIR}"
+
+# 日志文件
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="${LOG_DIR}/pipeline_${TIMESTAMP}.log"
 MASTER_LOG="${LOG_DIR}/pipeline_${TIMESTAMP}.log"
 
 # 记录开始时间
 START_TIME=$(date +%s)
 
+# ============================================
+# 日志函数
+# ============================================
+
+log() {
+    local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    echo "$msg"
+    echo "$msg" >> "$LOG_FILE"
+}
+
+log_info() {
+    log "[INFO] $1"
+}
+
+log_error() {
+    log "[ERROR] $1"
+}
+
+log_step() {
+    log "[STEP] $1"
+}
+
+log_warn() {
+    log "[WARN] $1"
+}
+
+log_success() {
+    log "[SUCCESS] $1"
+}
+
+safe_exit() {
+    local code="$1"
+    if [ "$code" -ne 0 ]; then
+        log_error "脚本异常退出，退出码: $code"
+    else
+        log_info "脚本正常完成"
+    fi
+    if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+        return "$code"
+    else
+        exit "$code"
+    fi
+}
+
+# ============================================
+# 用户配置区域 - 请根据实际情况修改
+# ============================================
+
+# LazyLLM 路径
+LAZYLLM_PATH="<LAZYLLM_PATH>"
+
+# 模型路径
+PIPELINE_MODEL="<PIPELINE_MODEL>"
+SFT_BASE_MODEL="<SFT_BASE_MODEL>"
+JUDGE_MODEL="<JUDGE_MODEL>"
+
+# Pipeline 参数
+MAX_ITEMS=1000
+OUTPUT_NUM=2
+INPUT_QUERY_NUM=3
+NUM_GENERATIONS=5
+OUTPUT_FORMAT="alpaca"
+TARGET_COMPLEXITY="hard"
+
+# ============================================
+# 检查配置
+# ============================================
+
+if [ ! -d "$LAZYLLM_PATH" ]; then
+    echo "错误: LAZYLLM_PATH 不存在: $LAZYLLM_PATH"
+    echo "请修改脚本中的 LAZYLLM_PATH 配置"
+    safe_exit 1
+fi
+
+log "=========================================="
+log "Text2SQL 一键处理脚本"
+log "=========================================="
+log ""
+log "配置信息:"
+log "  - 基础目录: $BASE_DIR"
+log "  - 输出目录: $OUTPUT_BASE_DIR"
+log "  - 日志文件: $LOG_FILE"
+log "  - LazyLLM路径: $LAZYLLM_PATH"
+log "  - Pipeline模型: $PIPELINE_MODEL"
+log "  - SFT基础模型: $SFT_BASE_MODEL"
+log "  - 评判模型: $JUDGE_MODEL"
+log "  - Pipeline处理数量: $MAX_ITEMS"
+log ""
+
+# ============================================
 # 帮助信息
+# ============================================
+
 show_help() {
     cat << EOF
 Text2SQL 一键处理脚本
@@ -99,7 +173,6 @@ EOF
 
 # 解析命令行参数
 SKIP_STEPS=""
-MAX_ITEMS=1000
 DRY_RUN=false
 STEP="all"
 
@@ -159,14 +232,14 @@ run_cmd() {
         rm -f "$temp_output"
         if [[ $exit_code -ne 0 ]]; then
             log_error "$step 失败! (exit code: $exit_code)"
-            exit 1
+            safe_exit 1
         fi
     fi
 }
 
-# 步骤1: 数据转换
+# ============ 步骤1: 数据转换 ============
 step_transform() {
-    log_info "========== 步骤 1/5: 数据转换 =========="
+    log_step "[1/5] 数据转换 =========="
 
     if should_skip "transform"; then
         log_warn "跳过数据转换步骤"
@@ -175,7 +248,7 @@ step_transform() {
 
     if [[ ! -f "$INPUT_DATA" ]]; then
         log_error "输入数据文件不存在: $INPUT_DATA"
-        exit 1
+        safe_exit 1
     fi
 
     # 创建临时转换脚本
@@ -243,15 +316,15 @@ TRANSFORM_SCRIPT
 
     if [[ ! -f "$HARD_SQL" ]]; then
         log_error "数据转换失败,未生成: $HARD_SQL"
-        exit 1
+        safe_exit 1
     fi
 
     log_success "数据转换完成: $HARD_SQL"
 }
 
-# 步骤2: Pipeline 生成
+# ============ 步骤2: Pipeline 生成 ============
 step_pipeline() {
-    log_info "========== 步骤 2/5: Pipeline 生成 =========="
+    log_step "[2/5] Pipeline 生成 =========="
 
     if should_skip "pipeline"; then
         log_warn "跳过 Pipeline 生成步骤"
@@ -260,7 +333,7 @@ step_pipeline() {
 
     if [[ ! -f "$HARD_SQL" ]]; then
         log_error "找不到输入文件: $HARD_SQL, 请先运行 transform 步骤"
-        exit 1
+        safe_exit 1
     fi
 
     # 创建临时修改版的 run_text2sql_ppl.py
@@ -274,21 +347,21 @@ import sys
 import shutil
 
 # 添加 lazyllm 路径
-sys.path.insert(0, '/home/mnt/huangchongjin/ppl_new')
+sys.path.insert(0, '${LAZYLLM_PATH}')
 
 import lazyllm
 from lazyllm.tools.data.pipelines import text2sql_synthetic_ppl
 
 # 配置参数 - 从环境变量读取
 USE_LOCAL_MODEL = os.environ.get('USE_LOCAL_MODEL', 'true').lower() == 'true'
-DATA_FILE = os.environ.get('DATA_FILE', '/home/mnt/huangchongjin/ppl_new/lazyllm/tools/data/ex/text2sql/hard_sql.json')
-OUTPUT_FILE = os.environ.get('OUTPUT_FILE', '/home/mnt/huangchongjin/from-data-to-llm/docs/chapter22/test/ppl_sql.json')
-MAX_ITEMS = int(os.environ.get('MAX_ITEMS', '1000'))
-OUTPUT_NUM = int(os.environ.get('OUTPUT_NUM', '2'))
-INPUT_QUERY_NUM = int(os.environ.get('INPUT_QUERY_NUM', '3'))
-NUM_GENERATIONS = int(os.environ.get('NUM_GENERATIONS', '5'))
-OUTPUT_FORMAT = os.environ.get('OUTPUT_FORMAT', 'alpaca')
-TARGET_COMPLEXITY = os.environ.get('TARGET_COMPLEXITY', 'hard')
+DATA_FILE = os.environ.get('DATA_FILE', '${HARD_SQL}')
+OUTPUT_FILE = os.environ.get('OUTPUT_FILE', '${PPL_SQL}')
+MAX_ITEMS = int(os.environ.get('MAX_ITEMS', '${MAX_ITEMS}'))
+OUTPUT_NUM = int(os.environ.get('OUTPUT_NUM', '${OUTPUT_NUM}'))
+INPUT_QUERY_NUM = int(os.environ.get('INPUT_QUERY_NUM', '${INPUT_QUERY_NUM}'))
+NUM_GENERATIONS = int(os.environ.get('NUM_GENERATIONS', '${NUM_GENERATIONS}'))
+OUTPUT_FORMAT = os.environ.get('OUTPUT_FORMAT', '${OUTPUT_FORMAT}')
+TARGET_COMPLEXITY = os.environ.get('TARGET_COMPLEXITY', '${TARGET_COMPLEXITY}')
 
 
 class MockDatabaseManager:
@@ -338,12 +411,12 @@ class MockDatabaseManager:
 
 
 def create_local_model():
-    model_path = '/mnt/lustre/share_data/lazyllm/models/Qwen3-30B-A3B-Instruct-2507'
+    model_path = '${PIPELINE_MODEL}'
     model = lazyllm.TrainableModule(model_path)
     return model
 
 
-def load_sample_data_from_json(filepath, max_items=1000):
+def load_sample_data_from_json(filepath, max_items=${MAX_ITEMS}):
     with open(filepath, 'r', encoding='utf-8') as f:
         data = json.load(f)
     if isinstance(data, list) and len(data) > max_items:
@@ -360,9 +433,9 @@ def save_results(results, filepath):
     print(f"结果已保存到: {filepath}")
 
 
-def run_text2sql_pipeline(use_local_model=True, data_file=None, max_items=1000,
-                           output_num=2, input_query_num=3, num_generations=5,
-                           output_format='alpaca', target_complexity='hard'):
+def run_text2sql_pipeline(use_local_model=True, data_file=None, max_items=${MAX_ITEMS},
+                           output_num=${OUTPUT_NUM}, input_query_num=${INPUT_QUERY_NUM}, num_generations=${NUM_GENERATIONS},
+                           output_format='${OUTPUT_FORMAT}', target_complexity='${TARGET_COMPLEXITY}'):
     print("=" * 60)
     print("Text2SQL Pipeline")
     print("=" * 60)
@@ -475,11 +548,11 @@ PPL_SCRIPT
     export DATA_FILE="$HARD_SQL"
     export OUTPUT_FILE="$PPL_SQL"
     export MAX_ITEMS="$MAX_ITEMS"
-    export OUTPUT_NUM=2
-    export INPUT_QUERY_NUM=3
-    export NUM_GENERATIONS=5
-    export OUTPUT_FORMAT="alpaca"
-    export TARGET_COMPLEXITY="hard"
+    export OUTPUT_NUM="$OUTPUT_NUM"
+    export INPUT_QUERY_NUM="$INPUT_QUERY_NUM"
+    export NUM_GENERATIONS="$NUM_GENERATIONS"
+    export OUTPUT_FORMAT="$OUTPUT_FORMAT"
+    export TARGET_COMPLEXITY="$TARGET_COMPLEXITY"
 
     run_cmd "cd '${BASE_DIR}' && python3 '${temp_ppl_script}'" "Pipeline 生成"
 
@@ -488,15 +561,15 @@ PPL_SCRIPT
 
     if [[ ! -f "$PPL_SQL" ]]; then
         log_error "Pipeline 生成失败,未生成: $PPL_SQL"
-        exit 1
+        safe_exit 1
     fi
 
     log_success "Pipeline 生成完成: $PPL_SQL"
 }
 
-# 步骤3: 训练
+# ============ 步骤3: 训练 ============
 step_train() {
-    log_info "========== 步骤 3/5: 模型训练 =========="
+    log_step "[3/5] 模型训练 =========="
 
     if should_skip "train"; then
         log_warn "跳过训练步骤"
@@ -514,7 +587,7 @@ step_train() {
             TRAIN_DATA="$PPL_SQL"
         else
             log_error "找不到训练数据文件"
-            exit 1
+            safe_exit 1
         fi
     fi
 
@@ -526,19 +599,19 @@ import sys
 import os
 
 # 添加 lazyllm 路径
-sys.path.insert(0, '/home/mnt/huangchongjin/ppl_new')
+sys.path.insert(0, '${LAZYLLM_PATH}')
 
-local_path = "/home/mnt/huangchongjin/.local/lib/python3.10/site-packages"
+local_path = "<LOCAL_PYTHON_PACKAGES_PATH>"
 if local_path not in sys.path:
     sys.path.insert(0, local_path)
 
 import lazyllm
 from lazyllm import finetune, deploy, launchers
 
-model_path="/home/mnt/huangchongjin/.lazyllm/model/modelscope/Qwen/Qwen2.5-0.5B-Instruct"
-model = lazyllm.TrainableModule(model_path, target_path='${CHECKPOINT_DIR}')\\
-    .mode('finetune')\\
-    .trainset('${TRAIN_DATA}')\\
+model_path="${SFT_BASE_MODEL}"
+model = lazyllm.TrainableModule(model_path, target_path='${CHECKPOINT_DIR}')\
+    .mode('finetune')\
+    .trainset('${TRAIN_DATA}')\
     .finetune_method((finetune.llamafactory, {
         'learning_rate': 1e-5,
         'cutoff_len': 4096,
@@ -567,7 +640,7 @@ model.update()
 TRAIN_SCRIPT
 
     log_info "训练配置:"
-    log_info "  - 基础模型: Qwen2.5-0.5B-Instruct"
+    log_info "  - 基础模型: ${SFT_BASE_MODEL}"
     log_info "  - 训练数据: $TRAIN_DATA"
     log_info "  - 输出目录: $CHECKPOINT_DIR"
 
@@ -586,9 +659,9 @@ TRAIN_SCRIPT
     fi
 }
 
-# 步骤4: 测试
+# ============ 步骤4: 测试 ============
 step_test() {
-    log_info "========== 步骤 4/5: 模型测试 =========="
+    log_step "[4/5] 模型测试 =========="
 
     if should_skip "test"; then
         log_warn "跳过测试步骤"
@@ -603,12 +676,12 @@ step_test() {
     if [[ -z "$CHECKPOINT_PATH" ]] || [[ ! -d "$CHECKPOINT_PATH" ]]; then
         log_error "找不到训练好的模型 checkpoint"
         log_error "请确认训练步骤已完成或手动指定 checkpoint 路径"
-        exit 1
+        safe_exit 1
     fi
 
     if [[ ! -f "$TEST_INPUT" ]]; then
         log_error "找不到测试数据: $TEST_INPUT"
-        exit 1
+        safe_exit 1
     fi
 
     # 创建临时测试脚本
@@ -617,7 +690,7 @@ step_test() {
     cat > "$temp_test_script" << TESTSCRIPT
 #!/usr/bin/env python3
 import sys
-sys.path.insert(0, '/home/mnt/huangchongjin/ppl_new')
+sys.path.insert(0, '${LAZYLLM_PATH}')
 
 import lazyllm
 import torch
@@ -807,15 +880,15 @@ TESTSCRIPT
 
     if [[ ! -f "$TEST_OUTPUT" ]]; then
         log_error "测试失败,未生成: $TEST_OUTPUT"
-        exit 1
+        safe_exit 1
     fi
 
     log_success "测试完成: $TEST_OUTPUT"
 }
 
-# 步骤5: 评估
+# ============ 步骤5: 评估 ============
 step_eval() {
-    log_info "========== 步骤 5/5: 结果评估 =========="
+    log_step "[5/5] 结果评估 =========="
 
     if should_skip "eval"; then
         log_warn "跳过评估步骤"
@@ -825,12 +898,12 @@ step_eval() {
     if [[ ! -f "$TEST_OUTPUT" ]]; then
         log_error "找不到测试结果: $TEST_OUTPUT"
         log_error "请先运行 test 步骤"
-        exit 1
+        safe_exit 1
     fi
 
     if [[ ! -f "$TEST_INPUT" ]]; then
         log_error "找不到参考答案: $TEST_INPUT"
-        exit 1
+        safe_exit 1
     fi
 
     log_info "评估配置:"
@@ -848,7 +921,7 @@ import sys
 import os
 from datetime import datetime
 
-sys.path.insert(0, '/home/mnt/huangchongjin/ppl_new')
+sys.path.insert(0, '<LAZYLLM_PATH>')
 
 import lazyllm
 from lazyllm import LOG
@@ -886,7 +959,7 @@ class Text2SQLJudge:
    - 0分: 不等价
 
 请按以下格式输出严格的评估结果（只输出 JSON，不要有其他内容）：
-\`\`\`json
+```json
 {
     "semantic_score": 5,
     "syntax_score": 5,
@@ -895,10 +968,10 @@ class Text2SQLJudge:
     "is_correct": true,
     "reason": "SQL 完全正确，正确理解了用户意图"
 }
-\`\`\`
+```
 """
 
-    def __init__(self, model_path: str = "/mnt/lustre/share_data/lazyllm/models/Qwen3-30B-A3B-Instruct-2507"):
+    def __init__(self, model_path: str = "<JUDGE_MODEL>"):
         print(f"正在加载评判模型: {model_path}")
         self.model = lazyllm.TrainableModule(model_path)
         self.model.start()
@@ -1065,7 +1138,10 @@ EVALSCRIPT
     log_success "评估完成,结果保存在: $EVAL_OUTPUT_DIR"
 }
 
+# ============================================
 # 打印执行计划
+# ============================================
+
 print_execution_plan() {
     log_info "=========================================="
     log_info "Text2SQL 一键处理脚本"
@@ -1104,7 +1180,10 @@ print_execution_plan() {
     log_info "=========================================="
 }
 
+# ============================================
 # 主执行流程
+# ============================================
+
 main() {
     print_execution_plan
 
@@ -1138,7 +1217,7 @@ main() {
         *)
             log_error "未知步骤: $STEP"
             show_help
-            exit 1
+            safe_exit 1
             ;;
     esac
 
@@ -1158,3 +1237,56 @@ main() {
 
 # 运行主流程
 main
+
+# ============================================
+# 使用说明
+# ============================================
+#
+# ## 1. 配置修改
+# 使用前请修改脚本中的以下占位符配置:
+#
+#   <OUTPUT_BASE_DIR>          - 输出基础目录
+#   <LAZYLLM_PATH>             - LazyLLM 安装路径
+#   <PIPELINE_MODEL>           - Pipeline 使用的模型路径
+#   <SFT_BASE_MODEL>           - SFT 训练基础模型路径
+#   <JUDGE_MODEL>              - 评估评判模型路径
+#   <LOCAL_PYTHON_PACKAGES_PATH> - Python site-packages 路径
+#
+# ## 2. 运行方式
+#
+#   bash run_text2sql_pipeline.sh              # 运行完整流程
+#   bash run_text2sql_pipeline.sh transform    # 仅运行数据转换
+#   bash run_text2sql_pipeline.sh pipeline     # 仅运行 Pipeline 生成
+#   bash run_text2sql_pipeline.sh train        # 仅运行模型训练
+#   bash run_text2sql_pipeline.sh test         # 仅运行模型测试
+#   bash run_text2sql_pipeline.sh eval         # 仅运行结果评估
+#
+# ## 3. 高级用法
+#
+#   # 跳过指定步骤 (用逗号分隔)
+#   bash run_text2sql_pipeline.sh all -s train,eval
+#
+#   # 限制 Pipeline 处理数据量
+#   bash run_text2sql_pipeline.sh all -m 500
+#
+#   # Dry-run 模式 (只显示命令,不执行)
+#   bash run_text2sql_pipeline.sh all --dry-run
+#
+#   # 显示帮助信息
+#   bash run_text2sql_pipeline.sh -h
+#
+# ## 4. 流程说明
+#
+#   [1/5] 数据转换  - 将输入 JSON 转换为 pipeline 所需格式
+#   [2/5] Pipeline  - 使用 LLM 生成合成训练数据
+#   [3/5] 模型训练  - 基于生成的数据进行 SFT 微调
+#   [4/5] 模型测试  - 使用训练好的模型进行推理测试
+#   [5/5] 结果评估  - 使用 LLM as Judge 评估生成质量
+#
+# ## 5. 注意事项
+#
+#   - 请不要用 source 执行此脚本
+#   - 确保所有路径配置正确且可访问
+#   - 训练步骤需要 GPU 资源
+#   - 日志文件保存在 logs/ 目录下
+#
