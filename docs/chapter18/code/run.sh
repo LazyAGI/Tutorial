@@ -272,7 +272,14 @@ inference_output = os.path.join(OUTPUT_DIR, "inference_results.json")
 # 自动查找最新的 lazyllm_merge 目录
 import glob
 def find_latest_merge_model(base_dir):
-    merge_dirs = [(p, os.path.getmtime(p)) for p in glob.glob(f"{base_dir}/**/lazyllm_merge", recursive=True)]
+    merge_dirs = []
+    for root, dirs, files in os.walk(base_dir):
+        if 'lazyllm_merge' in dirs:
+            path = os.path.join(root, 'lazyllm_merge')
+            try:
+                merge_dirs.append((path, os.path.getmtime(path)))
+            except OSError:
+                pass
     return max(merge_dirs, key=lambda x: x[1])[0] if merge_dirs else None
 
 model_path = find_latest_merge_model(MODEL_DIR)

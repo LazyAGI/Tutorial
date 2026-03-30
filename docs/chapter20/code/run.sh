@@ -355,17 +355,29 @@ if os.path.exists(report_path):
     exit(0)
 
 def extract_code(text):
-    pattern = r'\`\`\`python\s+(.*?)\s+\`\`\`'
-    match = re.search(pattern, text, re.DOTALL)
+    code_start = r'(^|\n)\s*(def\s+|import\s+|class\s+)'
+    for pattern in (r'```python\s*(.*?)\s*```', r'```\s*(.*?)\s*```'):
+        match = re.search(pattern, text, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+    for marker in ('### Solution:', 'Solution:'):
+        if marker in text:
+            text = text.split(marker, 1)[1].strip()
+            match = re.search(code_start, text)
+            return text[match.start():].strip() if match else text
+    match = re.search(r'(.*?)专家反馈:', text, re.DOTALL)
     if match:
-        return match.group(1).strip()
-    pattern = r'\`\`\`\s+(.*?)\s+\`\`\`'
-    match = re.search(pattern, text, re.DOTALL)
+        text = match.group(1).strip()
+    match = re.search(code_start, text)
     if match:
-        return match.group(1).strip()
-    if text.strip().startswith('def ') or text.strip().startswith('import '):
-        return text.strip()
+        return text[match.start():].strip()
     return None
+
+def get_case_id(item):
+    return item.get('test_case_id', item.get('id', 0))
+
+def get_case_response(item):
+    return item.get('response', item.get('prediction', ''))
 
 def check_syntax(code):
     try:
@@ -407,8 +419,8 @@ with unittest.mock.patch('builtins.input', side_effect=mock_input):
         return 'Error', '', str(e)
 
 def evaluate_case(item):
-    idx = item.get('id', 0)
-    code = extract_code(item.get('prediction', ''))
+    idx = get_case_id(item)
+    code = extract_code(get_case_response(item))
     if not code:
         return {'id': idx, 'status': 'NoCode'}
     valid, err = check_syntax(code)
