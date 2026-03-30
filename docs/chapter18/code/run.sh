@@ -164,23 +164,26 @@ ppl = build_preference_pipeline(
     threshold=3
 )
 
-results = []
-for item in data[:2000]:
-    result = ppl([item])
-    if result and len(result) > 0:
-        r = result[0]
-        if isinstance(r, dict) and 'instruction' in r:
-            results.append({
-                "prompt": r.get('instruction', item['content']),
-                "chosen": r.get('chosen', ''),
-                "rejected": r.get('rejected', '')
-            })
+# 批量处理
+batch_data = data
+print(f"  批量处理 {len(batch_data)} 条数据...")
+
+results = ppl(batch_data)
+
+output_data = []
+for r in results:
+    if isinstance(r, dict) and 'instruction' in r:
+        output_data.append({
+            "prompt": r.get('instruction', ''),
+            "chosen": r.get('chosen', ''),
+            "rejected": r.get('rejected', '')
+        })
 
 with open(output_file, 'w') as f:
-    json.dump(results, f, indent=2)
+    json.dump(output_data, f, indent=2)
 
 model.stop()
-print(f"  生成数据: {output_file} ({len(results)} 条)")
+print(f"  生成数据: {output_file} ({len(output_data)} 条)")
 EOF
 
 if [ $? -ne 0 ]; then

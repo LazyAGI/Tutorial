@@ -141,23 +141,41 @@ pipeline_model_path = "$PIPELINE_MODEL"
 model = lazyllm.TrainableModule(pipeline_model_path)
 model.start()
 
+# 使用批量处理方式
 ppl = build_codegen_pipeline(model=model, input_key='messages', min_score=8, max_score=10)
 
+# 构建 messages 格式数据
 formatted_data = []
-for item in data[:100]:
+for item in data:
     messages = [
         {"role": "system", "content": "You are an expert Python programmer."},
         {"role": "user", "content": item['instruction']}
     ]
-    result = ppl([{"messages": messages, "metadata": {}}])
+    formatted_data.append({
+        "messages": messages,
+        "metadata": {}
+    })
+
+print(f"  批量处理 {len(formatted_data)} 条数据...")
+
+# 一次性批量输入
+results = ppl(formatted_data)
+
+output_data = []
+for result in results:
     if result:
-        formatted_data.append(result[0])
+        # 转换为训练格式
+        output_data.append({
+            "instruction": result.get("instruction", ""),
+            "input": result.get("input", ""),
+            "output": result.get("output", "")
+        })
 
 with open(output_file, 'w') as f:
-    json.dump(formatted_data, f, indent=2)
+    json.dump(output_data, f, indent=2)
 
 model.stop()
-print(f"  生成数据: {len(formatted_data)} 条")
+print(f"  生成数据: {len(output_data)} 条")
 EOF
 
 if [ $? -ne 0 ]; then
