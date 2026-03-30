@@ -268,7 +268,18 @@ MODEL_DIR = "$MODEL_DIR"
 
 test_file = os.path.join(DATA_DIR, "test.jsonl")
 inference_output = os.path.join(OUTPUT_DIR, "inference_results.json")
-model_path = os.path.join(MODEL_DIR, "dpo_checkpoint")
+
+# 自动查找最新的 lazyllm_merge 目录
+import glob
+def find_latest_merge_model(base_dir):
+    merge_dirs = [(p, os.path.getmtime(p)) for p in glob.glob(f"{base_dir}/**/lazyllm_merge", recursive=True)]
+    return max(merge_dirs, key=lambda x: x[1])[0] if merge_dirs else None
+
+model_path = find_latest_merge_model(MODEL_DIR)
+if not model_path:
+    print(f"  错误: 在 {MODEL_DIR} 下未找到 lazyllm_merge 目录")
+    exit(1)
+print(f"  找到模型: {model_path}")
 
 if os.path.exists(inference_output):
     print("  推理结果已存在，跳过推理")

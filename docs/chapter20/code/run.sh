@@ -245,6 +245,7 @@ python3 << EOF 2>&1 | tee -a "$LOG_FILE"
 import json
 import os
 import sys
+import glob
 
 local_path = os.path.expanduser("~/.local/lib/python3.10/site-packages")
 if local_path not in sys.path:
@@ -259,7 +260,28 @@ MODEL_DIR = "$MODEL_DIR"
 
 eval_file = os.path.join(DATA_DIR, "eval_python.json")
 inference_output = os.path.join(OUTPUT_DIR, "inference_results.json")
-model_path = os.path.join(MODEL_DIR, "checkpoint")
+
+# 自动查找最新的 lazyllm_merge 目录
+def find_latest_merge_model(base_dir):
+    """查找 base_dir 下最新的 lazyllm_merge 目录"""
+    merge_dirs = []
+    for root, dirs, files in os.walk(base_dir):
+        for d in dirs:
+            if d == "lazyllm_merge":
+                full_path = os.path.join(root, d)
+                mtime = os.path.getmtime(full_path)
+                merge_dirs.append((full_path, mtime))
+    if not merge_dirs:
+        return None
+    # 按修改时间排序，返回最新的
+    merge_dirs.sort(key=lambda x: x[1], reverse=True)
+    return merge_dirs[0][0]
+
+model_path = find_latest_merge_model(MODEL_DIR)
+if not model_path:
+    print(f"  错误: 在 {MODEL_DIR} 下未找到 lazyllm_merge 目录")
+    exit(1)
+print(f"  找到模型: {model_path}")
 
 if os.path.exists(inference_output):
     print("  推理结果已存在，跳过推理")
