@@ -37,7 +37,7 @@ NUM_QA = 3
 SOURCE_LOAD_LIMIT = 2000
 
 BASE_MODEL_PATH = (
-    '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/'
+    '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
     'Qwen2.5-0.5B-Instruct'
 )
 MAX_EVAL_SAMPLES = None

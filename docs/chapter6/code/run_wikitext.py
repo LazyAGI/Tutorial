@@ -33,7 +33,7 @@ PREFIX_RATIO = 0.6
 SENTENCE_END_CHARS = '.!?;\n'
 
 BASE_MODEL_PATH = (
-    '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/'
+    '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
     'Qwen2.5-0.5B-Instruct'
 )
 MAX_EVAL_SAMPLES = None
