@@ -51,7 +51,7 @@ SOURCE_LOAD_LIMIT = 4000
 TRAIN_CONTEXT_WINDOW = 8192
 
 BASE_MODEL_PATH = (
-    '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/'
+    '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
     'Qwen2.5-7B-Instruct'
 )
 PPL_MODEL = 'qwen2.5-32b-instruct'
