@@ -439,7 +439,7 @@ if __name__ == '__main__':
         '--model_path',
         type=str,
         default=(
-            '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/'
+            '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
             'Qwen2.5-0.5B-Instruct'
         ),
         help='基座模型路径',
