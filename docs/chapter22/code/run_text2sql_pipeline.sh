@@ -1,79 +1,34 @@
 #!/bin/bash
-# Text2SQL 一键处理脚本
-# 流程: 数据转换 -> Pipeline生成 -> 训练 -> 测试 -> 评估
 
-# 防止被 source 执行导致终端退出
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-    echo "错误: 请不要用 source 执行此脚本，直接运行: bash ${BASH_SOURCE[0]}"
-    return 1 2>/dev/null || exit 1
-fi
-
-set -e  # 遇到错误立即退出
-
-# ============================================
-# 基础配置
-# ============================================
+set -e
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
-OUTPUT_BASE_DIR="<OUTPUT_BASE_DIR>"
-
-# 数据文件
-INPUT_DATA="${BASE_DIR}/hardest_5000_sql_sft.json"
-HARD_SQL="${OUTPUT_BASE_DIR}/hard_sql.json"
-PPL_SQL="${OUTPUT_BASE_DIR}/ppl_sql.json"
-ENHANCED_PPL_SQL="${OUTPUT_BASE_DIR}/enhanced_ppl_sql.json"
-
-# 训练配置
-TRAIN_DATA="${OUTPUT_BASE_DIR}/bird/improved_ppl_sql.json"
-CHECKPOINT_DIR="${OUTPUT_BASE_DIR}/enhance_ppl_checkpoint"
-
-# 测试配置
-TEST_INPUT="${OUTPUT_BASE_DIR}/bird/hardest_1000_sql_test_format.jsonl"
-TEST_OUTPUT="${OUTPUT_BASE_DIR}/spidertest/enhance_ppl.json"
-
-# 评估输出
-EVAL_OUTPUT_DIR="${OUTPUT_BASE_DIR}/enhance_ppl_eval_results"
-
-# 日志目录
-LOG_DIR="${BASE_DIR}/logs"
-mkdir -p "${LOG_DIR}"
+DATA_DIR="$BASE_DIR/data"
+MODEL_DIR="$BASE_DIR/models"
+OUTPUT_DIR="$BASE_DIR/output"
+LOG_DIR="$BASE_DIR/logs"
+mkdir -p "$DATA_DIR" "$MODEL_DIR" "$OUTPUT_DIR" "$LOG_DIR"
 
 # 日志文件
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="${LOG_DIR}/pipeline_${TIMESTAMP}.log"
-MASTER_LOG="${LOG_DIR}/pipeline_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/run_$(date +%Y%m%d_%H%M%S).log"
 
-# 记录开始时间
-START_TIME=$(date +%s)
-
-# ============================================
 # 日志函数
-# ============================================
-
 log() {
     local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
     echo "$msg"
     echo "$msg" >> "$LOG_FILE"
 }
 
-log_info() {
-    log "[INFO] $1"
-}
-
 log_error() {
     log "[ERROR] $1"
 }
 
+log_info() {
+    log "[INFO] $1"
+}
+
 log_step() {
     log "[STEP] $1"
-}
-
-log_warn() {
-    log "[WARN] $1"
-}
-
-log_success() {
-    log "[SUCCESS] $1"
 }
 
 safe_exit() {
@@ -83,297 +38,126 @@ safe_exit() {
     else
         log_info "脚本正常完成"
     fi
-    if [ "${BASH_SOURCE[0]}" != "$0" ]; then
-        return "$code"
-    else
-        exit "$code"
-    fi
+    exit "$code"
 }
 
-# ============================================
-# 用户配置区域 - 请根据实际情况修改
-# ============================================
-
-# LazyLLM 路径
-LAZYLLM_PATH="<LAZYLLM_PATH>"
-
-# 模型路径
-PIPELINE_MODEL="<PIPELINE_MODEL>"
-SFT_BASE_MODEL="<SFT_BASE_MODEL>"
-JUDGE_MODEL="<JUDGE_MODEL>"
-
-# Pipeline 参数
-MAX_ITEMS=1000
-OUTPUT_NUM=2
-INPUT_QUERY_NUM=3
-NUM_GENERATIONS=5
-OUTPUT_FORMAT="alpaca"
-TARGET_COMPLEXITY="hard"
-
-# ============================================
-# 检查配置
-# ============================================
+LAZYLLM_PATH="/path/to/your/lazyllm"
+PIPELINE_MODEL="/path/to/pipeline/model"
+SFT_BASE_MODEL="/path/to/sft/base/model"
+JUDGE_MODEL="/path/to/judge/model"
 
 if [ ! -d "$LAZYLLM_PATH" ]; then
-    echo "错误: LAZYLLM_PATH 不存在: $LAZYLLM_PATH"
-    echo "请修改脚本中的 LAZYLLM_PATH 配置"
+    log_error "LAZYLLM_PATH 不存在: $LAZYLLM_PATH"
+    log "请修改脚本中的 LAZYLLM_PATH 配置"
     safe_exit 1
 fi
 
 log "=========================================="
-log "Text2SQL 一键处理脚本"
+log "一键Text2SQL训练脚本"
 log "=========================================="
 log ""
-log "配置信息:"
+log_info "配置信息:"
 log "  - 基础目录: $BASE_DIR"
-log "  - 输出目录: $OUTPUT_BASE_DIR"
+log "  - 数据目录: $DATA_DIR"
+log "  - 模型目录: $MODEL_DIR"
+log "  - 输出目录: $OUTPUT_DIR"
 log "  - 日志文件: $LOG_FILE"
-log "  - LazyLLM路径: $LAZYLLM_PATH"
-log "  - Pipeline模型: $PIPELINE_MODEL"
-log "  - SFT基础模型: $SFT_BASE_MODEL"
-log "  - 评判模型: $JUDGE_MODEL"
-log "  - Pipeline处理数量: $MAX_ITEMS"
 log ""
 
-# ============================================
-# 帮助信息
-# ============================================
+# ============ 步骤1: 下载并准备数据 ============
+log_step "[1/5] 下载 Text2SQL 数据集..."
 
-show_help() {
-    cat << EOF
-Text2SQL 一键处理脚本
+python3 << EOF 2>&1 | tee -a "$LOG_FILE"
+import json
+import os
+from datasets import load_dataset
 
-用法: $0 [选项] [步骤]
+DATA_DIR = "$DATA_DIR"
+train_path = os.path.join(DATA_DIR, "train_text2sql.json")
+test_path = os.path.join(DATA_DIR, "test_text2sql.jsonl")
 
-步骤:
-    all         运行完整流程 (默认)
-    transform   仅运行数据转换
-    pipeline    仅运行 Pipeline 生成
-    train       仅运行训练
-    test        仅运行测试
-    eval        仅运行评估
+if os.path.exists(train_path) and os.path.exists(test_path):
+    print("  数据已存在，跳过下载")
+    exit(0)
 
-选项:
-    -h, --help      显示帮助信息
-    -s, --skip      跳过指定步骤 (用逗号分隔, 如: transform,train)
-    -m, --max-items 设置 Pipeline 处理的最大数据量 (默认: 1000)
-    --dry-run       只显示要执行的命令, 不实际运行
+print("  正在从 Hugging Face 加载数据集 rirqing/text2sql...")
+ds = load_dataset("rirqing/text2sql", trust_remote_code=True)
 
-示例:
-    $0                      # 运行完整流程
-    $0 transform            # 仅运行数据转换
-    $0 pipeline             # 仅运行 Pipeline 生成
-    $0 train                # 仅运行训练
-    $0 test                 # 仅运行测试
-    $0 eval                 # 仅运行评估
-    $0 all -s train         # 运行除训练外的所有步骤
-    $0 all -m 500           # 限制 Pipeline 处理 500 条数据
+train_data = []
+for idx, item in enumerate(ds['train']):
+    train_data.append({
+        "db_id": item.get('db_id', f"db_{idx}"),
+        "question": item.get('question', ''),
+        "schema": item.get('schema', ''),
+        "gold_sql": item.get('gold_sql', ''),
+        "prompt": item.get('prompt', ''),
+        "instruction": item.get('instruction', ''),
+        "input": item.get('input', ''),
+        "output": item.get('output', '')
+    })
+
+test_data = []
+for idx, item in enumerate(ds['test']):
+    test_data.append({
+        "db_id": item.get('db_id', f"db_{idx}"),
+        "question": item.get('question', ''),
+        "schema": item.get('schema', ''),
+        "gold_sql": item.get('gold_sql', ''),
+        "prompt": item.get('prompt', ''),
+        "instruction": item.get('instruction', ''),
+        "input": item.get('input', ''),
+        "output": item.get('output', '')
+    })
+
+with open(train_path, 'w', encoding='utf-8') as f:
+    json.dump(train_data, f, ensure_ascii=False, indent=2)
+
+with open(test_path, 'w', encoding='utf-8') as f:
+    for item in test_data:
+        f.write(json.dumps(item, ensure_ascii=False) + '\n')
+
+print(f"  训练集: {len(train_data)} 条")
+print(f"  测试集: {len(test_data)} 条")
 EOF
-}
 
-# 解析命令行参数
-SKIP_STEPS=""
-DRY_RUN=false
-STEP="all"
+if [ $? -ne 0 ]; then
+    log_error "步骤1失败！详细错误请查看日志: $LOG_FILE"
+    safe_exit 1
+fi
 
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        -s|--skip)
-            SKIP_STEPS="$2"
-            shift 2
-            ;;
-        -m|--max-items)
-            MAX_ITEMS="$2"
-            shift 2
-            ;;
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-        transform|pipeline|train|test|eval|all)
-            STEP="$1"
-            shift
-            ;;
-        *)
-            log_error "未知参数: $1"
-            show_help
-            exit 1
-            ;;
-    esac
-done
+# ============ 步骤2: 数据处理Pipeline ============
+log_step "[2/5] 运行 Text2SQL Pipeline..."
 
-# 检查是否需要跳过某步骤
-should_skip() {
-    local step=$1
-    if [[ ",${SKIP_STEPS}," == *",${step},"* ]]; then
-        return 0
-    fi
-    return 1
-}
-
-# 执行命令或打印命令（dry-run模式）
-run_cmd() {
-    local cmd="$1"
-    local step="$2"
-    if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY-RUN] 将要执行: $cmd"
-    else
-        log_info "执行: $step"
-        echo "命令: $cmd" >> "${MASTER_LOG}"
-        # 执行命令并捕获退出码，不使用 pipefail 避免终端退出
-        local temp_output="${LOG_DIR}/temp_output_$$.log"
-        eval "$cmd" > "$temp_output" 2>&1
-        local exit_code=$?
-        cat "$temp_output" | tee -a "${MASTER_LOG}"
-        rm -f "$temp_output"
-        if [[ $exit_code -ne 0 ]]; then
-            log_error "$step 失败! (exit code: $exit_code)"
-            safe_exit 1
-        fi
-    fi
-}
-
-# ============ 步骤1: 数据转换 ============
-step_transform() {
-    log_step "[1/5] 数据转换 =========="
-
-    if should_skip "transform"; then
-        log_warn "跳过数据转换步骤"
-        return 0
-    fi
-
-    if [[ ! -f "$INPUT_DATA" ]]; then
-        log_error "输入数据文件不存在: $INPUT_DATA"
-        safe_exit 1
-    fi
-
-    # 创建临时转换脚本
-    local temp_transform_script="${BASE_DIR}/.temp_transform_${TIMESTAMP}.py"
-
-    cat > "$temp_transform_script" << 'TRANSFORM_SCRIPT'
-#!/usr/bin/env python3
-import json
-import re
-import os
-import sys
-
-def transform(input_file, output_dir):
-    with open(input_file, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-
-    transformed = []
-    for idx, item in enumerate(data):
-        instruction = item.get('instruction', '')
-        input_text = item.get('input', '')
-        output_sql = item.get('output', '')
-
-        # Extract schema and question
-        parts = input_text.split("Question:", 1)
-        if len(parts) == 2:
-            schema = parts[0].replace("Database Schema:", "").strip()
-            question = parts[1].strip()
-        else:
-            schema = ""
-            question = input_text.strip()
-
-        transformed.append({
-            "db_id": f"spider_db_{idx}",
-            "question": question,
-            "schema": schema,
-            "gold_sql": output_sql,
-            "prompt": f"{instruction}\n\n{input_text}" if instruction else input_text,
-            "_original_instruction": instruction,
-            "_original_input": input_text
-        })
-
-    os.makedirs(output_dir, exist_ok=True)
-    output_json = os.path.join(output_dir, "hard_sql.json")
-    output_jsonl = os.path.join(output_dir, "hard_sql.jsonl")
-
-    with open(output_json, 'w', encoding='utf-8') as f:
-        json.dump(transformed, f, ensure_ascii=False, indent=2)
-
-    with open(output_jsonl, 'w', encoding='utf-8') as f:
-        for item in transformed:
-            f.write(json.dumps(item, ensure_ascii=False) + '\n')
-
-    print(f"Transformed {len(transformed)} items")
-    print(f"Output saved to: {output_json}")
-    print(f"JSONL saved to: {output_jsonl}")
-
-if __name__ == "__main__":
-    transform(sys.argv[1], sys.argv[2])
-TRANSFORM_SCRIPT
-
-    run_cmd "python3 '${temp_transform_script}' '${INPUT_DATA}' '${OUTPUT_BASE_DIR}'" "数据转换"
-
-    # 清理临时文件
-    rm -f "$temp_transform_script"
-
-    if [[ ! -f "$HARD_SQL" ]]; then
-        log_error "数据转换失败,未生成: $HARD_SQL"
-        safe_exit 1
-    fi
-
-    log_success "数据转换完成: $HARD_SQL"
-}
-
-# ============ 步骤2: Pipeline 生成 ============
-step_pipeline() {
-    log_step "[2/5] Pipeline 生成 =========="
-
-    if should_skip "pipeline"; then
-        log_warn "跳过 Pipeline 生成步骤"
-        return 0
-    fi
-
-    if [[ ! -f "$HARD_SQL" ]]; then
-        log_error "找不到输入文件: $HARD_SQL, 请先运行 transform 步骤"
-        safe_exit 1
-    fi
-
-    # 创建临时修改版的 run_text2sql_ppl.py
-    local temp_ppl_script="${BASE_DIR}/.temp_run_ppl_${TIMESTAMP}.py"
-
-    cat > "$temp_ppl_script" << PPL_SCRIPT
-#!/usr/bin/env python
+python3 << EOF 2>&1 | tee -a "$LOG_FILE"
 import json
 import os
 import sys
-import shutil
 
-# 添加 lazyllm 路径
-sys.path.insert(0, '${LAZYLLM_PATH}')
+LAZYLLM_PATH = "$LAZYLLM_PATH"
+sys.path.insert(0, LAZYLLM_PATH)
+sys.path.insert(0, os.path.dirname(LAZYLLM_PATH))
 
 import lazyllm
 from lazyllm.tools.data.pipelines import text2sql_synthetic_ppl
 
-# 配置参数 - 从环境变量读取
-USE_LOCAL_MODEL = os.environ.get('USE_LOCAL_MODEL', 'true').lower() == 'true'
-DATA_FILE = os.environ.get('DATA_FILE', '${HARD_SQL}')
-OUTPUT_FILE = os.environ.get('OUTPUT_FILE', '${PPL_SQL}')
-MAX_ITEMS = int(os.environ.get('MAX_ITEMS', '${MAX_ITEMS}'))
-OUTPUT_NUM = int(os.environ.get('OUTPUT_NUM', '${OUTPUT_NUM}'))
-INPUT_QUERY_NUM = int(os.environ.get('INPUT_QUERY_NUM', '${INPUT_QUERY_NUM}'))
-NUM_GENERATIONS = int(os.environ.get('NUM_GENERATIONS', '${NUM_GENERATIONS}'))
-OUTPUT_FORMAT = os.environ.get('OUTPUT_FORMAT', '${OUTPUT_FORMAT}')
-TARGET_COMPLEXITY = os.environ.get('TARGET_COMPLEXITY', '${TARGET_COMPLEXITY}')
+DATA_DIR = "$DATA_DIR"
+input_file = os.path.join(DATA_DIR, "train_text2sql.json")
+output_file = os.path.join(DATA_DIR, "ppl_text2sql.json")
 
+if os.path.exists(output_file):
+    print("  Pipeline 输出已存在，跳过处理")
+    exit(0)
+
+with open(input_file, 'r') as f:
+    data = json.load(f)
+
+print(f"  加载数据: {len(data)} 条")
 
 class MockDatabaseManager:
-    """模拟数据库管理器用于演示"""
-
     def __init__(self):
-        self.db_type = 'sqlite'
-        self.databases = {}
         self._db_schemas = {}
 
     def register_schema(self, db_id, schema_str):
-        """注册数据库 schema"""
         self._db_schemas[db_id] = schema_str
 
     def list_databases(self):
@@ -409,209 +193,86 @@ class MockDatabaseManager:
         import random
         return [CompareResult(random.choice([0, 1])) for _ in comparisons]
 
+# 初始化数据库管理器
+db_manager = MockDatabaseManager()
+sample_data = data[:1000]  # 限制处理数量
+for item in sample_data:
+    db_id = item.get('db_id')
+    schema = item.get('schema', '')
+    if db_id and schema:
+        db_manager.register_schema(db_id, schema)
 
-def create_local_model():
-    model_path = '${PIPELINE_MODEL}'
-    model = lazyllm.TrainableModule(model_path)
-    return model
+print(f"  已注册 {len(db_manager._db_schemas)} 个数据库 schema")
 
+# 加载模型
+pipeline_model_path = "$PIPELINE_MODEL"
+model = lazyllm.TrainableModule(pipeline_model_path)
+model.start()
 
-def load_sample_data_from_json(filepath, max_items=${MAX_ITEMS}):
-    with open(filepath, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    if isinstance(data, list) and len(data) > max_items:
-        data = data[:max_items]
-        print(f"   已限制为前 {max_items} 条数据")
-    return data
+# 构建 Pipeline
+ppl = text2sql_synthetic_ppl(
+    model=model,
+    embedding_model=None,
+    database_manager=db_manager,
+    output_num=2,
+    input_query_num=3,
+    num_generations=5,
+    output_format='alpaca',
+    target_complexity='hard'
+)
 
+print(f"  批量处理 {len(sample_data)} 条数据...")
+results = ppl(sample_data)
 
-def save_results(results, filepath):
-    # 确保输出目录存在
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-    print(f"结果已保存到: {filepath}")
+output_data = []
+for result in results:
+    if result and isinstance(result, dict):
+        output_data.append({
+            "instruction": result.get("instruction", ""),
+            "input": result.get("input", ""),
+            "output": result.get("output", "")
+        })
 
+with open(output_file, 'w') as f:
+    json.dump(output_data, f, indent=2)
 
-def run_text2sql_pipeline(use_local_model=True, data_file=None, max_items=${MAX_ITEMS},
-                           output_num=${OUTPUT_NUM}, input_query_num=${INPUT_QUERY_NUM}, num_generations=${NUM_GENERATIONS},
-                           output_format='${OUTPUT_FORMAT}', target_complexity='${TARGET_COMPLEXITY}'):
-    print("=" * 60)
-    print("Text2SQL Pipeline")
-    print("=" * 60)
+model.stop()
+print(f"  生成数据: {len(output_data)} 条")
+EOF
 
-    print("\n2. 初始化模拟数据库管理器")
-    db_manager = MockDatabaseManager()
-    print(f"   模拟数据库: {db_manager.list_databases()}")
+if [ $? -ne 0 ]; then
+    log_error "步骤2失败！详细错误请查看日志: $LOG_FILE"
+    safe_exit 1
+fi
 
-    sample_data = load_sample_data_from_json(data_file, max_items)
-    for item in sample_data:
-        db_id = item.get('db_id')
-        schema = item.get('schema', '')
-        if db_id and schema:
-            db_manager.register_schema(db_id, schema)
-    print(f"   已注册 {len(db_manager._db_schemas)} 个数据库 schema")
+# ============ 步骤3: SFT训练 ============
+log_step "[3/5] 开始 SFT 训练..."
 
-    print("\n3. 初始化 TrainableModule")
-    model = None
-    if use_local_model:
-        try:
-            model = create_local_model()
-            print("   模型初始化成功，正在启动...")
-            model.start()
-            print("   模型启动成功")
-        except Exception as e:
-            print(f"   模型初始化失败: {str(e)}")
-            return []
-    else:
-        print("   Using mock mode (model=None)")
-
-    print("\n4. 构建 Text2SQL Pipeline")
-    print(f"   输出格式: {output_format}")
-    pipeline = text2sql_synthetic_ppl(
-        model=model,
-        embedding_model=None,
-        database_manager=db_manager,
-        output_num=output_num,
-        input_query_num=input_query_num,
-        num_generations=num_generations,
-        output_format=output_format,
-        target_complexity=target_complexity
-    )
-
-    print("\n5. 准备输入数据")
-    print(f"   准备处理 {len(sample_data)} 个数据库")
-
-    print("\n6. 处理数据...")
-    results = []
-    try:
-        results = pipeline(sample_data)
-        print(f"\n   Pipeline 返回结果数量: {len(results)}")
-    except Exception as e:
-        print(f"   Pipeline 处理失败: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        results = []
-
-    if model is not None:
-        print("\n7. 停止模型")
-        try:
-            model.stop()
-            print("   模型已停止")
-        except Exception as e:
-            print(f"   停止模型时出错: {e}")
-
-    return results
-
-
-def main():
-    print("=" * 60)
-    print("Text2SQL Pipeline Runner")
-    print("=" * 60)
-    print(f"\nConfig:")
-    print(f"  - Use local model: {USE_LOCAL_MODEL}")
-    print(f"  - Data file: {DATA_FILE}")
-    print(f"  - Output file: {OUTPUT_FILE}")
-    print(f"  - Max items: {MAX_ITEMS}")
-
-    results = run_text2sql_pipeline(
-        use_local_model=USE_LOCAL_MODEL,
-        data_file=DATA_FILE,
-        max_items=MAX_ITEMS,
-        output_num=OUTPUT_NUM,
-        input_query_num=INPUT_QUERY_NUM,
-        num_generations=NUM_GENERATIONS,
-        output_format=OUTPUT_FORMAT,
-        target_complexity=TARGET_COMPLEXITY
-    )
-
-    print("\n" + "=" * 60)
-    print(f"处理统计:")
-    print(f"  - 总数据: {len(results)}")
-
-    success_count = sum(1 for r in results if isinstance(r, dict) and 'SQL' in r)
-    print(f"  - 成功生成 SQL: {success_count}/{len(results)}")
-    print("=" * 60)
-
-    output_path = OUTPUT_FILE
-    print(f"\n保存结果")
-    save_results(results, output_path)
-    print(f"结果已保存到: {output_path}")
-
-
-if __name__ == '__main__':
-    main()
-PPL_SCRIPT
-
-    # 设置环境变量
-    export USE_LOCAL_MODEL=true
-    export DATA_FILE="$HARD_SQL"
-    export OUTPUT_FILE="$PPL_SQL"
-    export MAX_ITEMS="$MAX_ITEMS"
-    export OUTPUT_NUM="$OUTPUT_NUM"
-    export INPUT_QUERY_NUM="$INPUT_QUERY_NUM"
-    export NUM_GENERATIONS="$NUM_GENERATIONS"
-    export OUTPUT_FORMAT="$OUTPUT_FORMAT"
-    export TARGET_COMPLEXITY="$TARGET_COMPLEXITY"
-
-    run_cmd "cd '${BASE_DIR}' && python3 '${temp_ppl_script}'" "Pipeline 生成"
-
-    # 清理临时文件
-    rm -f "$temp_ppl_script"
-
-    if [[ ! -f "$PPL_SQL" ]]; then
-        log_error "Pipeline 生成失败,未生成: $PPL_SQL"
-        safe_exit 1
-    fi
-
-    log_success "Pipeline 生成完成: $PPL_SQL"
-}
-
-# ============ 步骤3: 训练 ============
-step_train() {
-    log_step "[3/5] 模型训练 =========="
-
-    if should_skip "train"; then
-        log_warn "跳过训练步骤"
-        return 0
-    fi
-
-    # 检查训练数据
-    if [[ ! -f "$TRAIN_DATA" ]]; then
-        # 尝试使用 pipeline 生成的数据
-        if [[ -f "$ENHANCED_PPL_SQL" ]]; then
-            log_warn "使用 $ENHANCED_PPL_SQL 作为训练数据"
-            TRAIN_DATA="$ENHANCED_PPL_SQL"
-        elif [[ -f "$PPL_SQL" ]]; then
-            log_warn "使用 $PPL_SQL 作为训练数据"
-            TRAIN_DATA="$PPL_SQL"
-        else
-            log_error "找不到训练数据文件"
-            safe_exit 1
-        fi
-    fi
-
-    # 创建临时训练脚本
-    local temp_train_script="${BASE_DIR}/.temp_train_${TIMESTAMP}.py"
-
-    cat > "$temp_train_script" << TRAIN_SCRIPT
-import sys
+python3 << EOF 2>&1 | tee -a "$LOG_FILE"
+import json
 import os
+import sys
 
-# 添加 lazyllm 路径
-sys.path.insert(0, '${LAZYLLM_PATH}')
-
-local_path = "<LOCAL_PYTHON_PACKAGES_PATH>"
+local_path = os.path.expanduser("~/.local/lib/python3.10/site-packages")
 if local_path not in sys.path:
     sys.path.insert(0, local_path)
 
 import lazyllm
 from lazyllm import finetune, deploy, launchers
 
-model_path="${SFT_BASE_MODEL}"
-model = lazyllm.TrainableModule(model_path, target_path='${CHECKPOINT_DIR}')\
+DATA_DIR = "$DATA_DIR"
+MODEL_DIR = "$MODEL_DIR"
+train_file = os.path.join(DATA_DIR, "ppl_text2sql.json")
+checkpoint_dir = os.path.join(MODEL_DIR, "checkpoint")
+
+if os.path.exists(checkpoint_dir):
+    print("  模型已存在，跳过训练")
+    exit(0)
+
+sft_model_path = "$SFT_BASE_MODEL"
+model = lazyllm.TrainableModule(sft_model_path, target_path=checkpoint_dir)\
     .mode('finetune')\
-    .trainset('${TRAIN_DATA}')\
+    .trainset(train_file)\
     .finetune_method((finetune.llamafactory, {
         'learning_rate': 1e-5,
         'cutoff_len': 4096,
@@ -624,313 +285,167 @@ model = lazyllm.TrainableModule(model_path, target_path='${CHECKPOINT_DIR}')\
         'gradient_accumulation_steps': 4,
         'num_train_epochs': 3.0,
         'template': 'qwen',
-        'stage':'sft',
-        'save_steps': 10,
-        'resume_from_checkpoint': None,
-        'save_strategy': 'steps',
-        'save_total_limit': 3,
-        'launcher': launchers.sco(
-            ngpus=1,
-            partition='a800',
-            resource='N3lS.Ii.I60.1',
-        ),
+        'stage': 'sft',
+        'save_steps': 100,
+        'save_total_limit': 2,
+        'launcher': launchers.sco(ngpus=1, partition='a800'),
     }))
 
 model.update()
-TRAIN_SCRIPT
+print(f"  模型保存: {checkpoint_dir}")
+EOF
 
-    log_info "训练配置:"
-    log_info "  - 基础模型: ${SFT_BASE_MODEL}"
-    log_info "  - 训练数据: $TRAIN_DATA"
-    log_info "  - 输出目录: $CHECKPOINT_DIR"
+if [ $? -ne 0 ]; then
+    log_error "步骤3失败！详细错误请查看日志: $LOG_FILE"
+    safe_exit 1
+fi
 
-    run_cmd "cd '${BASE_DIR}' && python3 '${temp_train_script}'" "模型训练"
+# ============ 步骤4: 评测集推理 ============
+log_step "[4/5] 运行评测集推理..."
 
-    # 清理临时文件
-    rm -f "$temp_train_script"
-
-    # 查找生成的 checkpoint
-    CHECKPOINT_PATH=$(find "$CHECKPOINT_DIR" -name "lazyllm_merge" -type d 2>/dev/null | head -1)
-    if [[ -z "$CHECKPOINT_PATH" ]]; then
-        log_warn "未找到合并后的 checkpoint, 但训练可能仍在进行中"
-        log_warn "请训练完成后手动运行 test 步骤"
-    else
-        log_success "训练完成: $CHECKPOINT_PATH"
-    fi
-}
-
-# ============ 步骤4: 测试 ============
-step_test() {
-    log_step "[4/5] 模型测试 =========="
-
-    if should_skip "test"; then
-        log_warn "跳过测试步骤"
-        return 0
-    fi
-
-    # 查找 checkpoint
-    if [[ -z "$CHECKPOINT_PATH" ]]; then
-        CHECKPOINT_PATH=$(find "$CHECKPOINT_DIR" -name "lazyllm_merge" -type d 2>/dev/null | head -1)
-    fi
-
-    if [[ -z "$CHECKPOINT_PATH" ]] || [[ ! -d "$CHECKPOINT_PATH" ]]; then
-        log_error "找不到训练好的模型 checkpoint"
-        log_error "请确认训练步骤已完成或手动指定 checkpoint 路径"
-        safe_exit 1
-    fi
-
-    if [[ ! -f "$TEST_INPUT" ]]; then
-        log_error "找不到测试数据: $TEST_INPUT"
-        safe_exit 1
-    fi
-
-    # 创建临时测试脚本
-    local temp_test_script="${BASE_DIR}/.temp_test_${TIMESTAMP}.py"
-
-    cat > "$temp_test_script" << TESTSCRIPT
-#!/usr/bin/env python3
+python3 << EOF 2>&1 | tee -a "$LOG_FILE"
+import json
+import os
 import sys
-sys.path.insert(0, '${LAZYLLM_PATH}')
+import glob
+import re
+
+local_path = os.path.expanduser("~/.local/lib/python3.10/site-packages")
+if local_path not in sys.path:
+    sys.path.insert(0, local_path)
 
 import lazyllm
-import torch
-import torch.distributed as dist
-from transformers import AutoTokenizer, AutoConfig
-from transformers import AutoModelForCausalLM
-import json
-from datetime import datetime
-from vllm import LLM, SamplingParams
-import re
-import os
+from lazyllm import deploy
 
-def load_model(model_path):
-    print(f"Loading model from: {model_path}")
-    os.environ["VLLM_USE_V1_ENGINE"] = "0"
-    print(f"Using vLLM for accelerated inference...")
-    llm = LLM(
-        model=model_path,
-        trust_remote_code=True,
-        tensor_parallel_size=1,
-        gpu_memory_utilization=0.8,
-        max_model_len=4096,
-        enforce_eager=True
-    )
-    print(f"Model loaded successfully with vLLM!")
-    return llm
+DATA_DIR = "$DATA_DIR"
+OUTPUT_DIR = "$OUTPUT_DIR"
+MODEL_DIR = "$MODEL_DIR"
 
-def extract_sql_from_response(response):
-    sql_pattern = r'\`\`\`sql\s*(.*?)\s*\`\`\`'
-    matches = re.findall(sql_pattern, response, re.DOTALL | re.IGNORECASE)
-    if matches:
-        return matches[-1].strip()
-    code_pattern = r'\`\`\`\s*(.*?)\s*\`\`\`'
-    matches = re.findall(code_pattern, response, re.DOTALL)
-    if matches:
-        return matches[-1].strip()
-    select_pattern = r'(SELECT\s+.*?)\s*(?:\n|$)'
-    matches = re.findall(select_pattern, response, re.DOTALL | re.IGNORECASE)
-    if matches:
-        return matches[0].strip()
-    return response.strip()
+test_file = os.path.join(DATA_DIR, "test_text2sql.jsonl")
+inference_output = os.path.join(OUTPUT_DIR, "inference_results.json")
 
-def validate_sql(sql):
-    issues = []
-    if not sql:
-        issues.append("Empty SQL")
-        return False, issues
-    sql_upper = sql.upper()
-    if not sql_upper.startswith('SELECT'):
-        issues.append("SQL doesn't start with SELECT")
-    if 'FROM' not in sql_upper:
-        issues.append("Missing FROM clause")
-    if sql.count('(') != sql.count(')'):
-        issues.append("Unbalanced parentheses")
-    dangerous = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER']
-    for kw in dangerous:
-        if kw in sql_upper:
-            issues.append(f"Contains dangerous keyword: {kw}")
-            break
-    is_valid = len(issues) == 0 or all(i.startswith("SQL doesn't") or i.startswith("Missing") for i in issues)
-    return is_valid, issues
+# 自动查找最新的 lazyllm_merge 目录
+def find_latest_merge_model(base_dir):
+    merge_dirs = []
+    for root, dirs, files in os.walk(base_dir):
+        if 'lazyllm_merge' in dirs:
+            path = os.path.join(root, 'lazyllm_merge')
+            try:
+                merge_dirs.append((path, os.path.getmtime(path)))
+            except OSError:
+                pass
+    return max(merge_dirs, key=lambda x: x[1])[0] if merge_dirs else None
 
-def generate_response(llm, prompt, max_new_tokens=512, temperature=0.1):
-    system_prompt = "You are a SQL expert. Based on the database schema provided, generate a SQL query to answer the question. Return ONLY the SQL query without any explanation."
-    formatted_prompt = f"<|im_start|>system\n{system_prompt}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
-    sampling_params = SamplingParams(
-        temperature=temperature,
-        top_p=0.95,
-        max_tokens=max_new_tokens,
-        stop=[";", "\n\n", "Question:", "<|im_end|>"],
-    )
-    outputs = llm.generate(formatted_prompt, sampling_params=sampling_params)
-    raw_response = outputs[0].outputs[0].text
-    extracted_sql = extract_sql_from_response(raw_response)
-    is_valid, validation_issues = validate_sql(extracted_sql)
-    return {
-        'raw_response': raw_response,
-        'extracted_sql': extracted_sql,
-        'is_valid': is_valid,
-        'validation_issues': validation_issues
-    }
+model_path = find_latest_merge_model(MODEL_DIR)
+if not model_path:
+    print(f"  错误: 在 {MODEL_DIR} 下未找到 lazyllm_merge 目录")
+    exit(1)
+print(f"  找到模型: {model_path}")
 
-def test_model(llm, test_cases):
-    results = []
-    valid_count = 0
-    for i, test_case in enumerate(test_cases, 1):
-        print(f"\n{'='*80}")
-        print(f"Test Case {i}/{len(test_cases)}")
-        print(f"DB ID: {test_case.get('db_id', 'N/A')}")
-        print(f"Question: {test_case['question']}")
-        try:
-            result = generate_response(llm, test_case['prompt'])
-            print(f"\nExtracted SQL: {result['extracted_sql']}")
-            print(f"Valid SQL: {result['is_valid']}")
-            if result['is_valid']:
-                valid_count += 1
-            results.append({
-                "test_case_id": i,
-                "db_id": test_case.get('db_id', ''),
-                "question": test_case['question'],
-                "gold_sql": test_case.get('gold_sql', ''),
-                "raw_response": result['raw_response'],
-                "predicted_sql": result['extracted_sql'],
-                "is_valid": result['is_valid'],
-                "validation_issues": result['validation_issues'],
-                "timestamp": datetime.now().isoformat()
-            })
-        except Exception as e:
-            print(f"\nError: {e}")
-            results.append({
-                "test_case_id": i,
-                "db_id": test_case.get('db_id', ''),
-                "question": test_case['question'],
-                "gold_sql": test_case.get('gold_sql', ''),
-                "raw_response": f"ERROR: {str(e)}",
-                "predicted_sql": "",
-                "is_valid": False,
-                "validation_issues": [str(e)],
-                "timestamp": datetime.now().isoformat()
-            })
-    print(f"\n{'='*80}")
-    print(f"Valid SQL Rate: {valid_count}/{len(test_cases)} ({valid_count/len(test_cases)*100:.1f}%)")
-    print(f"{'='*80}")
-    return results
+if os.path.exists(inference_output):
+    print("  推理结果已存在，跳过推理")
+    exit(0)
 
-def load_test_cases(jsonl_file):
-    test_cases = []
-    with open(jsonl_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            data = json.loads(line.strip())
-            if 'schema' in data and 'question' in data:
-                prompt = f"Database Schema:\n{data['schema']}\n\nQuestion: {data['question']}"
-                test_cases.append({
-                    'prompt': prompt,
-                    'question': data['question'],
-                    'gold_sql': data.get('SQL', ''),
-                    'db_id': data.get('db_id', '')
-                })
-    return test_cases
+# 加载测试数据
+print("  加载测试数据...")
+test_data = []
+with open(test_file, 'r') as f:
+    for line in f:
+        test_data.append(json.loads(line))
+print(f"  测试样本: {len(test_data)} 条")
 
-def main():
-    model_path = '${CHECKPOINT_PATH}'
-    output_path = '${TEST_OUTPUT}'
-    test_cases_file = '${TEST_INPUT}'
+# 加载训练好的模型
+print("  加载训练好的模型...")
+model = lazyllm.TrainableModule(model_path).deploy_method(deploy.vllm)
+model.start()
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    test_cases = load_test_cases(test_cases_file)
+# 构建prompt并推理
+SYS_PROMPT = "You are a SQL expert. Based on the database schema provided, generate a SQL query to answer the question. Return ONLY the SQL query without any explanation."
 
-    print("="*80)
-    print(" Model Testing Script")
-    print("="*80)
-    print(f"Model Path: {model_path}")
-    print(f"Output Path: {output_path}")
-    print(f"Number of Test Cases: {len(test_cases)}")
-    print("="*80)
+def extract_sql(text):
+    patterns = [
+        r'```sql\s*(.*?)\s*```',
+        r'```\s*(.*?)\s*```',
+        r'(SELECT\s+.*)'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return text.strip()
 
-    llm = load_model(model_path)
-    results = test_model(llm, test_cases)
+print("  开始推理...")
+results = []
+for i, item in enumerate(test_data):
+    schema = item.get('schema', '')
+    question = item.get('question', '')
+    gold_sql = item.get('gold_sql', '')
 
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-    print(f"\nResults saved to: {output_path}")
+    prompt = f"{SYS_PROMPT}\n\nDatabase Schema:\n{schema}\n\nQuestion: {question}"
+    response = model(prompt)
+    extracted_sql = extract_sql(response)
 
-    print("\n" + "="*80)
-    print("Testing Summary")
-    print("="*80)
-    print(f"Total test cases: {len(results)}")
-    successful = sum(1 for r in results if not r["raw_response"].startswith("ERROR"))
-    valid_sql = sum(1 for r in results if r.get("is_valid", False))
-    print(f"Successful generations: {successful}")
-    print(f"Valid SQL outputs: {valid_sql} ({valid_sql/len(results)*100:.1f}%)")
-    print("="*80)
+    results.append({
+        'test_case_id': i,
+        'db_id': item.get('db_id', ''),
+        'question': question,
+        'schema': schema,
+        'gold_sql': gold_sql,
+        'raw_response': response,
+        'predicted_sql': extracted_sql
+    })
 
-if __name__ == "__main__":
-    main()
-TESTSCRIPT
+    if (i + 1) % 10 == 0:
+        print(f"    已处理: {i+1}/{len(test_data)}")
 
-    log_info "测试配置:"
-    log_info "  - 模型: $CHECKPOINT_PATH"
-    log_info "  - 测试数据: $TEST_INPUT"
-    log_info "  - 输出: $TEST_OUTPUT"
+# 保存推理结果
+with open(inference_output, 'w', encoding='utf-8') as f:
+    json.dump(results, f, ensure_ascii=False, indent=2)
 
-    run_cmd "cd '${BASE_DIR}' && python3 '${temp_test_script}'" "模型测试"
+print(f"  推理完成: {inference_output}")
+model.stop()
+EOF
 
-    # 清理临时文件
-    rm -f "$temp_test_script"
-
-    if [[ ! -f "$TEST_OUTPUT" ]]; then
-        log_error "测试失败,未生成: $TEST_OUTPUT"
-        safe_exit 1
-    fi
-
-    log_success "测试完成: $TEST_OUTPUT"
-}
+if [ $? -ne 0 ]; then
+    log_error "步骤4失败！详细错误请查看日志: $LOG_FILE"
+    safe_exit 1
+fi
 
 # ============ 步骤5: 评估 ============
-step_eval() {
-    log_step "[5/5] 结果评估 =========="
+log_step "[5/5] 运行 Text2SQL 评估..."
 
-    if should_skip "eval"; then
-        log_warn "跳过评估步骤"
-        return 0
-    fi
-
-    if [[ ! -f "$TEST_OUTPUT" ]]; then
-        log_error "找不到测试结果: $TEST_OUTPUT"
-        log_error "请先运行 test 步骤"
-        safe_exit 1
-    fi
-
-    if [[ ! -f "$TEST_INPUT" ]]; then
-        log_error "找不到参考答案: $TEST_INPUT"
-        safe_exit 1
-    fi
-
-    log_info "评估配置:"
-    log_info "  - 测试结果: $TEST_OUTPUT"
-    log_info "  - 参考答案: $TEST_INPUT"
-    log_info "  - 输出目录: $EVAL_OUTPUT_DIR"
-
-    # 创建临时评估脚本
-    local temp_eval_script="${BASE_DIR}/.temp_eval_${TIMESTAMP}.py"
-
-    cat > "$temp_eval_script" << 'EVALSCRIPT'
-#!/usr/bin/env python3
+python3 << 'PYEOF' 2>&1 | tee -a "$LOG_FILE"
 import json
-import sys
 import os
-from datetime import datetime
+import sys
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-sys.path.insert(0, '<LAZYLLM_PATH>')
+OUTPUT_DIR = "$OUTPUT_DIR"
+LAZYLLM_PATH = "$LAZYLLM_PATH"
+JUDGE_MODEL = "$JUDGE_MODEL"
+JUDGE_WORKERS = int(os.environ.get('JUDGE_WORKERS', '4'))
 
+inference_file = os.path.join(OUTPUT_DIR, "inference_results.json")
+report_path = os.path.join(OUTPUT_DIR, "evaluation_report.json")
+
+if os.path.exists(report_path):
+    print("  评估报告已存在，跳过评估")
+    with open(report_path, 'r') as f:
+        report = json.load(f)
+    s = report['summary']
+    print(f"  平均总分: {s['avg_overall_score']:.2f}/5.0")
+    print(f"  语义得分: {s['avg_semantic_score']:.2f}/5.0")
+    print(f"  语法得分: {s['avg_syntax_score']:.2f}/5.0")
+    print(f"  等价得分: {s['avg_equivalence_score']:.2f}/3.0")
+    print(f"  正确率: {s['accuracy']*100:.1f}%")
+    exit(0)
+
+sys.path.insert(0, LAZYLLM_PATH)
 import lazyllm
-from lazyllm import LOG
+from lazyllm import deploy
 
-
-class Text2SQLJudge:
-    """使用 LLM 评估 Text2SQL 结果"""
-
-    JUDGE_PROMPT = """你是一个 非常非常严格的SQL 评估专家。请评估生成的 SQL 是否正确回答了用户问题。
+JUDGE_PROMPT = '''你是一个 非常非常严格的SQL 评估专家。请评估生成的 SQL 是否正确回答了用户问题。
 
 【用户问题】
 {question}
@@ -968,325 +483,152 @@ class Text2SQLJudge:
     "is_correct": true,
     "reason": "SQL 完全正确，正确理解了用户意图"
 }
-```
-"""
+```'''
 
-    def __init__(self, model_path: str = "<JUDGE_MODEL>"):
-        print(f"正在加载评判模型: {model_path}")
-        self.model = lazyllm.TrainableModule(model_path)
-        self.model.start()
-        print("评判模型加载完成！")
+class SQLJudge:
+    def __init__(self, model_path):
+        self.model = lazyllm.TrainableModule(model_path).deploy_method((deploy.vllm, {
+            'max_model_len': 4096,
+            'gpu_memory_utilization': 0.9,
+            'max_num_seqs': 8,
+        })).start()
 
-    def evaluate_single(self, question: str, gold_sql: str, pred_sql: str) -> dict:
-        prompt = self.JUDGE_PROMPT.format(
+    def evaluate(self, question, gold_sql, pred_sql):
+        prompt = JUDGE_PROMPT.format(
             question=question,
             gold_sql=gold_sql,
             pred_sql=pred_sql
         )
         try:
-            response = self.model(prompt)
-            import re
-            json_match = re.search(r'\`\`\`json\s*(.*?)\s*\`\`\`', response, re.DOTALL)
+            result = self.model(prompt, max_tokens=256)
+            json_match = re.search(r'```json\s*({.*?)\s*```', result, re.DOTALL)
             if json_match:
-                result = json.loads(json_match.group(1))
+                parsed = json.loads(json_match.group(1))
             else:
-                result = json.loads(response.strip())
-            return result
-        except Exception as e:
-            LOG.warning(f"解析评估结果失败: {e}")
+                parsed = json.loads(result.strip())
             return {
-                "semantic_score": 0,
-                "syntax_score": 0,
-                "equivalence_score": 0,
-                "overall_score": 0.0,
-                "is_correct": False,
-                "reason": f"评估失败: {str(e)}"
+                'semantic_score': parsed.get('semantic_score', 0),
+                'syntax_score': parsed.get('syntax_score', 0),
+                'equivalence_score': parsed.get('equivalence_score', 0),
+                'overall_score': parsed.get('overall_score', 0.0),
+                'is_correct': parsed.get('is_correct', False),
+                'reason': parsed.get('reason', '')
+            }
+        except Exception as e:
+            return {
+                'semantic_score': 0,
+                'syntax_score': 0,
+                'equivalence_score': 0,
+                'overall_score': 0.0,
+                'is_correct': False,
+                'reason': f'评估失败: {str(e)}'
             }
 
-    def evaluate_batch(self, predictions: list, references: list) -> list:
-        results = []
-        total = len(predictions)
-        ref_dict = {ref.get('instruction', ref.get('question', '')): ref['SQL']
-                    for ref in references}
+# 加载推理结果
+with open(inference_file, 'r') as f:
+    inference_data = json.load(f)
 
-        for i, pred in enumerate(predictions, 1):
-            question = pred.get('question', '')
-            pred_sql = pred.get('raw_response', '') or pred.get('response', '')
-            gold_sql = ref_dict.get(question, '')
+print(f"  加载推理结果: {len(inference_data)} 条")
 
-            print(f"\n[{i}/{total}] 评估中...")
-            print(f"  问题: {question[:50]}...")
+judge = SQLJudge(JUDGE_MODEL)
 
-            eval_result = self.evaluate_single(question, gold_sql, pred_sql)
+results = [None] * len(inference_data)
 
-            results.append({
-                "test_case_id": pred.get('test_case_id', i),
-                "question": question,
-                "gold_sql": gold_sql,
-                "pred_sql": pred_sql,
-                "evaluation": eval_result
-            })
-
-            print(f"  评分: {eval_result.get('overall_score', 0):.1f}/5.0, "
-                  f"正确: {eval_result.get('is_correct', False)}")
-
-        return results
-
-    def stop(self):
-        self.model.stop()
-
-
-def load_jsonl_file(filepath: str) -> list:
-    data = []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                data.append(json.loads(line))
-    return data
-
-
-def calculate_stats(results: list) -> dict:
-    total = len(results)
-    correct_count = sum(1 for r in results if r['evaluation'].get('is_correct', False))
-    scores = [r['evaluation'].get('overall_score', 0) for r in results]
-    semantic_scores = [r['evaluation'].get('semantic_score', 0) for r in results]
-    syntax_scores = [r['evaluation'].get('syntax_score', 0) for r in results]
-    equivalence_scores = [r['evaluation'].get('equivalence_score', 0) for r in results]
-
-    return {
-        "total_samples": total,
-        "correct_count": correct_count,
-        "accuracy": correct_count / total if total > 0 else 0,
-        "avg_overall_score": sum(scores) / len(scores) if scores else 0,
-        "avg_semantic_score": sum(semantic_scores) / len(semantic_scores) if semantic_scores else 0,
-        "avg_syntax_score": sum(syntax_scores) / len(syntax_scores) if syntax_scores else 0,
-        "avg_equivalence_score": sum(equivalence_scores) / len(equivalence_scores) if equivalence_scores else 0,
+def evaluate_single(i, item):
+    question = item.get('question', '')
+    gold_sql = item.get('gold_sql', '')
+    pred_sql = item.get('predicted_sql', '')
+    eval_result = judge.evaluate(question, gold_sql, pred_sql)
+    return i, {
+        'test_case_id': item.get('test_case_id', i),
+        'question': question[:100] + '...' if len(question) > 100 else question,
+        'gold_sql': gold_sql[:200] + '...' if len(gold_sql) > 200 else gold_sql,
+        'predicted_sql': pred_sql[:200] + '...' if len(pred_sql) > 200 else pred_sql,
+        'evaluation': eval_result
     }
 
+num_workers = max(1, min(JUDGE_WORKERS, len(inference_data)))
+with ThreadPoolExecutor(max_workers=num_workers) as executor:
+    futures = [executor.submit(evaluate_single, i, item) for i, item in enumerate(inference_data)]
 
-def print_report(stats: dict):
-    print("\n" + "="*80)
-    print("LLM as Judge 评估报告")
-    print("="*80)
-    print(f"\n【模型表现】")
-    print(f"  平均总分: {stats['avg_overall_score']:.2f}/5.0")
-    print(f"  语义得分: {stats['avg_semantic_score']:.2f}/5.0")
-    print(f"  语法得分: {stats['avg_syntax_score']:.2f}/5.0")
-    print(f"  等价得分: {stats['avg_equivalence_score']:.2f}/5.0")
-    print(f"  正确率: {stats['accuracy']*100:.1f}%")
-    print("\n" + "="*80)
+    for done_count, future in enumerate(as_completed(futures), 1):
+        idx, result = future.result()
+        results[idx] = result
+        if done_count % 20 == 0 or done_count == len(inference_data):
+            print(f"    已评估: {done_count}/{len(inference_data)}")
 
+judge.model.stop()
 
-def main():
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--predictions', required=True)
-    parser.add_argument('--references', required=True)
-    parser.add_argument('--output-dir', required=True)
-    args = parser.parse_args()
+total = len(results)
+correct_count = sum(1 for r in results if r['evaluation']['is_correct'])
+scores = [r['evaluation']['overall_score'] for r in results]
+semantic_scores = [r['evaluation']['semantic_score'] for r in results]
+syntax_scores = [r['evaluation']['syntax_score'] for r in results]
+equivalence_scores = [r['evaluation']['equivalence_score'] for r in results]
 
-    ppl_file = args.predictions
-    reference_file = args.references
-    output_dir = args.output_dir
-
-    os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%m%d%H%M%S")
-
-    print("加载数据...")
-    ppl_data = json.load(open(ppl_file, 'r', encoding='utf-8'))
-    reference_data = load_jsonl_file(reference_file)
-
-    print(f"PPL结果: {len(ppl_data)} 条")
-    print(f"参考答案: {len(reference_data)} 条")
-
-    judge = Text2SQLJudge()
-
-    try:
-        print("\n" + "="*80)
-        print("评估PPL模型...")
-        print("="*80)
-        ppl_eval_results = judge.evaluate_batch(ppl_data, reference_data)
-
-        ppl_eval_file = os.path.join(output_dir, f"ppl_eval_{timestamp}.json")
-        with open(ppl_eval_file, 'w', encoding='utf-8') as f:
-            json.dump(ppl_eval_results, f, ensure_ascii=False, indent=2)
-        print(f"PPL模型评估结果已保存: {ppl_eval_file}")
-
-        # 统计
-        stats = calculate_stats(ppl_eval_results)
-        print_report(stats)
-
-        stats_file = os.path.join(output_dir, f"stats_{timestamp}.json")
-        with open(stats_file, 'w', encoding='utf-8') as f:
-            json.dump(stats, f, ensure_ascii=False, indent=2)
-        print(f"统计结果已保存: {stats_file}")
-
-    finally:
-        judge.stop()
-
-
-if __name__ == "__main__":
-    main()
-EVALSCRIPT
-
-    run_cmd "cd '${BASE_DIR}' && python3 '${temp_eval_script}' --predictions '${TEST_OUTPUT}' --references '${TEST_INPUT}' --output-dir '${EVAL_OUTPUT_DIR}'" "结果评估"
-
-    # 清理临时文件
-    rm -f "$temp_eval_script"
-
-    log_success "评估完成,结果保存在: $EVAL_OUTPUT_DIR"
+stats = {
+    'total_samples': total,
+    'correct_count': correct_count,
+    'accuracy': correct_count / total if total > 0 else 0,
+    'avg_overall_score': sum(scores) / len(scores) if scores else 0,
+    'avg_semantic_score': sum(semantic_scores) / len(semantic_scores) if semantic_scores else 0,
+    'avg_syntax_score': sum(syntax_scores) / len(syntax_scores) if syntax_scores else 0,
+    'avg_equivalence_score': sum(equivalence_scores) / len(equivalence_scores) if equivalence_scores else 0,
 }
 
-# ============================================
-# 打印执行计划
-# ============================================
+print(f"  评估完成: {total} 条样本")
+print(f"  平均总分: {stats['avg_overall_score']:.2f}/5.0")
+print(f"  语义得分: {stats['avg_semantic_score']:.2f}/5.0")
+print(f"  语法得分: {stats['avg_syntax_score']:.2f}/5.0")
+print(f"  等价得分: {stats['avg_equivalence_score']:.2f}/3.0")
+print(f"  正确率: {stats['accuracy']*100:.1f}%")
 
-print_execution_plan() {
-    log_info "=========================================="
-    log_info "Text2SQL 一键处理脚本"
-    log_info "=========================================="
-    log_info "执行计划:"
+with open(report_path, 'w') as f:
+    json.dump({
+        'summary': stats,
+        'details': results
+    }, f, indent=2)
 
-    case "$STEP" in
-        transform)
-            log_info "  [1/1] 数据转换"
-            ;;
-        pipeline)
-            log_info "  [1/1] Pipeline 生成"
-            ;;
-        train)
-            log_info "  [1/1] 模型训练"
-            ;;
-        test)
-            log_info "  [1/1] 模型测试"
-            ;;
-        eval)
-            log_info "  [1/1] 结果评估"
-            ;;
-        all)
-            if ! should_skip "transform"; then log_info "  [1/5] 数据转换"; fi
-            if ! should_skip "pipeline"; then log_info "  [2/5] Pipeline 生成"; fi
-            if ! should_skip "train"; then log_info "  [3/5] 模型训练"; fi
-            if ! should_skip "test"; then log_info "  [4/5] 模型测试"; fi
-            if ! should_skip "eval"; then log_info "  [5/5] 结果评估"; fi
-            ;;
-    esac
+print(f"  报告保存: {report_path}")
+PYEOF
 
-    if [[ -n "$SKIP_STEPS" ]]; then
-        log_warn "跳过的步骤: $SKIP_STEPS"
-    fi
+if [ $? -ne 0 ]; then
+    log_error "步骤5失败！详细错误请查看日志: $LOG_FILE"
+    safe_exit 1
+fi
 
-    log_info "=========================================="
-}
+# ============ 完成 ============
+log ""
+log "=========================================="
+log "全部完成!"
+log "=========================================="
+log ""
+log_info "结果汇总:"
+log "  数据目录: $DATA_DIR"
+log "  模型目录: $MODEL_DIR/checkpoint"
+log "  推理结果: $OUTPUT_DIR/inference_results.json"
+log "  评估报告: $OUTPUT_DIR/evaluation_report.json"
+log "  日志文件: $LOG_FILE"
+log ""
 
-# ============================================
-# 主执行流程
-# ============================================
+# 显示评估结果摘要
+if [ -f "$OUTPUT_DIR/evaluation_report.json" ]; then
+    log_info "评估统计:"
+    python3 << RESULT 2>&1 | tee -a "$LOG_FILE"
+import json
+with open("$OUTPUT_DIR/evaluation_report.json", 'r') as f:
+    report = json.load(f)
+s = report['summary']
+print(f"  - 总样本: {s['total_samples']}")
+print(f"  - 平均总分: {s['avg_overall_score']:.2f}/5.0")
+print(f"  - 语义得分: {s['avg_semantic_score']:.2f}/5.0")
+print(f"  - 语法得分: {s['avg_syntax_score']:.2f}/5.0")
+print(f"  - 等价得分: {s['avg_equivalence_score']:.2f}/3.0")
+print(f"  - 正确率: {s['accuracy']*100:.1f}%")
+RESULT
+fi
 
-main() {
-    print_execution_plan
+log ""
+log "=========================================="
 
-    if [[ "$DRY_RUN" == true ]]; then
-        log_warn "Dry-run 模式: 只显示将要执行的命令"
-    fi
-
-    case "$STEP" in
-        transform)
-            step_transform
-            ;;
-        pipeline)
-            step_pipeline
-            ;;
-        train)
-            step_train
-            ;;
-        test)
-            step_test
-            ;;
-        eval)
-            step_eval
-            ;;
-        all)
-            step_transform
-            step_pipeline
-            step_train
-            step_test
-            step_eval
-            ;;
-        *)
-            log_error "未知步骤: $STEP"
-            show_help
-            safe_exit 1
-            ;;
-    esac
-
-    # 计算总耗时
-    END_TIME=$(date +%s)
-    DURATION=$((END_TIME - START_TIME))
-    HOURS=$((DURATION / 3600))
-    MINUTES=$(((DURATION % 3600) / 60))
-    SECONDS=$((DURATION % 60))
-
-    log_info "=========================================="
-    log_success "所有步骤执行完成!"
-    log_info "总耗时: ${HOURS}小时 ${MINUTES}分钟 ${SECONDS}秒"
-    log_info "日志文件: ${MASTER_LOG}"
-    log_info "=========================================="
-}
-
-# 运行主流程
-main
-
-# ============================================
-# 使用说明
-# ============================================
-#
-# ## 1. 配置修改
-# 使用前请修改脚本中的以下占位符配置:
-#
-#   <OUTPUT_BASE_DIR>          - 输出基础目录
-#   <LAZYLLM_PATH>             - LazyLLM 安装路径
-#   <PIPELINE_MODEL>           - Pipeline 使用的模型路径
-#   <SFT_BASE_MODEL>           - SFT 训练基础模型路径
-#   <JUDGE_MODEL>              - 评估评判模型路径
-#   <LOCAL_PYTHON_PACKAGES_PATH> - Python site-packages 路径
-#
-# ## 2. 运行方式
-#
-#   bash run_text2sql_pipeline.sh              # 运行完整流程
-#   bash run_text2sql_pipeline.sh transform    # 仅运行数据转换
-#   bash run_text2sql_pipeline.sh pipeline     # 仅运行 Pipeline 生成
-#   bash run_text2sql_pipeline.sh train        # 仅运行模型训练
-#   bash run_text2sql_pipeline.sh test         # 仅运行模型测试
-#   bash run_text2sql_pipeline.sh eval         # 仅运行结果评估
-#
-# ## 3. 高级用法
-#
-#   # 跳过指定步骤 (用逗号分隔)
-#   bash run_text2sql_pipeline.sh all -s train,eval
-#
-#   # 限制 Pipeline 处理数据量
-#   bash run_text2sql_pipeline.sh all -m 500
-#
-#   # Dry-run 模式 (只显示命令,不执行)
-#   bash run_text2sql_pipeline.sh all --dry-run
-#
-#   # 显示帮助信息
-#   bash run_text2sql_pipeline.sh -h
-#
-# ## 4. 流程说明
-#
-#   [1/5] 数据转换  - 将输入 JSON 转换为 pipeline 所需格式
-#   [2/5] Pipeline  - 使用 LLM 生成合成训练数据
-#   [3/5] 模型训练  - 基于生成的数据进行 SFT 微调
-#   [4/5] 模型测试  - 使用训练好的模型进行推理测试
-#   [5/5] 结果评估  - 使用 LLM as Judge 评估生成质量
-#
-# ## 5. 注意事项
-#
-#   - 请不要用 source 执行此脚本
-#   - 确保所有路径配置正确且可访问
-#   - 训练步骤需要 GPU 资源
-#   - 日志文件保存在 logs/ 目录下
-#
+safe_exit 0
