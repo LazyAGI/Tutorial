@@ -1,13 +1,12 @@
 """
-DuReader 预训练一体化脚本：数据准备、训练、评测一步到位。
+Wikitext 预训练一体化脚本：数据准备、训练、评测一步到位。
 支持 --mode: prepare | train | eval | full
 """
 import os
 import re
 import json
-import random
-import argparse
 import torch
+import argparse
 from datetime import datetime
 from typing import List, Dict, Tuple
 
@@ -16,23 +15,26 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import lazyllm
 from lazyllm import finetune, launchers
 from datasets import load_dataset
+from lazyllm.tools.data.pipelines.pt_text_ppl import build_text_pt_pipeline
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 RESULTS_DIR = os.path.join(BASE_DIR, 'results')
 PRETRAIN_CKPT_DIR = os.path.join(BASE_DIR, 'pretrain_ckpt')
-TRAIN_JSON_PATH = os.path.join(DATA_DIR, 'dureader_train.json')
-EVAL_JSONL_PATH = os.path.join(DATA_DIR, 'dureader_eval.jsonl')
+TRAIN_JSON_PATH = os.path.join(DATA_DIR, 'wikitext_train.json')
+EVAL_JSONL_PATH = os.path.join(DATA_DIR, 'wikitext_eval.jsonl')
+CLEANED_JSONL_PATH = os.path.join(DATA_DIR, 'wikitext_cleaned.jsonl')
 
 TRAIN_SAMPLES = 3000
 EVAL_SAMPLES = 200
-SAMPLE_SEED = 42
+RAW_LOAD_SAMPLES = 10000
 PREFIX_RATIO = 0.6
-SENTENCE_END_CHARS = '。！？；\n'
+SENTENCE_END_CHARS = '.!?;\n'
 
 BASE_MODEL_PATH = (
-    '/home/mnt/path/.lazyllm/model/modelscope/qwen/Qwen2.5-0.5B-Instruct'
+    '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/'
+    'Qwen2.5-0.5B-Instruct'
 )
 MAX_EVAL_SAMPLES = None
 MAX_NEW_TOKENS = 256
@@ -43,27 +45,10 @@ GEN_REPETITION_PENALTY = 1.05
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-def _get_context(item):
-    for key in ('context', 'passage', 'content'):
-        val = item.get(key)
-        if val and isinstance(val, str) and val.strip():
-            return val.strip()
-    doc = item.get('doc')
-    if isinstance(doc, list) and doc:
-        parts = [str(p).strip() for p in doc if p]
-        if parts:
-            return '\n'.join(parts)
-    if isinstance(doc, str) and doc.strip():
-        return doc.strip()
-    if isinstance(item.get('positive'), str) and item['positive'].strip():
-        return item['positive'].strip()
-    return ''
-
-
 def _split_at_sentence_boundary(text, target_ratio=0.5):
     n = len(text)
     if not n or target_ratio <= 0 or target_ratio >= 1:
-        return text[:n // 2], text[n // 2:]
+        return text[: n // 2], text[n // 2:]
     target_pos = int(n * target_ratio)
     pattern = re.compile(f'[{re.escape(SENTENCE_END_CHARS)}]')
     matches = list(pattern.finditer(text))
@@ -85,90 +70,112 @@ def _split_at_sentence_boundary(text, target_ratio=0.5):
     return prefix, continuation
 
 
+def _load_and_process_chunks():
+    print(f'正在加载 wikitext-2-raw-v1 train，取前 {RAW_LOAD_SAMPLES} 条非空数据...')
+    dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+    raw_texts = []
+    for row in dataset:
+        if len(raw_texts) >= RAW_LOAD_SAMPLES:
+            break
+        t = row.get('text', '')
+        if t and isinstance(t, str) and t.strip():
+            raw_texts.append(t.strip())
+    print(f'加载完成: 共 {len(raw_texts)} 条非空文本')
+
+    print('正在通过 build_text_pt_pipeline 处理...')
+    ppl = build_text_pt_pipeline(
+        content_key='content',
+        language='en',
+        min_chars=100,
+        max_chars=100000,
+        max_tokens=1024,
+        min_tokens=100,
+    )
+    data = [{'content': text} for text in raw_texts]
+    chunks = ppl(data)
+    chunks = (
+        chunks if isinstance(chunks, list)
+        else ([] if not chunks else [chunks])
+    )
+    print(f'处理完成: 共 {len(chunks)} 个 chunk')
+
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(CLEANED_JSONL_PATH, 'w', encoding='utf-8') as f:
+        for rec in chunks:
+            f.write(json.dumps(rec, ensure_ascii=False) + '\n')
+    print(f'pipeline 结果已保存: {CLEANED_JSONL_PATH}')
+
+    return chunks
+
+
 def prepare_dataset():
     os.makedirs(DATA_DIR, exist_ok=True)
     if os.path.exists(TRAIN_JSON_PATH) and os.path.exists(EVAL_JSONL_PATH):
         print('预训练集与评测集已存在，跳过生成')
         return
 
-    print('正在下载 DuReader robust 训练集（luozhouyang/dureader, robust）...')
-    try:
-        dataset = load_dataset(
-            'luozhouyang/dureader', 'robust', trust_remote_code=True)
-    except Exception as e:
-        print(f'下载失败: {e}')
+    chunks = _load_and_process_chunks()
+    if not chunks:
+        print('处理后无有效 chunk，退出')
         return
-    if dataset:
-        split = next(iter(dataset.keys()))
-        first = dataset[split][0]
-        print('=== 原始数据（第 1 条）===')
-        for k, v in first.items():
-            v_str = str(v)
-            suf = '...' if len(v_str) > 300 else ''
-            print(f'  {k}: {v_str[:300]}{suf}')
-        print()
 
-    seen = set()
-    all_contexts = []
-    train_split = (
-        dataset.get('train')
-        or dataset.get('validation')
-        or list(dataset.values())[0]
-    )
-    for item in train_split:
-        context = _get_context(item)
-        if context and context not in seen:
-            seen.add(context)
-            all_contexts.append(context)
-
-    n_train = min(TRAIN_SAMPLES, len(all_contexts))
-    n_eval = min(EVAL_SAMPLES, len(all_contexts) - n_train)
-    train_contexts = all_contexts[:n_train]
-    eval_contexts = all_contexts[:n_eval]
+    train_chunks = chunks[:TRAIN_SAMPLES]
+    eval_chunks = chunks[:EVAL_SAMPLES]
 
     if not os.path.exists(TRAIN_JSON_PATH):
+        texts = [c.get('content', c.get('text', '')) for c in train_chunks]
         with open(TRAIN_JSON_PATH, 'w', encoding='utf-8') as f:
             json.dump(
-                [{'text': c} for c in train_contexts],
+                [{'text': t} for t in texts],
                 f,
                 ensure_ascii=False,
                 indent=2,
             )
-        print(f'预训练集已保存：{TRAIN_JSON_PATH}，共 {len(train_contexts)} 条')
+        print(f'预训练集已保存：{TRAIN_JSON_PATH}，共 {len(texts)} 条')
 
     eval_samples = []
-    for ctx in eval_contexts:
+    for chunk in eval_chunks:
+        ctx = chunk.get('content', chunk.get('text', ''))
+        if not ctx:
+            continue
         prefix, continuation = _split_at_sentence_boundary(
-            ctx, target_ratio=PREFIX_RATIO)
+            ctx,
+            target_ratio=PREFIX_RATIO,
+        )
         if not prefix or not continuation:
             prefix = ctx[:len(ctx) // 2]
             continuation = ctx[len(ctx) // 2:]
         eval_samples.append({'prefix': prefix, 'continuation': continuation})
+
     with open(EVAL_JSONL_PATH, 'w', encoding='utf-8') as f:
         for rec in eval_samples:
             f.write(json.dumps(rec, ensure_ascii=False) + '\n')
     print(f'评测集已保存：{EVAL_JSONL_PATH}，共 {len(eval_samples)} 条')
 
     print('\n=== 处理后的训练集（第 1 条）===')
-    train_sample = {'text': train_contexts[0]} if train_contexts else {}
-    for k, v in train_sample.items():
-        v_str = str(v)
-        suf = '...' if len(v_str) > 400 else ''
-        print(f'  {k}: {v_str[:400]}{suf}')
+    if train_chunks:
+        text = train_chunks[0].get('content', train_chunks[0].get('text', ''))
+        print(f'  text: {text[:400]}{"..." if len(text) > 400 else ""}')
     print('\n=== 处理后的评测集（第 1 条）===')
     if eval_samples:
         rec = eval_samples[0]
-        pf, ct = rec['prefix'], rec['continuation']
-        sp, sc = '...' if len(pf) > 300 else '', '...' if len(ct) > 300 else ''
-        print(f'  prefix: {pf[:300]}{sp}')
-        print(f'  continuation: {ct[:300]}{sc}')
+        print(
+            f'  prefix: {rec["prefix"][:300]}'
+            f'{"..." if len(rec["prefix"]) > 300 else ""}'
+        )
+        print(
+            f'  continuation: {rec["continuation"][:300]}'
+            f'{"..." if len(rec["continuation"]) > 300 else ""}'
+        )
     print()
 
 
 def run_train():
     timestamp = datetime.now().strftime('%y%m%d%H%M%S')
     target_path = os.path.join(
-        PRETRAIN_CKPT_DIR, f'qwen2_5_0_5b_dureader_{timestamp}')
+        PRETRAIN_CKPT_DIR,
+        f'qwen2_5_0_5b_wikitext_{timestamp}',
+    )
     os.makedirs(PRETRAIN_CKPT_DIR, exist_ok=True)
 
     model = lazyllm.TrainableModule(BASE_MODEL_PATH, target_path=target_path)
@@ -243,7 +250,9 @@ def load_eval_samples(path: str, max_samples: int = None) -> List[Dict]:
 
 def load_model_and_tokenizer(model_path: str):
     tokenizer = AutoTokenizer.from_pretrained(
-        model_path, trust_remote_code=True)
+        model_path,
+        trust_remote_code=True,
+    )
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16 if DEVICE == 'cuda' else torch.float32,
@@ -253,7 +262,9 @@ def load_model_and_tokenizer(model_path: str):
 
 
 def compute_ppl(
-    model, tokenizer, samples: List[Dict]
+    model,
+    tokenizer,
+    samples: List[Dict],
 ) -> Tuple[float, float, List[float], List[float]]:
     ppl_list = []
     loss_list = []
@@ -286,7 +297,10 @@ def compute_ppl(
         ppl_list.append(ppl)
     n = len(ppl_list) if ppl_list else 0
     avg_loss = sum(loss_list) / n if n else 0.0
-    avg_ppl = torch.exp(torch.tensor(min(avg_loss, 50.0))).item() if n else 0.0
+    avg_ppl = (
+        torch.exp(torch.tensor(min(avg_loss, 50.0))).item()
+        if n else 0.0
+    )
     return avg_ppl, avg_loss, ppl_list, loss_list
 
 
@@ -312,7 +326,9 @@ def _bleu_simple(ref: str, pred: str) -> float:
 
 
 def run_generation(
-    model, tokenizer, samples: List[Dict]
+    model,
+    tokenizer,
+    samples: List[Dict],
 ) -> Tuple[float, List[Dict]]:
     results = []
     gen_config = GenerationConfig(
@@ -362,20 +378,26 @@ def run_generation(
                 'bleu': score,
             })
     avg_bleu = (
-        sum(r['bleu'] for r in results) / len(results) if results else 0.0
+        sum(r['bleu'] for r in results) / len(results)
+        if results else 0.0
     )
     return avg_bleu, results
 
 
 def run_eval_for_model(
-    model_path: str, label: str, samples: List[Dict]
+    model_path: str,
+    label: str,
+    samples: List[Dict],
 ) -> Dict:
     print(f'\n[{label}] 加载模型: {model_path}')
     model, tokenizer = load_model_and_tokenizer(model_path)
 
     print(f'[{label}] 计算 PPL 与交叉熵损失 ...')
     avg_ppl, avg_loss, ppl_list, loss_list = compute_ppl(
-        model, tokenizer, samples)
+        model,
+        tokenizer,
+        samples,
+    )
     print(f'[{label}] 平均 PPL: {avg_ppl:.4f}  平均 loss: {avg_loss:.4f}')
 
     print(f'[{label}] 生成续写并计算 BLEU ...')
@@ -397,7 +419,6 @@ def run_eval_for_model(
 
 
 def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
-    random.seed(42)
     torch.manual_seed(42)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(42)
@@ -425,8 +446,8 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
     ts = datetime.now().strftime('%Y%m%d_%H%M%S')
     run_dir = out_run_dir or os.path.join(RESULTS_DIR, ts)
     os.makedirs(run_dir, exist_ok=True)
-    metrics_path = os.path.join(run_dir, 'eval_pt_dureader_metrics.json')
-    results_path = os.path.join(run_dir, 'eval_pt_dureader_results.jsonl')
+    metrics_path = os.path.join(run_dir, 'eval_pt_wikitext_metrics.json')
+    results_path = os.path.join(run_dir, 'eval_pt_wikitext_results.jsonl')
 
     metrics = {
         'num_samples': len(samples),
@@ -441,8 +462,7 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
                 'loss': pt_metrics['loss'],
                 'bleu': pt_metrics['bleu'],
             }
-            if pt_metrics
-            else None
+            if pt_metrics else None
         ),
     }
     with open(metrics_path, 'w', encoding='utf-8') as f:
@@ -450,29 +470,31 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
 
     with open(results_path, 'w', encoding='utf-8') as f:
         for i in range(len(samples)):
-            bg = base_metrics['gen_results'][i]
             rec = {
                 'id': i + 1,
                 'prefix_len': len(samples[i]['prefix']),
                 'continuation_len': len(samples[i]['continuation']),
                 'base_ppl': base_metrics['ppl_per_sample'][i],
                 'base_loss': base_metrics['loss_per_sample'][i],
-                'base_pred': bg['continuation_pred'][:200],
-                'base_bleu': bg['bleu'],
+                'base_pred': (
+                    base_metrics['gen_results'][i]['continuation_pred'][:200]
+                ),
+                'base_bleu': base_metrics['gen_results'][i]['bleu'],
             }
             if pt_metrics:
-                ptg = pt_metrics['gen_results'][i]
                 rec['pt_ppl'] = pt_metrics['ppl_per_sample'][i]
                 rec['pt_loss'] = pt_metrics['loss_per_sample'][i]
-                rec['pt_pred'] = ptg['continuation_pred'][:200]
-                rec['pt_bleu'] = ptg['bleu']
+                rec['pt_pred'] = (
+                    pt_metrics['gen_results'][i]['continuation_pred'][:200]
+                )
+                rec['pt_bleu'] = pt_metrics['gen_results'][i]['bleu']
             f.write(json.dumps(rec, ensure_ascii=False) + '\n')
 
     print(f'\n评测结果已保存至: {run_dir}')
     print(f'  指标: {metrics_path}')
     print(f'  逐条结果: {results_path}')
     print('\n' + '=' * 60)
-    print('DuReader 预训练评测（prefix → continuation）')
+    print('Wikitext 预训练评测（prefix → continuation）')
     print('=' * 60)
     print(
         f'基座模型   PPL={base_metrics["ppl"]:.4f}  '
@@ -489,17 +511,25 @@ def run_eval(pt_model_path: str = None, out_run_dir: str = None) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='DuReader 预训练：数据准备、训练、评测一体化')
+    parser = argparse.ArgumentParser(
+        description='Wikitext 预训练：数据准备、训练、评测一体化',
+    )
     parser.add_argument(
-        '--mode', type=str, default='full',
+        '--mode',
+        type=str,
+        default='full',
         choices=['prepare', 'train', 'eval', 'full'],
         help=(
             'prepare=仅准备数据; train=准备+训练; '
             'eval=仅评测; full=准备+训练+评测'
         ),
     )
-    parser.add_argument('--pt_model_path', type=str, default=None,
-                        help='预训练模型目录（eval/full 时使用；full 未指定则用本次训练 ckpt）')
+    parser.add_argument(
+        '--pt_model_path',
+        type=str,
+        default=None,
+        help='预训练模型目录（eval/full 时使用；full 未指定则用本次训练 ckpt）',
+    )
     args = parser.parse_args()
 
     if args.mode == 'prepare':
@@ -526,10 +556,11 @@ def main():
 
 
 # 使用示例：
-# 1. 仅准备数据：     python run_dureader.py --mode=prepare
-# 2. 准备 + 训练：     python run_dureader.py --mode=train
-# 3. 仅评测：         python run_dureader.py --mode=eval
+# 1. 仅准备数据：     python run_wikitext.py --mode=prepare
+# 2. 准备 + 训练：     python run_wikitext.py --mode=train
+# 3. 仅评测：
+#    python run_wikitext.py --mode=eval
 #    [--pt_model_path=path/to/lazyllm_merge]
-# 4. 一步到位：       python run_dureader.py --mode=full
+# 4. 一步到位：       python run_wikitext.py --mode=full
 if __name__ == '__main__':
     main()
