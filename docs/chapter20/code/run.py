@@ -66,8 +66,46 @@ def safe_exit(code: int = 0):
     sys.exit(code)
 
 
+def ensure_local_site_packages():
+    import site
+    import sysconfig
+
+    candidate_paths = []
+
+    user_site = site.getusersitepackages()
+    if isinstance(user_site, str):
+        candidate_paths.append(user_site)
+    else:
+        candidate_paths.extend(user_site)
+
+    try:
+        candidate_paths.extend(site.getsitepackages())
+    except AttributeError:
+        pass
+
+    sysconfig_paths = sysconfig.get_paths()
+    for key in ['purelib', 'platlib']:
+        path = sysconfig_paths.get(key)
+        if path:
+            candidate_paths.append(path)
+
+    versioned_local_path = (
+        Path.home()
+        / '.local'
+        / 'lib'
+        / f'python{sys.version_info.major}.{sys.version_info.minor}'
+        / 'site-packages'
+    )
+    candidate_paths.append(str(versioned_local_path))
+
+    for path in dict.fromkeys(candidate_paths):
+        if path and os.path.isdir(path) and path not in sys.path:
+            sys.path.insert(0, path)
+
+
 def step1_download_data():
     log_step('[1/5] 下载 tiny-codes 数据集...')
+    ensure_local_site_packages()
 
     train_path = DATA_DIR / 'train_python.json'
     eval_path = DATA_DIR / 'eval_python.json'
@@ -195,9 +233,7 @@ def step2_data_pipeline():
 def step3_sft_training():
     log_step('[3/5] 开始 SFT 训练...')
 
-    local_path = os.path.expanduser('~/.local/lib/python3.10/site-packages')
-    if local_path not in sys.path:
-        sys.path.insert(0, local_path)
+    ensure_local_site_packages()
 
     import lazyllm
     from lazyllm import finetune, launchers
@@ -318,9 +354,7 @@ def save_inference_results(results, inference_output):
 def step4_inference(step_label='[4/5]'):
     log_step(f'{step_label} 运行评测集推理...')
 
-    local_path = os.path.expanduser('~/.local/lib/python3.10/site-packages')
-    if local_path not in sys.path:
-        sys.path.insert(0, local_path)
+    ensure_local_site_packages()
 
     import lazyllm
     from lazyllm import deploy

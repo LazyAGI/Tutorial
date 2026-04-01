@@ -65,6 +65,43 @@ def safe_exit(code: int = 0):
     sys.exit(code)
 
 
+def ensure_local_site_packages():
+    import site
+    import sysconfig
+
+    candidate_paths = []
+
+    user_site = site.getusersitepackages()
+    if isinstance(user_site, str):
+        candidate_paths.append(user_site)
+    else:
+        candidate_paths.extend(user_site)
+
+    try:
+        candidate_paths.extend(site.getsitepackages())
+    except AttributeError:
+        pass
+
+    sysconfig_paths = sysconfig.get_paths()
+    for key in ['purelib', 'platlib']:
+        path = sysconfig_paths.get(key)
+        if path:
+            candidate_paths.append(path)
+
+    versioned_local_path = (
+        Path.home()
+        / '.local'
+        / 'lib'
+        / f'python{sys.version_info.major}.{sys.version_info.minor}'
+        / 'site-packages'
+    )
+    candidate_paths.append(str(versioned_local_path))
+
+    for path in dict.fromkeys(candidate_paths):
+        if path and os.path.isdir(path) and path not in sys.path:
+            sys.path.insert(0, path)
+
+
 def find_latest_merge_model(base_dir):
     merge_dirs = []
     for root, dirs, _ in os.walk(base_dir):
@@ -119,6 +156,7 @@ def run_parallel_inference(model, test_data):
 
 def step1_prepare_data():
     log_step('[1/5] 下载并准备 PKU-SafeRLHF 数据集...')
+    ensure_local_site_packages()
 
     train_path = DATA_DIR / 'ppl_input.json'
     test_path = DATA_DIR / 'test.jsonl'
@@ -233,9 +271,7 @@ def step2_preference_pipeline():
 def step3_dpo_training():
     log_step('[3/5] 开始 DPO 训练...')
 
-    local_path = os.path.expanduser('~/.local/lib/python3.10/site-packages')
-    if local_path not in sys.path:
-        sys.path.insert(0, local_path)
+    ensure_local_site_packages()
 
     import lazyllm
     from lazyllm import finetune, launchers
@@ -276,9 +312,7 @@ def step3_dpo_training():
 def step4_inference():
     log_step('[4/5] 运行评测集推理...')
 
-    local_path = os.path.expanduser('~/.local/lib/python3.10/site-packages')
-    if local_path not in sys.path:
-        sys.path.insert(0, local_path)
+    ensure_local_site_packages()
 
     import lazyllm
     from lazyllm import deploy
