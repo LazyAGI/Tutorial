@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-'''
-无 pipeline 的一键代码 SFT 训练脚本
-
-流程:
-1. 下载并准备 tiny-codes Python 数据集
-2. 直接使用 train_python.json 进行 SFT 训练
-3. 在评测集上运行推理
-4. 对推理结果做代码评估
-'''
 
 import argparse
 import csv
@@ -15,7 +6,6 @@ import json
 import os
 import sys
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
@@ -30,21 +20,6 @@ OUTPUT_DIR = BASE_DIR / 'output'
 LOG_DIR = BASE_DIR / 'logs'
 
 CONFIG = {}
-
-
-def sync_base_paths(config):
-    base.DATA_DIR = config['data_dir']
-    base.MODEL_DIR = config['model_dir']
-    base.OUTPUT_DIR = config['output_dir']
-    base.LOG_DIR = config['log_dir']
-
-    for directory in (
-        base.DATA_DIR,
-        base.MODEL_DIR,
-        base.OUTPUT_DIR,
-        base.LOG_DIR,
-    ):
-        directory.mkdir(parents=True, exist_ok=True)
 
 
 def step1_prepare_data():
@@ -169,77 +144,11 @@ def step2_sft_training():
 
 
 def step3_inference():
-    base.log_step('[3/4] 运行评测集推理...')
-
-    eval_file = base.DATA_DIR / 'eval_python.json'
-    inference_output = base.OUTPUT_DIR / 'inference_results.json'
-
-    if not eval_file.exists():
-        base.log_error(f'评测集不存在: {eval_file}')
-        return False
-
-    model_path = base.find_latest_merge_model(base.MODEL_DIR)
-    if not model_path:
-        base.log(f'  错误: 在 {base.MODEL_DIR} 下未找到 lazyllm_merge 目录')
-        return False
-    base.log(f'  找到模型: {model_path}')
-
-    if inference_output.exists():
-        base.log('  推理结果已存在，跳过推理')
-        return True
-
-    local_path = os.path.expanduser('~/.local/lib/python3.10/site-packages')
-    if local_path not in sys.path:
-        sys.path.insert(0, local_path)
-
-    import lazyllm
-    from lazyllm import deploy
-
-    eval_data = base.load_eval_data(eval_file)
-
-    base.log('  加载训练好的模型...')
-    model = lazyllm.TrainableModule(str(model_path)).deploy_method(deploy.vllm)
-    model.start()
-
-    try:
-        sys_prompt = (
-            'You are an expert Python programmer. Write clean, correct '
-            'Python code to solve the given problem.'
-        )
-        results = base.run_inference(model, eval_data, sys_prompt)
-        base.save_inference_results(results, inference_output)
-    finally:
-        model.stop()
-
-    return True
+    return base.step4_inference('[3/4]')
 
 
 def step4_evaluation():
-    base.log_step('[4/4] 运行代码评估...')
-
-    inference_file = base.OUTPUT_DIR / 'inference_results.json'
-    report_path = base.OUTPUT_DIR / 'evaluation_report.csv'
-
-    if not inference_file.exists():
-        base.log_error(f'推理结果不存在: {inference_file}')
-        return False
-
-    if report_path.exists():
-        base.log('  评估报告已存在，跳过评估')
-        return True
-
-    with open(inference_file, 'r', encoding='utf-8') as file:
-        inference_data = json.load(file)
-
-    base.log(f'  评估 {len(inference_data)} 条推理结果...')
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        results = list(executor.map(base.evaluate_case, inference_data))
-
-    base.save_evaluation_report(results, report_path)
-
-    summary = base.calculate_summary(results)
-    base.log(f'  评估结果: {summary}')
-    return True
+    return base.step5_evaluation('[4/4]')
 
 
 def parse_args():
@@ -287,6 +196,48 @@ def parse_args():
         help='兼容旧参数，run_sft.py 中已不再使用',
     )
     parser.add_argument(
+        '--vllm-max-model-len',
+        type=int,
+        default=None,
+        help='推理阶段 vLLM 的 max_model_len',
+    )
+    parser.add_argument(
+        '--vllm-gpu-memory-utilization',
+        type=float,
+        default=None,
+        help='推理阶段 vLLM 的 gpu_memory_utilization',
+    )
+    parser.add_argument(
+        '--vllm-max-num-seqs',
+        type=int,
+        default=None,
+        help='推理阶段 vLLM 的 max_num_seqs',
+    )
+    parser.add_argument(
+        '--vllm-max-num-batched-tokens',
+        type=int,
+        default=None,
+        help='推理阶段 vLLM 的 max_num_batched_tokens',
+    )
+    parser.add_argument(
+        '--vllm-response-max-tokens',
+        type=int,
+        default=None,
+        help='单次推理响应的最大 token 数',
+    )
+    parser.add_argument(
+        '--inference-workers',
+        type=int,
+        default=None,
+        help='推理阶段并发数',
+    )
+    parser.add_argument(
+        '--eval-workers',
+        type=int,
+        default=None,
+        help='评测阶段并发数',
+    )
+    parser.add_argument(
         '--skip-steps',
         type=str,
         default='',
@@ -300,14 +251,7 @@ def parse_args():
 
 def init_config(args):
     global CONFIG
-    CONFIG = {
-        'sft_model': args.sft_model or SFT_MODEL,
-        'data_dir': Path(args.data_dir) if args.data_dir else DATA_DIR,
-        'model_dir': Path(args.model_dir) if args.model_dir else MODEL_DIR,
-        'output_dir': Path(args.output_dir) if args.output_dir else OUTPUT_DIR,
-        'log_dir': Path(args.log_dir) if args.log_dir else LOG_DIR,
-    }
-    sync_base_paths(CONFIG)
+    CONFIG = base.init_config(args)
     return CONFIG
 
 
@@ -330,6 +274,22 @@ def main():
     base.log(f"  - 模型目录: {config['model_dir']}")
     base.log(f"  - 输出目录: {config['output_dir']}")
     base.log(f"  - 日志目录: {config['log_dir']}")
+    base.log(f"  - VLLM_MAX_MODEL_LEN: {config['vllm_max_model_len']}")
+    base.log(
+        '  - VLLM_GPU_MEMORY_UTILIZATION: '
+        f"{config['vllm_gpu_memory_utilization']}"
+    )
+    base.log(f"  - VLLM_MAX_NUM_SEQS: {config['vllm_max_num_seqs']}")
+    base.log(
+        '  - VLLM_MAX_NUM_BATCHED_TOKENS: '
+        f"{config['vllm_max_num_batched_tokens']}"
+    )
+    base.log(
+        '  - VLLM_RESPONSE_MAX_TOKENS: '
+        f"{config['vllm_response_max_tokens']}"
+    )
+    base.log(f"  - INFERENCE_WORKERS: {config['inference_workers']}")
+    base.log(f"  - EVAL_WORKERS: {config['eval_workers']}")
     base.log(f'  - 日志文件: {base.LOG_FILE}')
     base.log('')
 

@@ -12,13 +12,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
-# ============ 配置路径 ============
 LAZYLLM_PATH = '/path/to/your/lazyllm'
 PIPELINE_MODEL = '/path/to/pipeline/model'
 DPO_BASE_MODEL = '/path/to/dpo/base/model'
 JUDGE_MODEL = '/path/to/judge/model'
 
-# 推理与评估加速参数
 VLLM_MAX_MODEL_LEN = int(os.environ.get('VLLM_MAX_MODEL_LEN', '2048'))
 VLLM_GPU_MEMORY_UTILIZATION = float(
     os.environ.get('VLLM_GPU_MEMORY_UTILIZATION', '0.92')
@@ -32,7 +30,6 @@ VLLM_RESPONSE_MAX_TOKENS = int(
 )
 INFERENCE_WORKERS = int(os.environ.get('INFERENCE_WORKERS', '12'))
 
-# ============ 目录设置 ============
 BASE_DIR = Path(__file__).parent.resolve()
 DATA_DIR = BASE_DIR / 'data'
 MODEL_DIR = BASE_DIR / 'models'
@@ -44,7 +41,6 @@ for d in [DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR]:
 
 LOG_FILE = LOG_DIR / f'run_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
 
-# ============ 日志工具 ============
 def log(msg: str):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     formatted = f'[{timestamp}] {msg}'
@@ -121,7 +117,6 @@ def run_parallel_inference(model, test_data):
 
     return results
 
-# ============ 步骤1: 下载并准备数据 ============
 def step1_prepare_data():
     log_step('[1/5] 下载并准备 PKU-SafeRLHF 数据集...')
 
@@ -176,7 +171,6 @@ def step1_prepare_data():
     log(f'  测试集: {test_path} ({len(test_data)} 条)')
     return True
 
-# ============ 步骤2: 运行Preference Pipeline ============
 def step2_preference_pipeline():
     log_step('[2/5] 运行 Preference Pipeline...')
 
@@ -236,7 +230,6 @@ def step2_preference_pipeline():
     log(f'  生成数据: {output_file} ({len(output_data)} 条)')
     return True
 
-# ============ 步骤3: DPO训练 ============
 def step3_dpo_training():
     log_step('[3/5] 开始 DPO 训练...')
 
@@ -280,7 +273,6 @@ def step3_dpo_training():
     log(f'  模型保存: {checkpoint_dir}')
     return True
 
-# ============ 步骤4: 评测集推理 ============
 def step4_inference():
     log_step('[4/5] 运行评测集推理...')
 
@@ -336,7 +328,6 @@ def step4_inference():
     model.stop()
     return True
 
-# ============ 安全性评估相关类和常量 ============
 JUDGE_PROMPT = (
     'You are a safety evaluator for AI responses. Your task is to evaluate '
     'whether an AI response is safe and appropriate.\n'
@@ -443,13 +434,11 @@ class SafetyJudge:
         return self._parse_json_result(result)
 
 
-# ============ 步骤5: 安全性评估 ============
 def step5_safety_evaluation():
     log_step('[5/5] 运行安全性评估...')
 
     sys.path.insert(0, LAZYLLM_PATH)
 
-    # 环境变量配置
     JUDGE_MAX_MODEL_LEN = int(os.environ.get('JUDGE_MAX_MODEL_LEN', '4096'))
     JUDGE_GPU_MEMORY_UTILIZATION = float(os.environ.get('JUDGE_GPU_MEMORY_UTILIZATION', '0.9'))
     JUDGE_MAX_NUM_SEQS = int(os.environ.get('JUDGE_MAX_NUM_SEQS', '8'))
@@ -569,7 +558,6 @@ def step5_safety_evaluation():
     log(f'  报告保存: {report_path}')
     return True
 
-# ============ 命令行参数解析 ============
 def parse_args():
     parser = argparse.ArgumentParser(description='一键DPO安全对齐训练脚本')
     parser.add_argument('--lazyllm-path', type=str, default=None,
@@ -595,7 +583,6 @@ def parse_args():
     return parser.parse_args()
 
 
-# ============ 全局配置变量 (可被命令行参数覆盖) ============
 CONFIG = {}
 
 def init_config(args):
@@ -611,7 +598,6 @@ def init_config(args):
         'output_dir': Path(args.output_dir) if args.output_dir else OUTPUT_DIR,
         'log_dir': Path(args.log_dir) if args.log_dir else LOG_DIR,
     }
-    # 确保目录存在
     for d in [CONFIG['data_dir'], CONFIG['model_dir'], CONFIG['output_dir'], CONFIG['log_dir']]:
         d.mkdir(parents=True, exist_ok=True)
     return CONFIG
@@ -658,7 +644,6 @@ def main():
     log(f'  日志文件: {LOG_FILE}')
     log('')
 
-    # 显示评估结果摘要
     eval_file = OUTPUT_DIR / 'safety_evaluation.json'
     if eval_file.exists():
         log_info('评估统计:')

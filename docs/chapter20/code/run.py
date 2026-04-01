@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-'''
-一键代码SFT训练脚本
-'''
 
 import ast
 import csv
@@ -126,7 +123,6 @@ def step1_download_data():
     return True
 
 
-# ============ 步骤2: 数据处理Pipeline ============
 def step2_data_pipeline():
     log_step('[2/5] 运行数据增强 pipeline...')
 
@@ -196,7 +192,6 @@ def step2_data_pipeline():
     return True
 
 
-# ============ 步骤3: SFT训练 ============
 def step3_sft_training():
     log_step('[3/5] 开始 SFT 训练...')
 
@@ -247,9 +242,7 @@ def step3_sft_training():
     return True
 
 
-# ============ 步骤4: 评测集推理 ============
 def find_latest_merge_model(base_dir):
-    '''查找最新的合并模型目录.'''
     merge_dirs = []
     for root, dirs, _ in os.walk(base_dir):
         for d in dirs:
@@ -266,7 +259,6 @@ def find_latest_merge_model(base_dir):
 
 
 def load_eval_data(eval_file):
-    '''加载评测数据.'''
     log('  加载评测数据...')
     with open(eval_file, 'r', encoding='utf-8') as f:
         eval_data = json.load(f)
@@ -281,7 +273,6 @@ def run_inference(
     response_max_tokens,
     inference_workers,
 ):
-    '''运行推理并返回结果.'''
     log('  开始推理...')
     if not eval_data:
         return []
@@ -319,14 +310,13 @@ def run_inference(
 
 
 def save_inference_results(results, inference_output):
-    '''保存推理结果到文件.'''
     with open(inference_output, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     log(f'  推理完成: {inference_output}')
 
 
-def step4_inference():
-    log_step('[4/5] 运行评测集推理...')
+def step4_inference(step_label='[4/5]'):
+    log_step(f'{step_label} 运行评测集推理...')
 
     local_path = os.path.expanduser('~/.local/lib/python3.10/site-packages')
     if local_path not in sys.path:
@@ -396,9 +386,7 @@ def step4_inference():
     return True
 
 
-# ============ 步骤5: 评估 ============
 def extract_code(text):
-    '''从文本中提取代码块.'''
     code_start = r'(^|\n)\s*(def\s+|import\s+|class\s+)'
     for pattern in (r'```python\s*(.*?)\s*```', r'```\s*(.*?)\s*```'):
         match = re.search(pattern, text, re.DOTALL)
@@ -419,17 +407,14 @@ def extract_code(text):
 
 
 def get_case_id(item):
-    '''获取案例ID.'''
     return item.get('test_case_id', item.get('id', 0))
 
 
 def get_case_response(item):
-    '''获取案例响应.'''
     return item.get('response', item.get('prediction', ''))
 
 
 def check_syntax(code):
-    '''检查代码语法.'''
     try:
         ast.parse(code)
         return True, None
@@ -438,7 +423,6 @@ def check_syntax(code):
 
 
 def run_in_docker(code, case_id):
-    '''在Docker中运行代码.'''
     file_name = f'tmp_run_{case_id}.py'
     lines = code.split('\n')
     indented = '\n'.join('        ' + line for line in lines)
@@ -490,7 +474,6 @@ with unittest.mock.patch('builtins.input', side_effect=mock_input):
 
 
 def evaluate_case(item):
-    '''评估单个案例.'''
     idx = get_case_id(item)
     code = extract_code(get_case_response(item))
     if not code:
@@ -508,7 +491,6 @@ def evaluate_case(item):
 
 
 def save_evaluation_report(results, report_path):
-    '''保存评估报告.'''
     with open(report_path, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(
             f, fieldnames=['id', 'status', 'stdout', 'stderr', 'error']
@@ -518,15 +500,14 @@ def save_evaluation_report(results, report_path):
 
 
 def calculate_summary(results):
-    '''计算评估汇总统计.'''
     summary = {}
     for r in results:
         summary[r['status']] = summary.get(r['status'], 0) + 1
     return summary
 
 
-def step5_evaluation():
-    log_step('[5/5] 运行代码评估...')
+def step5_evaluation(step_label='[5/5]'):
+    log_step(f'{step_label} 运行代码评估...')
 
     inference_file = OUTPUT_DIR / 'inference_results.json'
     report_path = OUTPUT_DIR / 'evaluation_report.csv'
@@ -550,7 +531,6 @@ def step5_evaluation():
     return True
 
 
-# ============ 命令行参数解析 ============
 def parse_args():
     parser = argparse.ArgumentParser(description='一键代码SFT训练脚本')
     parser.add_argument(
@@ -649,12 +629,10 @@ def parse_args():
     return parser.parse_args()
 
 
-# ============ 全局配置变量 (可被命令行参数覆盖) ============
 CONFIG = {}
 
 
 def init_config(args):
-    '''根据命令行参数初始化配置'''
     global CONFIG
     global LAZYLLM_PATH, PIPELINE_MODEL, SFT_MODEL
     global DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR
@@ -689,7 +667,6 @@ def init_config(args):
     MODEL_DIR = CONFIG['model_dir']
     OUTPUT_DIR = CONFIG['output_dir']
     LOG_DIR = CONFIG['log_dir']
-    # 确保目录存在
     for d in [
         DATA_DIR,
         MODEL_DIR,
@@ -700,12 +677,10 @@ def init_config(args):
     return CONFIG
 
 
-# ============ 主函数 ============
 def main():
     args = parse_args()
     config = init_config(args)
 
-    # 重新初始化日志文件路径
     global LOG_FILE
     LOG_FILE = config['log_dir'] / (
         'run_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
@@ -743,7 +718,6 @@ def main():
     log(f'  - 日志文件: {LOG_FILE}')
     log('')
 
-    # 解析跳过的步骤
     skip_steps = set()
     if args.skip_steps:
         skip_steps = set(
@@ -761,10 +735,8 @@ def main():
     ]
 
     for i, (name, step_func) in enumerate(steps, 1):
-        # 如果只运行指定步骤
         if args.only_step is not None and i != args.only_step:
             continue
-        # 如果步骤在跳过列表中
         if i in skip_steps:
             log_info(f'跳过步骤{i}: {name}')
             continue
@@ -790,7 +762,6 @@ def main():
     log(f'  日志文件: {LOG_FILE}')
     log('')
 
-    # 显示评估结果摘要
     report_file = config['output_dir'] / 'evaluation_report.csv'
     if report_file.exists():
         log_info('评估统计:')
