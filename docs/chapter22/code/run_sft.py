@@ -21,6 +21,13 @@ JUDGE_MAX_NUM_SEQS = int(os.environ.get('JUDGE_MAX_NUM_SEQS', '8'))
 JUDGE_RESPONSE_MAX_TOKENS = int(
     os.environ.get('JUDGE_RESPONSE_MAX_TOKENS', '256')
 )
+HF_DATASET_REPO = 'rirqing/text2sql'
+HF_DATA_FILES = {
+    'train': 'data/spider_full_train.json',
+    'test': 'data/hardest_1000_sql_test_format.jsonl',
+}
+TRAIN_DATA_FILE = 'spider_full_train.json'
+TEST_DATA_FILE = 'hardest_1000_sql_test_format.jsonl'
 
 BASE_DIR = Path(__file__).parent.resolve()
 DATA_DIR = BASE_DIR / 'data'
@@ -67,9 +74,40 @@ def safe_exit(code: int = 0):
 
 
 def ensure_local_site_packages():
-    local_path = os.path.expanduser('~/.local/lib/python3.10/site-packages')
-    if local_path not in sys.path:
-        sys.path.insert(0, local_path)
+    import site
+    import sysconfig
+
+    candidate_paths = []
+
+    user_site = site.getusersitepackages()
+    if isinstance(user_site, str):
+        candidate_paths.append(user_site)
+    else:
+        candidate_paths.extend(user_site)
+
+    try:
+        candidate_paths.extend(site.getsitepackages())
+    except AttributeError:
+        pass
+
+    sysconfig_paths = sysconfig.get_paths()
+    for key in ['purelib', 'platlib']:
+        path = sysconfig_paths.get(key)
+        if path:
+            candidate_paths.append(path)
+
+    versioned_local_path = (
+        Path.home()
+        / '.local'
+        / 'lib'
+        / f'python{sys.version_info.major}.{sys.version_info.minor}'
+        / 'site-packages'
+    )
+    candidate_paths.append(str(versioned_local_path))
+
+    for path in dict.fromkeys(candidate_paths):
+        if path and os.path.isdir(path) and path not in sys.path:
+            sys.path.insert(0, path)
 
 
 def find_latest_merge_model(base_dir):
@@ -82,6 +120,15 @@ def find_latest_merge_model(base_dir):
             except OSError:
                 pass
     return max(merge_dirs, key=lambda item: item[1])[0] if merge_dirs else None
+
+
+def count_jsonl_records(path: Path):
+    count = 0
+    with open(path, 'r', encoding='utf-8') as file:
+        for line in file:
+            if line.strip():
+                count += 1
+    return count
 
 
 def extract_sql(text):
@@ -122,12 +169,12 @@ class SQLJudge:
         self.response_max_tokens = response_max_tokens
 
     def evaluate(self, question, gold_sql, pred_sql):
-        prompt = JUDGE_PROMPT.format(
-            question=question,
-            gold_sql=gold_sql,
-            pred_sql=pred_sql,
-        )
         try:
+            prompt = JUDGE_PROMPT.format(
+                question=question,
+                gold_sql=gold_sql,
+                pred_sql=pred_sql,
+            )
             result = self.model(prompt, max_tokens=self.response_max_tokens)
             json_match = re.search(
                 r'```json\s*({.*?)\s*```', result, re.DOTALL
@@ -185,71 +232,81 @@ JUDGE_PROMPT = '''你是一个 非常非常严格的SQL 评估专家。请评估
 
 请按以下格式输出严格的评估结果（只输出 JSON，不要有其他内容）：
 ```json
-{
+{{
     "semantic_score": 5,
     "syntax_score": 5,
     "equivalence_score": 3,
     "overall_score": 5.0,
     "is_correct": true,
     "reason": "SQL 完全正确，正确理解了用户意图"
-}
+}}
 ```'''
 
 
 def step1_prepare_data():
     log_step('[1/4] 下载 Text2SQL 数据集...')
+    ensure_local_site_packages()
 
-    train_path = DATA_DIR / 'train_text2sql.json'
-    test_path = DATA_DIR / 'test_text2sql.jsonl'
+    train_path = DATA_DIR / TRAIN_DATA_FILE
+    test_path = DATA_DIR / TEST_DATA_FILE
 
     if train_path.exists() and test_path.exists():
         log('  数据已存在，跳过下载')
+        with open(train_path, 'r', encoding='utf-8') as file:
+            train_data = json.load(file)
+        test_count = count_jsonl_records(test_path)
+        log(f'  训练集: {len(train_data)} 条')
+        log(f'  测试集: {test_count} 条')
         return True
 
     try:
-        from datasets import load_dataset
+        from huggingface_hub import hf_hub_download
     except ImportError:
-        log_error('请先安装 datasets: pip install datasets')
+        log_error('请先安装 huggingface_hub: pip install huggingface_hub')
         return False
 
-    log('  正在从 Hugging Face 加载数据集 rirqing/text2sql...')
-    dataset = load_dataset('rirqing/text2sql', trust_remote_code=True)
+    log(
+        '  正在从 Hugging Face 数据集仓库 '
+        f'{HF_DATASET_REPO} 的 data/ 目录下载文件...'
+    )
 
-    def normalize_item(idx, item):
-        return {
-            'db_id': item.get('db_id', f'db_{idx}'),
-            'question': item.get('question', ''),
-            'schema': item.get('schema', ''),
-            'gold_sql': item.get('gold_sql', ''),
-            'prompt': item.get('prompt', ''),
-            'instruction': item.get('instruction', ''),
-            'input': item.get('input', ''),
-            'output': item.get('output', ''),
-        }
-
-    train_data = [
-        normalize_item(idx, item) for idx, item in enumerate(dataset['train'])
-    ]
-    test_data = [
-        normalize_item(idx, item) for idx, item in enumerate(dataset['test'])
+    download_targets = [
+        (HF_DATA_FILES['train'], train_path),
+        (HF_DATA_FILES['test'], test_path),
     ]
 
-    with open(train_path, 'w', encoding='utf-8') as file:
-        json.dump(train_data, file, ensure_ascii=False, indent=2)
+    for hf_filename, local_path in download_targets:
+        if local_path.exists():
+            log(f'  本地已存在，直接复用: {local_path.name}')
+            continue
 
-    with open(test_path, 'w', encoding='utf-8') as file:
-        for item in test_data:
-            file.write(json.dumps(item, ensure_ascii=False) + '\n')
+        try:
+            cached_path = hf_hub_download(
+                repo_id=HF_DATASET_REPO,
+                filename=hf_filename,
+                repo_type='dataset',
+            )
+        except Exception as exc:
+            log_error(f'下载 {hf_filename} 失败: {exc}')
+            return False
+
+        source_path = Path(cached_path)
+        local_path.write_bytes(source_path.read_bytes())
+        log(f'  已下载: {hf_filename} -> {local_path.name}')
+
+    with open(train_path, 'r', encoding='utf-8') as file:
+        train_data = json.load(file)
+    test_count = count_jsonl_records(test_path)
 
     log(f'  训练集: {len(train_data)} 条')
-    log(f'  测试集: {len(test_data)} 条')
+    log(f'  测试集: {test_count} 条')
     return True
 
 
 def step2_sft_training():
     log_step('[2/4] 开始 SFT 训练...')
 
-    train_file = DATA_DIR / 'train_text2sql.json'
+    train_file = DATA_DIR / TRAIN_DATA_FILE
     checkpoint_dir = MODEL_DIR / 'checkpoint'
 
     if not train_file.exists():
@@ -309,7 +366,7 @@ def step3_inference():
     import lazyllm
     from lazyllm import deploy
 
-    test_file = DATA_DIR / 'test_text2sql.jsonl'
+    test_file = DATA_DIR / TEST_DATA_FILE
     inference_output = OUTPUT_DIR / 'inference_results.json'
 
     model_path = find_latest_merge_model(MODEL_DIR)
@@ -345,7 +402,7 @@ def step3_inference():
         for index, item in enumerate(test_data):
             schema = item.get('schema', '')
             question = item.get('question', '')
-            gold_sql = item.get('gold_sql', '')
+            gold_sql = item.get('gold_sql', item.get('SQL', ''))
 
             prompt = (
                 f'{sys_prompt}\n\nDatabase Schema:\n{schema}\n\nQuestion: '

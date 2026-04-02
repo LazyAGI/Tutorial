@@ -1,0 +1,9 @@
+adapter_name_or_path: /home/mnt/huangchongjin/LLM/GRPO/agent_sft/run_ppl_sh/models/tooluse_sft_checkpoint/qwen2_ruct/qwen2_ruct-LazySplit-train_json-LazySplit-26032901094129/lazyllm_lora
+export_device: cpu
+export_dir: /home/mnt/huangchongjin/LLM/GRPO/agent_sft/run_ppl_sh/models/tooluse_sft_checkpoint/qwen2_ruct/qwen2_ruct-LazySplit-train_json-LazySplit-26032901094129/lazyllm_merge
+export_legacy_format: true
+export_size: 2
+finetuning_type: lora
+model_name_or_path: /mnt/lustre/share_data/lazyllm/models/qwen2.5-0.5b-instruct
+template: qwen
+trust_remote_code: true
