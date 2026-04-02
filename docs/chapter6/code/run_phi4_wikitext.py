@@ -1,6 +1,6 @@
 """
 Phi-4 风格预训练一体化脚本：数据准备、训练、评测一步到位。
-数据来源：data/wikitext_cleaned.jsonl（已由 build_text_pt_pipeline 处理）
+数据来源：data/wikitext_cleaned.jsonl（已清洗处理）
 数据合成：build_phi4_pt_pipeline 对 chunk 生成 QA 对
 支持 --mode: prepare | train | eval | full
 
