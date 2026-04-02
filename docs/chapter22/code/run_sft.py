@@ -28,6 +28,11 @@ HF_DATA_FILES = {
 }
 TRAIN_DATA_FILE = 'spider_full_train.json'
 TEST_DATA_FILE = 'hardest_1000_sql_test_format.jsonl'
+INFERENCE_MAX_MODEL_LEN = 4096
+INFERENCE_GPU_MEMORY_UTILIZATION = 0.8
+INFERENCE_TEMPERATURE = 0.1
+INFERENCE_TOP_P = 0.95
+INFERENCE_MAX_TOKENS = 512
 
 BASE_DIR = Path(__file__).parent.resolve()
 DATA_DIR = BASE_DIR / 'data'
@@ -387,7 +392,15 @@ def step3_inference():
     log(f'  测试样本: {len(test_data)} 条')
 
     log('  加载训练好的模型...')
-    model = lazyllm.TrainableModule(str(model_path)).deploy_method(deploy.vllm)
+    model = lazyllm.TrainableModule(str(model_path)).deploy_method(
+        (
+            deploy.vllm,
+            {
+                'max_model_len': INFERENCE_MAX_MODEL_LEN,
+                'gpu_memory_utilization': INFERENCE_GPU_MEMORY_UTILIZATION,
+            },
+        )
+    )
     model.start()
 
     sys_prompt = (
@@ -408,7 +421,12 @@ def step3_inference():
                 f'{sys_prompt}\n\nDatabase Schema:\n{schema}\n\nQuestion: '
                 f'{question}'
             )
-            response = model(prompt)
+            response = model(
+                prompt,
+                temperature=INFERENCE_TEMPERATURE,
+                top_p=INFERENCE_TOP_P,
+                max_tokens=INFERENCE_MAX_TOKENS,
+            )
             response_text = response if isinstance(response, str) else str(response)
             extracted_sql = extract_sql(response_text)
 
