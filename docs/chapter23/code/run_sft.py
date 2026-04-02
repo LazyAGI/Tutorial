@@ -18,6 +18,12 @@ JUDGE_MODEL = '/path/to/judge/model'
 
 TRAIN_DATASET_REPO = 'glaiveai/glaive-function-calling-v2'
 TEST_DATASET_REPO = 'rirqing/tool_use'
+TRAIN_DATASET_ENDPOINT = os.environ.get(
+    'TOOLUSE_TRAIN_DATASET_ENDPOINT', HF_ENDPOINT
+)
+TEST_DATASET_ENDPOINT = os.environ.get(
+    'TOOLUSE_TEST_DATASET_ENDPOINT', HF_ENDPOINT
+)
 
 TRAIN_NUM_SAMPLES = int(os.environ.get('TOOLUSE_TRAIN_NUM_SAMPLES', '10000'))
 EVAL_NUM_SAMPLES = int(os.environ.get('TOOLUSE_EVAL_NUM_SAMPLES', '1000'))
@@ -234,6 +240,22 @@ def parse_json_from_text(text: str):
                     continue
 
     raise ValueError('无法从文本中解析 JSON')
+
+
+def override_hf_endpoint(endpoint=None):
+    previous = os.environ.get('HF_ENDPOINT')
+    if endpoint:
+        os.environ['HF_ENDPOINT'] = endpoint
+    else:
+        os.environ.pop('HF_ENDPOINT', None)
+    return previous
+
+
+def restore_hf_endpoint(previous):
+    if previous is None:
+        os.environ.pop('HF_ENDPOINT', None)
+    else:
+        os.environ['HF_ENDPOINT'] = previous
 
 
 def coerce_text(value):
@@ -605,8 +627,6 @@ class ToolUseJudge:
 def step1_prepare_data(step_label='[1/4]'):
     log_step(f'{step_label} 下载并准备训练集和测试集...')
     ensure_local_site_packages()
-    hf_endpoint = os.environ.get('HF_ENDPOINT')
-    log(f'  Hugging Face 下载端点: {hf_endpoint}')
 
     train_path = DATA_DIR / TRAIN_DATA_FILE
     test_path = DATA_DIR / TEST_DATA_FILE
@@ -630,10 +650,19 @@ def step1_prepare_data(step_label='[1/4]'):
         return False
 
     if not train_ready:
-        log(
-            f'  正在从 Hugging Face 下载训练集: {CONFIG["train_dataset_repo"]}'
+        previous_endpoint = override_hf_endpoint(
+            CONFIG['train_dataset_endpoint']
         )
-        dataset = load_dataset(CONFIG['train_dataset_repo'], split='train')
+        try:
+            log(
+                f'  正在从 Hugging Face 下载训练集: '
+                f'{CONFIG["train_dataset_repo"]}'
+            )
+            if CONFIG['train_dataset_endpoint']:
+                log(f'  训练集下载端点: {CONFIG["train_dataset_endpoint"]}')
+            dataset = load_dataset(CONFIG['train_dataset_repo'], split='train')
+        finally:
+            restore_hf_endpoint(previous_endpoint)
 
         alpaca_data = []
         log('  开始按给定逻辑转换 Glaive 训练集...')
@@ -654,25 +683,33 @@ def step1_prepare_data(step_label='[1/4]'):
         log(f'  训练集保存: {train_path} ({len(train_data)} 条)')
 
     if not test_ready:
-        log(f'  正在解析测试集仓库: {CONFIG["test_dataset_repo"]}')
+        previous_endpoint = override_hf_endpoint(
+            CONFIG['test_dataset_endpoint']
+        )
         try:
-            test_data_file = resolve_test_dataset_file(
-                CONFIG['test_dataset_repo'], CONFIG['test_data_file']
-            )
-        except Exception as exc:
-            log_error(f'解析测试集文件失败: {exc}')
-            return False
+            log(f'  正在解析测试集仓库: {CONFIG["test_dataset_repo"]}')
+            if CONFIG['test_dataset_endpoint']:
+                log(f'  测试集下载端点: {CONFIG["test_dataset_endpoint"]}')
+            try:
+                test_data_file = resolve_test_dataset_file(
+                    CONFIG['test_dataset_repo'], CONFIG['test_data_file']
+                )
+            except Exception as exc:
+                log_error(f'解析测试集文件失败: {exc}')
+                return False
 
-        log(f'  选中的测试集文件: {test_data_file}')
-        try:
-            local_test_file = hf_hub_download(
-                repo_id=CONFIG['test_dataset_repo'],
-                filename=test_data_file,
-                repo_type='dataset',
-            )
-        except Exception as exc:
-            log_error(f'下载测试集文件失败: {exc}')
-            return False
+            log(f'  选中的测试集文件: {test_data_file}')
+            try:
+                local_test_file = hf_hub_download(
+                    repo_id=CONFIG['test_dataset_repo'],
+                    filename=test_data_file,
+                    repo_type='dataset',
+                )
+            except Exception as exc:
+                log_error(f'下载测试集文件失败: {exc}')
+                return False
+        finally:
+            restore_hf_endpoint(previous_endpoint)
 
         try:
             raw_test_data = load_records_from_local_dataset_file(
@@ -755,7 +792,9 @@ def step2_sft_training():
         )
     )
 
-    model.update()
+    # `update()` will run train + server + eval in LazyLLM.
+    # Only run the training stage here so inference/evaluation happen later.
+    model._update(mode=['train'])
     log(f'  模型保存: {checkpoint_dir}')
     return True
 
@@ -960,7 +999,19 @@ def parse_args():
         '--train-dataset-repo', type=str, default=None, help='训练集仓库'
     )
     parser.add_argument(
+        '--train-dataset-endpoint',
+        type=str,
+        default=None,
+        help='训练集下载端点，默认使用 hf-mirror',
+    )
+    parser.add_argument(
         '--test-dataset-repo', type=str, default=None, help='测试集仓库'
+    )
+    parser.add_argument(
+        '--test-dataset-endpoint',
+        type=str,
+        default=None,
+        help='测试集下载端点，默认使用 hf-mirror',
     )
     parser.add_argument(
         '--test-data-file', type=str, default=None, help='测试集文件路径'
@@ -1094,10 +1145,20 @@ def init_config(args):
             if args.train_dataset_repo is not None
             else TRAIN_DATASET_REPO
         ),
+        'train_dataset_endpoint': (
+            args.train_dataset_endpoint
+            if args.train_dataset_endpoint is not None
+            else TRAIN_DATASET_ENDPOINT
+        ),
         'test_dataset_repo': (
             args.test_dataset_repo
             if args.test_dataset_repo is not None
             else TEST_DATASET_REPO
+        ),
+        'test_dataset_endpoint': (
+            args.test_dataset_endpoint
+            if args.test_dataset_endpoint is not None
+            else TEST_DATASET_ENDPOINT
         ),
         'test_data_file': args.test_data_file,
         'data_dir': Path(args.data_dir) if args.data_dir else DATA_DIR,
@@ -1201,7 +1262,9 @@ def main():
     log(f'  - SFT模型: {config["sft_base_model"]}')
     log(f'  - Judge模型: {config["judge_model"]}')
     log(f'  - 训练集仓库: {config["train_dataset_repo"]}')
+    log(f'  - 训练集端点: {config["train_dataset_endpoint"]}')
     log(f'  - 测试集仓库: {config["test_dataset_repo"]}')
+    log(f'  - 测试集端点: {config["test_dataset_endpoint"]}')
     log(f'  - 测试集文件: {config["test_data_file"] or "自动发现"}')
     log(f'  - 数据目录: {config["data_dir"]}')
     log(f'  - 模型目录: {config["model_dir"]}')

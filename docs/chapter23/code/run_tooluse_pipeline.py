@@ -979,7 +979,9 @@ def step3_sft_training():
         )
     )
 
-    model.update()
+    # `update()` will run train + server + eval in LazyLLM.
+    # Only run the training stage here so inference/evaluation happen later.
+    model._update(mode=['train'])
     log(f'  模型保存: {checkpoint_dir}')
     return True
 
