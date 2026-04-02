@@ -16,7 +16,7 @@ pipeline 流程：
   - 训练集：squad_ppl_train.json
   - 评测集：squad_ppl_eval.jsonl
 
-评测指标（与 run_narrativeqa.py 一致）：
+评测指标：
   - Token-F1 / ROUGE-L / Exact Match，对多答案取最优
 
 支持 --mode: prepare | infer | train | eval | full
