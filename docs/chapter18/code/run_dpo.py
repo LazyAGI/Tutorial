@@ -19,9 +19,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
+HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
+os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
+
 LAZYLLM_PATH = '/path/to/your/lazyllm'
 DPO_BASE_MODEL = '/path/to/dpo/base/model'
 JUDGE_MODEL = '/path/to/judge/model'
+PKU_SAFERLHF_DATASET_ENDPOINT = os.environ.get(
+    'PKU_SAFERLHF_DATASET_ENDPOINT', HF_ENDPOINT
+)
 
 VLLM_MAX_MODEL_LEN = int(os.environ.get('VLLM_MAX_MODEL_LEN', '2048'))
 VLLM_GPU_MEMORY_UTILIZATION = float(
@@ -108,6 +114,22 @@ def ensure_local_site_packages():
             sys.path.insert(0, path)
 
 
+def override_hf_endpoint(endpoint=None):
+    previous_endpoint = os.environ.get('HF_ENDPOINT')
+    if endpoint:
+        os.environ['HF_ENDPOINT'] = endpoint
+    elif 'HF_ENDPOINT' in os.environ:
+        del os.environ['HF_ENDPOINT']
+    return previous_endpoint
+
+
+def restore_hf_endpoint(previous_endpoint):
+    if previous_endpoint is not None:
+        os.environ['HF_ENDPOINT'] = previous_endpoint
+    elif 'HF_ENDPOINT' in os.environ:
+        del os.environ['HF_ENDPOINT']
+
+
 def run_parallel_inference(model, eval_data):
     results = [None] * len(eval_data)
 
@@ -158,51 +180,61 @@ def step1_prepare_data():
         log_error('请先安装 datasets: pip install datasets')
         return False
 
-    log('  正在从 Hugging Face 加载 PKU-SafeRLHF...')
-    try:
-        ds = load_dataset('PKU-Alignment/PKU-SafeRLHF', trust_remote_code=True)
-    except Exception as e:
-        log_error(f'加载数据集失败: {e}')
-        log('')
-        log_info('提示: 如果遇到权限问题，请尝试以下方法:')
-        log('  1. 登录 Hugging Face: huggingface-cli login')
-        log('  2. 或设置环境变量: export HF_TOKEN=your_token')
-        log('  3. 或手动下载数据集并放置到 data/ 目录')
-        log('')
-        return False
-
-    def convert_to_dpo(example):
-        r0 = example.get('response_0', '')
-        r1 = example.get('response_1', '')
-        prompt = example.get('prompt', '')
-        chosen_idx = example.get(
-            'safer_response_id',
-            example.get('better_response_id', 0),
-        )
-        return {
-            'prompt': prompt,
-            'chosen': r0 if chosen_idx == 0 else r1,
-            'rejected': r1 if chosen_idx == 0 else r0,
-        }
-
-    dpo_dataset = ds['train'].map(
-        convert_to_dpo,
-        remove_columns=ds['train'].column_names,
+    previous_hf_endpoint = override_hf_endpoint(
+        PKU_SAFERLHF_DATASET_ENDPOINT
     )
-    data_list = list(dpo_dataset)
+    log(f'  当前数据集下载端点: {PKU_SAFERLHF_DATASET_ENDPOINT}')
 
-    train_data = data_list[:9000]
-    eval_data = data_list[9000:10000]
+    try:
+        log('  正在从 Hugging Face 加载 PKU-SafeRLHF...')
+        try:
+            ds = load_dataset(
+                'PKU-Alignment/PKU-SafeRLHF', trust_remote_code=True
+            )
+        except Exception as e:
+            log_error(f'加载数据集失败: {e}')
+            log('')
+            log_info('提示: 如果遇到权限问题，请尝试以下方法:')
+            log('  1. 登录 Hugging Face: huggingface-cli login')
+            log('  2. 或设置环境变量: export HF_TOKEN=your_token')
+            log('  3. 或手动下载数据集并放置到 data/ 目录')
+            log('')
+            return False
 
-    with open(train_path, 'w', encoding='utf-8') as f:
-        json.dump(train_data, f, indent=2)
+        def convert_to_dpo(example):
+            r0 = example.get('response_0', '')
+            r1 = example.get('response_1', '')
+            prompt = example.get('prompt', '')
+            chosen_idx = example.get(
+                'safer_response_id',
+                example.get('better_response_id', 0),
+            )
+            return {
+                'prompt': prompt,
+                'chosen': r0 if chosen_idx == 0 else r1,
+                'rejected': r1 if chosen_idx == 0 else r0,
+            }
 
-    with open(eval_path, 'w', encoding='utf-8') as f:
-        json.dump(eval_data, f, indent=2)
+        dpo_dataset = ds['train'].map(
+            convert_to_dpo,
+            remove_columns=ds['train'].column_names,
+        )
+        data_list = list(dpo_dataset)
 
-    log(f'  训练集: {train_path} ({len(train_data)} 条)')
-    log(f'  验证集: {eval_path} ({len(eval_data)} 条)')
-    return True
+        train_data = data_list[:9000]
+        eval_data = data_list[9000:10000]
+
+        with open(train_path, 'w', encoding='utf-8') as f:
+            json.dump(train_data, f, indent=2)
+
+        with open(eval_path, 'w', encoding='utf-8') as f:
+            json.dump(eval_data, f, indent=2)
+
+        log(f'  训练集: {train_path} ({len(train_data)} 条)')
+        log(f'  验证集: {eval_path} ({len(eval_data)} 条)')
+        return True
+    finally:
+        restore_hf_endpoint(previous_hf_endpoint)
 
 
 def step2_dpo_training():
@@ -618,6 +650,8 @@ def parse_args():
                         help='DPO基础模型路径')
     parser.add_argument('--judge-model', type=str, default=None,
                         help='评估模型路径')
+    parser.add_argument('--dataset-endpoint', type=str, default=None,
+                        help='Hugging Face 数据集下载端点')
     parser.add_argument('--data-dir', type=str, default=None,
                         help='数据目录')
     parser.add_argument('--model-dir', type=str, default=None,
@@ -633,6 +667,7 @@ def parse_args():
 
 def apply_cli_overrides(args):
     global LAZYLLM_PATH, DPO_BASE_MODEL, JUDGE_MODEL
+    global PKU_SAFERLHF_DATASET_ENDPOINT
     global DATA_DIR, MODEL_DIR, OUTPUT_DIR
 
     if args.lazyllm_path:
@@ -641,6 +676,8 @@ def apply_cli_overrides(args):
         DPO_BASE_MODEL = args.dpo_base_model
     if args.judge_model:
         JUDGE_MODEL = args.judge_model
+    if args.dataset_endpoint:
+        PKU_SAFERLHF_DATASET_ENDPOINT = args.dataset_endpoint
     if args.data_dir:
         DATA_DIR = Path(args.data_dir)
     if args.model_dir:
@@ -666,6 +703,7 @@ def log_configuration():
     log(f'  - LazyLLM路径: {LAZYLLM_PATH}')
     log(f'  - DPO基础模型: {DPO_BASE_MODEL}')
     log(f'  - Judge模型: {JUDGE_MODEL}')
+    log(f'  - DATASET_ENDPOINT: {PKU_SAFERLHF_DATASET_ENDPOINT}')
     log(f'  - VLLM_MAX_MODEL_LEN: {VLLM_MAX_MODEL_LEN}')
     log(
         '  - VLLM_GPU_MEMORY_UTILIZATION: '

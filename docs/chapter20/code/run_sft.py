@@ -13,7 +13,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
+HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
+os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
+
 SFT_MODEL = '/path/to/sft/base/model'
+TINY_CODES_DATASET_ENDPOINT = os.environ.get(
+    'TINY_CODES_DATASET_ENDPOINT', HF_ENDPOINT
+)
 VLLM_MAX_MODEL_LEN = 4096
 VLLM_GPU_MEMORY_UTILIZATION = 0.8
 VLLM_MAX_NUM_SEQS = 16
@@ -103,6 +109,22 @@ def ensure_local_site_packages():
             sys.path.insert(0, path)
 
 
+def override_hf_endpoint(endpoint=None):
+    previous_endpoint = os.environ.get('HF_ENDPOINT')
+    if endpoint:
+        os.environ['HF_ENDPOINT'] = endpoint
+    elif 'HF_ENDPOINT' in os.environ:
+        del os.environ['HF_ENDPOINT']
+    return previous_endpoint
+
+
+def restore_hf_endpoint(previous_endpoint):
+    if previous_endpoint is not None:
+        os.environ['HF_ENDPOINT'] = previous_endpoint
+    elif 'HF_ENDPOINT' in os.environ:
+        del os.environ['HF_ENDPOINT']
+
+
 def step1_prepare_data():
     log_step('[1/4] 下载并准备 tiny-codes 数据集...')
     ensure_local_site_packages()
@@ -120,52 +142,61 @@ def step1_prepare_data():
         log_error('请先安装 datasets: pip install datasets')
         return False
 
-    log('  正在从 Hugging Face 加载数据集...')
+    dataset_endpoint = CONFIG.get(
+        'dataset_endpoint', TINY_CODES_DATASET_ENDPOINT
+    )
+    previous_hf_endpoint = override_hf_endpoint(dataset_endpoint)
+    log(f'  当前数据集下载端点: {dataset_endpoint}')
+
     try:
-        dataset = load_dataset(
-            'nampdn-ai/tiny-codes', split='train', streaming=True
-        )
-    except Exception as exc:
-        log_error(f'加载数据集失败: {exc}')
-        log('')
-        log_info('提示: 如果遇到权限问题，请尝试以下方法:')
-        log('  1. 登录 Hugging Face: huggingface-cli login')
-        log('  2. 或设置环境变量: export HF_TOKEN=your_token')
-        log('  3. 或手动下载数据集并放置到 data/ 目录')
-        log('')
-        return False
+        log('  正在从 Hugging Face 加载数据集...')
+        try:
+            dataset = load_dataset(
+                'nampdn-ai/tiny-codes', split='train', streaming=True
+            )
+        except Exception as exc:
+            log_error(f'加载数据集失败: {exc}')
+            log('')
+            log_info('提示: 如果遇到权限问题，请尝试以下方法:')
+            log('  1. 登录 Hugging Face: huggingface-cli login')
+            log('  2. 或设置环境变量: export HF_TOKEN=your_token')
+            log('  3. 或手动下载数据集并放置到 data/ 目录')
+            log('')
+            return False
 
-    python_data = []
-    target_count = 6000
+        python_data = []
+        target_count = 6000
 
-    for entry in dataset:
-        if entry.get('programming_language', '').lower() != 'python':
-            continue
+        for entry in dataset:
+            if entry.get('programming_language', '').lower() != 'python':
+                continue
 
-        prompt = entry.get('prompt', '').strip()
-        response = entry.get('response', '').strip()
-        if len(prompt) <= 5 or len(response) <= 10:
-            continue
+            prompt = entry.get('prompt', '').strip()
+            response = entry.get('response', '').strip()
+            if len(prompt) <= 5 or len(response) <= 10:
+                continue
 
-        python_data.append(
-            {'instruction': prompt, 'input': '', 'output': response}
-        )
-        if len(python_data) % 500 == 0:
-            log(f'    已收集 {len(python_data)} 条...')
-        if len(python_data) >= target_count:
-            break
+            python_data.append(
+                {'instruction': prompt, 'input': '', 'output': response}
+            )
+            if len(python_data) % 500 == 0:
+                log(f'    已收集 {len(python_data)} 条...')
+            if len(python_data) >= target_count:
+                break
 
-    train_data = python_data[:5000]
-    eval_data = python_data[5000:6000]
+        train_data = python_data[:5000]
+        eval_data = python_data[5000:6000]
 
-    with open(train_path, 'w', encoding='utf-8') as file:
-        json.dump(train_data, file, indent=2, ensure_ascii=False)
-    with open(eval_path, 'w', encoding='utf-8') as file:
-        json.dump(eval_data, file, indent=2, ensure_ascii=False)
+        with open(train_path, 'w', encoding='utf-8') as file:
+            json.dump(train_data, file, indent=2, ensure_ascii=False)
+        with open(eval_path, 'w', encoding='utf-8') as file:
+            json.dump(eval_data, file, indent=2, ensure_ascii=False)
 
-    log(f'  SFT训练集: {train_path} ({len(train_data)} 条)')
-    log(f'  评测集: {eval_path} ({len(eval_data)} 条)')
-    return True
+        log(f'  SFT训练集: {train_path} ({len(train_data)} 条)')
+        log(f'  评测集: {eval_path} ({len(eval_data)} 条)')
+        return True
+    finally:
+        restore_hf_endpoint(previous_hf_endpoint)
 
 
 def step2_sft_training():
@@ -543,6 +574,12 @@ def parse_args():
         help='日志目录 (默认: 脚本所在目录/logs)',
     )
     parser.add_argument(
+        '--dataset-endpoint',
+        type=str,
+        default=None,
+        help='Hugging Face 数据集下载端点',
+    )
+    parser.add_argument(
         '--vllm-max-model-len',
         type=int,
         default=None,
@@ -599,6 +636,7 @@ def parse_args():
 def init_config(args):
     global CONFIG
     global SFT_MODEL, DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR
+    global TINY_CODES_DATASET_ENDPOINT
 
     CONFIG = {
         'sft_model': (
@@ -608,6 +646,11 @@ def init_config(args):
         'model_dir': Path(args.model_dir) if args.model_dir else MODEL_DIR,
         'output_dir': Path(args.output_dir) if args.output_dir else OUTPUT_DIR,
         'log_dir': Path(args.log_dir) if args.log_dir else LOG_DIR,
+        'dataset_endpoint': (
+            args.dataset_endpoint
+            if args.dataset_endpoint is not None
+            else TINY_CODES_DATASET_ENDPOINT
+        ),
         'vllm_max_model_len': (
             args.vllm_max_model_len
             if args.vllm_max_model_len is not None
@@ -650,6 +693,7 @@ def init_config(args):
     MODEL_DIR = CONFIG['model_dir']
     OUTPUT_DIR = CONFIG['output_dir']
     LOG_DIR = CONFIG['log_dir']
+    TINY_CODES_DATASET_ENDPOINT = CONFIG['dataset_endpoint']
 
     for directory in [DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR]:
         directory.mkdir(parents=True, exist_ok=True)
@@ -677,6 +721,7 @@ def main():
     log(f"  - 模型目录: {config['model_dir']}")
     log(f"  - 输出目录: {config['output_dir']}")
     log(f"  - 日志目录: {config['log_dir']}")
+    log(f"  - DATASET_ENDPOINT: {config['dataset_endpoint']}")
     log(f"  - VLLM_MAX_MODEL_LEN: {config['vllm_max_model_len']}")
     log(
         '  - VLLM_GPU_MEMORY_UTILIZATION: '
