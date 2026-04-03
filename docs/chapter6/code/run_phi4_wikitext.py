@@ -19,7 +19,7 @@ from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import lazyllm
 from lazyllm import finetune, launchers, deploy, TrainableModule
-from lazyllm.tools.data.pipelines.pt_text_ppl import build_phi4_pt_pipeline
+from lazyllm.tools.data.pipelines.pt_data_ppl import build_phi4_pt_pipeline
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
