@@ -1,0 +1,426 @@
+/mnt/lustre/share_data/env/miniconda3/envs/lazyllm/lib/python3.10/site-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[WARNING|2026-03-10 17:35:17] llamafactory.extras.misc:154 >> Version checking has been disabled, may lead to unexpected behaviors.
+[2026-03-10 17:35:20,103] [INFO] [real_accelerator.py:203:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[INFO|2026-03-10 17:35:27] llamafactory.hparams.parser:423 >> Process rank: 0, world size: 1, device: cuda:0, distributed training: False, compute dtype: torch.float16
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,061 >> loading file vocab.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,061 >> loading file merges.txt
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,061 >> loading file tokenizer.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,061 >> loading file added_tokens.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,061 >> loading file special_tokens_map.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,061 >> loading file tokenizer_config.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,061 >> loading file chat_template.jinja
+[INFO|tokenization_utils_base.py:2364] 2026-03-10 17:35:27,380 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|configuration_utils.py:763] 2026-03-10 17:35:27,389 >> loading configuration file /home/mnt/cuishaoting/.lazyllm/model/qwen2.5-0.5B-instruct/config.json
+[INFO|configuration_utils.py:839] 2026-03-10 17:35:27,394 >> Model config Qwen2Config {
+  "architectures": [
+    "Qwen2ForCausalLM"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 896,
+  "initializer_range": 0.02,
+  "intermediate_size": 4864,
+  "layer_types": [
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention"
+  ],
+  "max_position_embeddings": 32768,
+  "max_window_layers": 21,
+  "model_type": "qwen2",
+  "num_attention_heads": 14,
+  "num_hidden_layers": 24,
+  "num_key_value_heads": 2,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": null,
+  "rope_theta": 1000000.0,
+  "sliding_window": null,
+  "tie_word_embeddings": true,
+  "transformers_version": "4.57.1",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "vocab_size": 151936
+}
+
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,403 >> loading file vocab.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,403 >> loading file merges.txt
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,403 >> loading file tokenizer.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,403 >> loading file added_tokens.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,403 >> loading file special_tokens_map.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,403 >> loading file tokenizer_config.json
+[INFO|tokenization_utils_base.py:2093] 2026-03-10 17:35:27,403 >> loading file chat_template.jinja
+[INFO|tokenization_utils_base.py:2364] 2026-03-10 17:35:27,679 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|2026-03-10 17:35:27] llamafactory.data.loader:143 >> Loading dataset /home/mnt/cuishaoting/LazyLLM/lazyllm/tools/data/pipelines/experiment/cot_experiment/train.json...
+Converting format of dataset (num_proc=16):   0%|          | 0/2680 [00:00<?, ? examples/s]Converting format of dataset (num_proc=16):  25%|██▌       | 670/2680 [00:00<00:00, 6512.52 examples/s]Converting format of dataset (num_proc=16): 100%|██████████| 2680/2680 [00:00<00:00, 9844.64 examples/s]
+Running tokenizer on dataset (num_proc=16):   0%|          | 0/2680 [00:00<?, ? examples/s]Running tokenizer on dataset (num_proc=16):   6%|▋         | 168/2680 [00:00<00:12, 204.58 examples/s]Running tokenizer on dataset (num_proc=16):  13%|█▎        | 336/2680 [00:00<00:05, 422.35 examples/s]Running tokenizer on dataset (num_proc=16):  25%|██▌       | 672/2680 [00:01<00:02, 797.71 examples/s]Running tokenizer on dataset (num_proc=16):  38%|███▊      | 1008/2680 [00:01<00:01, 1070.05 examples/s]Running tokenizer on dataset (num_proc=16):  50%|█████     | 1344/2680 [00:01<00:01, 1261.31 examples/s]Running tokenizer on dataset (num_proc=16):  56%|█████▋    | 1511/2680 [00:01<00:00, 1304.18 examples/s]Running tokenizer on dataset (num_proc=16):  69%|██████▉   | 1845/2680 [00:01<00:00, 1635.15 examples/s]Running tokenizer on dataset (num_proc=16):  81%|████████▏ | 2179/2680 [00:01<00:00, 1703.35 examples/s]Running tokenizer on dataset (num_proc=16):  94%|█████████▍| 2513/2680 [00:02<00:00, 1792.95 examples/s]Running tokenizer on dataset (num_proc=16): 100%|██████████| 2680/2680 [00:02<00:00, 1163.89 examples/s]
+[INFO|configuration_utils.py:763] 2026-03-10 17:35:31,744 >> loading configuration file /home/mnt/cuishaoting/.lazyllm/model/qwen2.5-0.5B-instruct/config.json
+[INFO|configuration_utils.py:839] 2026-03-10 17:35:31,746 >> Model config Qwen2Config {
+  "architectures": [
+    "Qwen2ForCausalLM"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 896,
+  "initializer_range": 0.02,
+  "intermediate_size": 4864,
+  "layer_types": [
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention"
+  ],
+  "max_position_embeddings": 32768,
+  "max_window_layers": 21,
+  "model_type": "qwen2",
+  "num_attention_heads": 14,
+  "num_hidden_layers": 24,
+  "num_key_value_heads": 2,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": null,
+  "rope_theta": 1000000.0,
+  "sliding_window": null,
+  "tie_word_embeddings": true,
+  "transformers_version": "4.57.1",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "vocab_size": 151936
+}
+
+training example:
+input_ids:
+[151644, 8948, 198, 2610, 525, 1207, 16948, 11, 3465, 553, 54364, 14817, 13, 1446, 525, 264, 10950, 17847, 13, 151645, 198, 151644, 872, 198, 785, 2701, 42643, 1817, 7512, 264, 738, 315, 2326, 6171, 27802, 304, 264, 8356, 1973, 13, 576, 12239, 525, 73045, 12966, 2878, 1817, 14311, 13, 1913, 264, 27645, 11, 1052, 525, 2326, 6467, 25, 264, 2518, 2311, 11, 264, 17545, 2311, 11, 323, 264, 4158, 2311, 13, 576, 4158, 2311, 374, 311, 279, 2115, 315, 279, 17545, 2311, 13, 576, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 624, 3798, 510, 4346, 8, 576, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 198, 5349, 8, 576, 17545, 2311, 374, 279, 2086, 504, 279, 2115, 198, 3025, 8, 576, 4158, 2311, 374, 279, 2086, 504, 279, 2115, 151645, 198, 151644, 77091, 198, 10061, 594, 23643, 279, 2661, 1995, 3019, 553, 3019, 1447, 16, 13, 1205, 614, 2326, 6467, 25, 264, 2518, 2311, 11, 264, 17545, 2311, 11, 323, 264, 4158, 2311, 624, 17, 13, 576, 4158, 2311, 374, 311, 279, 2115, 315, 279, 17545, 2311, 624, 18, 13, 576, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 382, 22043, 1493, 3501, 11, 582, 1184, 311, 8253, 279, 4396, 1973, 315, 279, 6467, 382, 12549, 279, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 11, 279, 3204, 9892, 369, 279, 1008, 1378, 6467, 320, 5782, 323, 17545, 8, 525, 279, 1156, 323, 4843, 9892, 13, 576, 4158, 2311, 1969, 387, 311, 279, 2115, 315, 279, 17545, 2311, 13, 15277, 11, 279, 4158, 2311, 1969, 387, 304, 279, 1156, 2309, 11, 323, 279, 17545, 2311, 1969, 387, 304, 279, 4843, 2309, 382, 4416, 11, 279, 1973, 315, 279, 6467, 504, 2115, 311, 1290, 374, 510, 16, 13, 5807, 2311, 198, 17, 13, 3731, 2311, 198, 18, 13, 23366, 2311, 271, 7039, 11, 1077, 594, 1779, 279, 2661, 2606, 510, 12, 320, 32, 8, 576, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 25, 1096, 374, 830, 3118, 389, 1039, 6358, 624, 12, 320, 33, 8, 576, 17545, 2311, 374, 279, 2086, 504, 279, 2115, 25, 1096, 374, 895, 1576, 279, 17545, 2311, 374, 304, 279, 4843, 2309, 624, 12, 320, 34, 8, 576, 4158, 2311, 374, 279, 2086, 504, 279, 2115, 25, 1096, 374, 895, 1576, 279, 4158, 2311, 374, 304, 279, 1156, 2309, 382, 54815, 11, 279, 4396, 4226, 374, 1447, 820, 362, 151645, 198]
+inputs:
+<|im_start|>system
+You are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>
+<|im_start|>user
+The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: a red book, a gray book, and a white book. The white book is to the left of the gray book. The red book is the second from the left.
+Options:
+(A) The red book is the second from the left
+(B) The gray book is the second from the left
+(C) The white book is the second from the left<|im_end|>
+<|im_start|>assistant
+Let's analyze the given information step by step:
+
+1. We have three books: a red book, a gray book, and a white book.
+2. The white book is to the left of the gray book.
+3. The red book is the second from the left.
+
+Given these points, we need to determine the correct order of the books.
+
+Since the red book is the second from the left, the possible positions for the other two books (white and gray) are the first and third positions. The white book must be to the left of the gray book. Therefore, the white book must be in the first position, and the gray book must be in the third position.
+
+So, the order of the books from left to right is:
+1. White book
+2. Red book
+3. Gray book
+
+Now, let's check the given options:
+- (A) The red book is the second from the left: This is true based on our analysis.
+- (B) The gray book is the second from the left: This is false because the gray book is in the third position.
+- (C) The white book is the second from the left: This is false because the white book is in the first position.
+
+Therefore, the correct answer is:
+
+#### A<|im_end|>
+
+label_ids:
+[-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, 10061, 594, 23643, 279, 2661, 1995, 3019, 553, 3019, 1447, 16, 13, 1205, 614, 2326, 6467, 25, 264, 2518, 2311, 11, 264, 17545, 2311, 11, 323, 264, 4158, 2311, 624, 17, 13, 576, 4158, 2311, 374, 311, 279, 2115, 315, 279, 17545, 2311, 624, 18, 13, 576, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 382, 22043, 1493, 3501, 11, 582, 1184, 311, 8253, 279, 4396, 1973, 315, 279, 6467, 382, 12549, 279, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 11, 279, 3204, 9892, 369, 279, 1008, 1378, 6467, 320, 5782, 323, 17545, 8, 525, 279, 1156, 323, 4843, 9892, 13, 576, 4158, 2311, 1969, 387, 311, 279, 2115, 315, 279, 17545, 2311, 13, 15277, 11, 279, 4158, 2311, 1969, 387, 304, 279, 1156, 2309, 11, 323, 279, 17545, 2311, 1969, 387, 304, 279, 4843, 2309, 382, 4416, 11, 279, 1973, 315, 279, 6467, 504, 2115, 311, 1290, 374, 510, 16, 13, 5807, 2311, 198, 17, 13, 3731, 2311, 198, 18, 13, 23366, 2311, 271, 7039, 11, 1077, 594, 1779, 279, 2661, 2606, 510, 12, 320, 32, 8, 576, 2518, 2311, 374, 279, 2086, 504, 279, 2115, 25, 1096, 374, 830, 3118, 389, 1039, 6358, 624, 12, 320, 33, 8, 576, 17545, 2311, 374, 279, 2086, 504, 279, 2115, 25, 1096, 374, 895, 1576, 279, 17545, 2311, 374, 304, 279, 4843, 2309, 624, 12, 320, 34, 8, 576, 4158, 2311, 374, 279, 2086, 504, 279, 2115, 25, 1096, 374, 895, 1576, 279, 4158, 2311, 374, 304, 279, 1156, 2309, 382, 54815, 11, 279, 4396, 4226, 374, 1447, 820, 362, 151645, 198]
+labels:
+Let's analyze the given information step by step:
+
+1. We have three books: a red book, a gray book, and a white book.
+2. The white book is to the left of the gray book.
+3. The red book is the second from the left.
+
+Given these points, we need to determine the correct order of the books.
+
+Since the red book is the second from the left, the possible positions for the other two books (white and gray) are the first and third positions. The white book must be to the left of the gray book. Therefore, the white book must be in the first position, and the gray book must be in the third position.
+
+So, the order of the books from left to right is:
+1. White book
+2. Red book
+3. Gray book
+
+Now, let's check the given options:
+- (A) The red book is the second from the left: This is true based on our analysis.
+- (B) The gray book is the second from the left: This is false because the gray book is in the third position.
+- (C) The white book is the second from the left: This is false because the white book is in the first position.
+
+Therefore, the correct answer is:
+
+#### A<|im_end|>
+
+[INFO|2026-03-10 17:35:31] llamafactory.model.model_utils.kv_cache:143 >> KV cache is disabled during training.
+[WARNING|logging.py:328] 2026-03-10 17:35:33,085 >> `torch_dtype` is deprecated! Use `dtype` instead!
+[INFO|modeling_utils.py:1169] 2026-03-10 17:35:33,087 >> loading weights file /home/mnt/cuishaoting/.lazyllm/model/qwen2.5-0.5B-instruct/model.safetensors
+[INFO|modeling_utils.py:2341] 2026-03-10 17:35:33,091 >> Instantiating Qwen2ForCausalLM model under default dtype torch.float16.
+[INFO|configuration_utils.py:986] 2026-03-10 17:35:33,094 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "eos_token_id": 151645,
+  "use_cache": false
+}
+
+[INFO|configuration_utils.py:939] 2026-03-10 17:35:35,663 >> loading configuration file /home/mnt/cuishaoting/.lazyllm/model/qwen2.5-0.5B-instruct/generation_config.json
+[INFO|configuration_utils.py:986] 2026-03-10 17:35:35,664 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": true,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "pad_token_id": 151643,
+  "repetition_penalty": 1.1,
+  "temperature": 0.7,
+  "top_k": 20,
+  "top_p": 0.8
+}
+
+[INFO|dynamic_module_utils.py:423] 2026-03-10 17:35:35,665 >> Could not locate the custom_generate/generate.py inside /home/mnt/cuishaoting/.lazyllm/model/qwen2.5-0.5B-instruct.
+[INFO|2026-03-10 17:35:35] llamafactory.model.model_utils.checkpointing:143 >> Gradient checkpointing enabled.
+[INFO|2026-03-10 17:35:35] llamafactory.model.model_utils.attention:143 >> Using torch SDPA for faster training and inference.
+[INFO|2026-03-10 17:35:35] llamafactory.model.adapter:143 >> Upcasting trainable params to float32.
+[INFO|2026-03-10 17:35:35] llamafactory.model.adapter:143 >> Fine-tuning method: LoRA
+[INFO|2026-03-10 17:35:35] llamafactory.model.model_utils.misc:143 >> Found linear modules: down_proj,up_proj,o_proj,v_proj,gate_proj,k_proj,q_proj
+[INFO|2026-03-10 17:35:47] llamafactory.model.loader:143 >> trainable params: 4,399,104 || all params: 498,431,872 || trainable%: 0.8826
+Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+[WARNING|trainer.py:906] 2026-03-10 17:35:47,453 >> The model is already on multiple devices. Skipping the move to device specified in `args`.
+[INFO|trainer.py:749] 2026-03-10 17:35:47,680 >> Using auto half precision backend
+[WARNING|trainer.py:982] 2026-03-10 17:35:47,684 >> The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+[INFO|trainer.py:2519] 2026-03-10 17:35:48,210 >> ***** Running training *****
+[INFO|trainer.py:2520] 2026-03-10 17:35:48,210 >>   Num examples = 2,412
+[INFO|trainer.py:2521] 2026-03-10 17:35:48,210 >>   Num Epochs = 3
+[INFO|trainer.py:2522] 2026-03-10 17:35:48,210 >>   Instantaneous batch size per device = 24
+[INFO|trainer.py:2525] 2026-03-10 17:35:48,210 >>   Total train batch size (w. parallel, distributed & accumulation) = 24
+[INFO|trainer.py:2526] 2026-03-10 17:35:48,210 >>   Gradient Accumulation steps = 1
+[INFO|trainer.py:2527] 2026-03-10 17:35:48,210 >>   Total optimization steps = 303
+[INFO|trainer.py:2528] 2026-03-10 17:35:48,214 >>   Number of trainable parameters = 4,399,104
+  0%|          | 0/303 [00:00<?, ?it/s]/mnt/lustre/share_data/env/miniconda3/envs/lazyllm/lib/python3.10/site-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+  0%|          | 1/303 [00:01<10:00,  1.99s/it]  1%|          | 2/303 [00:02<06:00,  1.20s/it]  1%|          | 3/303 [00:03<04:43,  1.06it/s]  1%|▏         | 4/303 [00:03<04:07,  1.21it/s]  2%|▏         | 5/303 [00:04<03:45,  1.32it/s]  2%|▏         | 6/303 [00:05<03:32,  1.39it/s]  2%|▏         | 7/303 [00:05<03:24,  1.45it/s]  3%|▎         | 8/303 [00:06<03:19,  1.48it/s]  3%|▎         | 9/303 [00:07<03:15,  1.50it/s]  3%|▎         | 10/303 [00:07<03:13,  1.52it/s]                                                  3%|▎         | 10/303 [00:07<03:13,  1.52it/s]  4%|▎         | 11/303 [00:08<03:12,  1.52it/s]  4%|▍         | 12/303 [00:09<03:10,  1.53it/s]  4%|▍         | 13/303 [00:09<03:08,  1.54it/s]  5%|▍         | 14/303 [00:10<03:07,  1.55it/s]  5%|▍         | 15/303 [00:10<03:06,  1.55it/s]  5%|▌         | 16/303 [00:11<03:05,  1.55it/s]  6%|▌         | 17/303 [00:12<03:04,  1.55it/s]  6%|▌         | 18/303 [00:12<03:03,  1.55it/s]  6%|▋         | 19/303 [00:13<03:02,  1.55it/s]  7%|▋         | 20/303 [00:14<03:02,  1.55it/s]                                                  7%|▋         | 20/303 [00:14<03:02,  1.55it/s]  7%|▋         | 21/303 [00:14<03:02,  1.55it/s]  7%|▋         | 22/303 [00:15<03:01,  1.55it/s]  8%|▊         | 23/303 [00:16<03:00,  1.55it/s]  8%|▊         | 24/303 [00:16<02:59,  1.55it/s]  8%|▊         | 25/303 [00:17<02:58,  1.56it/s]  9%|▊         | 26/303 [00:18<02:57,  1.56it/s]  9%|▉         | 27/303 [00:18<02:57,  1.56it/s]  9%|▉         | 28/303 [00:19<02:56,  1.56it/s] 10%|▉         | 29/303 [00:19<02:55,  1.56it/s] 10%|▉         | 30/303 [00:20<02:55,  1.56it/s]                                                 10%|▉         | 30/303 [00:20<02:55,  1.56it/s] 10%|█         | 31/303 [00:21<02:55,  1.55it/s] 11%|█         | 32/303 [00:21<02:54,  1.56it/s] 11%|█         | 33/303 [00:22<02:53,  1.56it/s] 11%|█         | 34/303 [00:23<02:52,  1.56it/s] 12%|█▏        | 35/303 [00:23<02:52,  1.55it/s] 12%|█▏        | 36/303 [00:24<02:51,  1.56it/s] 12%|█▏        | 37/303 [00:25<02:50,  1.56it/s] 13%|█▎        | 38/303 [00:25<02:49,  1.56it/s] 13%|█▎        | 39/303 [00:26<02:49,  1.56it/s] 13%|█▎        | 40/303 [00:27<02:48,  1.56it/s]                                                 13%|█▎        | 40/303 [00:27<02:48,  1.56it/s] 14%|█▎        | 41/303 [00:27<02:49,  1.55it/s] 14%|█▍        | 42/303 [00:28<02:48,  1.55it/s] 14%|█▍        | 43/303 [00:28<02:47,  1.55it/s] 15%|█▍        | 44/303 [00:29<02:46,  1.56it/s] 15%|█▍        | 45/303 [00:30<02:45,  1.56it/s] 15%|█▌        | 46/303 [00:30<02:45,  1.56it/s] 16%|█▌        | 47/303 [00:31<02:44,  1.56it/s] 16%|█▌        | 48/303 [00:32<02:43,  1.56it/s] 16%|█▌        | 49/303 [00:32<02:43,  1.56it/s] 17%|█▋        | 50/303 [00:33<02:42,  1.56it/s]                                                 17%|█▋        | 50/303 [00:33<02:42,  1.56it/s] 17%|█▋        | 51/303 [00:34<02:42,  1.55it/s] 17%|█▋        | 52/303 [00:34<02:41,  1.55it/s] 17%|█▋        | 53/303 [00:35<02:40,  1.55it/s] 18%|█▊        | 54/303 [00:36<02:40,  1.55it/s] 18%|█▊        | 55/303 [00:36<02:39,  1.55it/s] 18%|█▊        | 56/303 [00:37<02:38,  1.56it/s] 19%|█▉        | 57/303 [00:37<02:37,  1.56it/s] 19%|█▉        | 58/303 [00:38<02:37,  1.56it/s] 19%|█▉        | 59/303 [00:39<02:36,  1.56it/s] 20%|█▉        | 60/303 [00:39<02:35,  1.56it/s]                                                 20%|█▉        | 60/303 [00:39<02:35,  1.56it/s] 20%|██        | 61/303 [00:40<02:36,  1.55it/s] 20%|██        | 62/303 [00:41<02:34,  1.55it/s] 21%|██        | 63/303 [00:41<02:34,  1.56it/s] 21%|██        | 64/303 [00:42<02:33,  1.56it/s] 21%|██▏       | 65/303 [00:43<02:32,  1.56it/s] 22%|██▏       | 66/303 [00:43<02:32,  1.56it/s] 22%|██▏       | 67/303 [00:44<02:31,  1.56it/s] 22%|██▏       | 68/303 [00:45<02:30,  1.56it/s] 23%|██▎       | 69/303 [00:45<02:29,  1.56it/s] 23%|██▎       | 70/303 [00:46<02:29,  1.56it/s]                                                 23%|██▎       | 70/303 [00:46<02:29,  1.56it/s] 23%|██▎       | 71/303 [00:46<02:29,  1.55it/s] 24%|██▍       | 72/303 [00:47<02:28,  1.55it/s] 24%|██▍       | 73/303 [00:48<02:27,  1.55it/s] 24%|██▍       | 74/303 [00:48<02:27,  1.56it/s] 25%|██▍       | 75/303 [00:49<02:26,  1.56it/s] 25%|██▌       | 76/303 [00:50<02:25,  1.56it/s] 25%|██▌       | 77/303 [00:50<02:25,  1.56it/s] 26%|██▌       | 78/303 [00:51<02:24,  1.56it/s] 26%|██▌       | 79/303 [00:52<02:23,  1.56it/s] 26%|██▋       | 80/303 [00:52<02:22,  1.56it/s]                                                 26%|██▋       | 80/303 [00:52<02:22,  1.56it/s] 27%|██▋       | 81/303 [00:53<02:22,  1.55it/s] 27%|██▋       | 82/303 [00:54<02:22,  1.56it/s] 27%|██▋       | 83/303 [00:54<02:21,  1.56it/s] 28%|██▊       | 84/303 [00:55<02:20,  1.56it/s] 28%|██▊       | 85/303 [00:55<02:20,  1.56it/s] 28%|██▊       | 86/303 [00:56<02:19,  1.56it/s] 29%|██▊       | 87/303 [00:57<02:18,  1.56it/s] 29%|██▉       | 88/303 [00:57<02:18,  1.56it/s] 29%|██▉       | 89/303 [00:58<02:17,  1.56it/s] 30%|██▉       | 90/303 [00:59<02:16,  1.56it/s]                                                 30%|██▉       | 90/303 [00:59<02:16,  1.56it/s] 30%|███       | 91/303 [00:59<02:16,  1.55it/s] 30%|███       | 92/303 [01:00<02:15,  1.55it/s] 31%|███       | 93/303 [01:01<02:15,  1.55it/s] 31%|███       | 94/303 [01:01<02:14,  1.56it/s] 31%|███▏      | 95/303 [01:02<02:13,  1.56it/s] 32%|███▏      | 96/303 [01:03<02:12,  1.56it/s] 32%|███▏      | 97/303 [01:03<02:12,  1.56it/s] 32%|███▏      | 98/303 [01:04<02:11,  1.56it/s] 33%|███▎      | 99/303 [01:04<02:10,  1.56it/s] 33%|███▎      | 100/303 [01:05<02:08,  1.57it/s]                                                  33%|███▎      | 100/303 [01:05<02:08,  1.57it/s] 33%|███▎      | 101/303 [01:05<01:51,  1.81it/s] 34%|███▎      | 102/303 [01:06<01:57,  1.71it/s] 34%|███▍      | 103/303 [01:07<02:00,  1.66it/s] 34%|███▍      | 104/303 [01:07<02:02,  1.63it/s] 35%|███▍      | 105/303 [01:08<02:02,  1.62it/s] 35%|███▍      | 106/303 [01:09<02:02,  1.60it/s] 35%|███▌      | 107/303 [01:09<02:02,  1.60it/s] 36%|███▌      | 108/303 [01:10<02:02,  1.59it/s] 36%|███▌      | 109/303 [01:11<02:02,  1.58it/s] 36%|███▋      | 110/303 [01:11<02:02,  1.58it/s]                                                  36%|███▋      | 110/303 [01:11<02:02,  1.58it/s] 37%|███▋      | 111/303 [01:12<02:02,  1.57it/s] 37%|███▋      | 112/303 [01:12<02:02,  1.56it/s] 37%|███▋      | 113/303 [01:13<02:01,  1.57it/s] 38%|███▊      | 114/303 [01:14<02:00,  1.56it/s] 38%|███▊      | 115/303 [01:14<02:00,  1.56it/s] 38%|███▊      | 116/303 [01:15<01:59,  1.56it/s] 39%|███▊      | 117/303 [01:16<01:58,  1.57it/s] 39%|███▉      | 118/303 [01:16<01:58,  1.56it/s] 39%|███▉      | 119/303 [01:17<01:57,  1.56it/s] 40%|███▉      | 120/303 [01:18<01:57,  1.56it/s]                                                  40%|███▉      | 120/303 [01:18<01:57,  1.56it/s] 40%|███▉      | 121/303 [01:18<01:57,  1.55it/s] 40%|████      | 122/303 [01:19<01:56,  1.56it/s] 41%|████      | 123/303 [01:20<01:55,  1.56it/s] 41%|████      | 124/303 [01:20<01:54,  1.56it/s] 41%|████▏     | 125/303 [01:21<01:53,  1.56it/s] 42%|████▏     | 126/303 [01:21<01:53,  1.56it/s] 42%|████▏     | 127/303 [01:22<01:52,  1.56it/s] 42%|████▏     | 128/303 [01:23<01:52,  1.56it/s] 43%|████▎     | 129/303 [01:23<01:51,  1.57it/s] 43%|████▎     | 130/303 [01:24<01:50,  1.57it/s]                                                  43%|████▎     | 130/303 [01:24<01:50,  1.57it/s] 43%|████▎     | 131/303 [01:25<01:50,  1.56it/s] 44%|████▎     | 132/303 [01:25<01:49,  1.56it/s] 44%|████▍     | 133/303 [01:26<01:48,  1.56it/s] 44%|████▍     | 134/303 [01:27<01:48,  1.56it/s] 45%|████▍     | 135/303 [01:27<01:47,  1.57it/s] 45%|████▍     | 136/303 [01:28<01:46,  1.56it/s] 45%|████▌     | 137/303 [01:28<01:45,  1.57it/s] 46%|████▌     | 138/303 [01:29<01:45,  1.56it/s] 46%|████▌     | 139/303 [01:30<01:44,  1.57it/s] 46%|████▌     | 140/303 [01:30<01:44,  1.56it/s]                                                  46%|████▌     | 140/303 [01:30<01:44,  1.56it/s] 47%|████▋     | 141/303 [01:31<01:44,  1.56it/s] 47%|████▋     | 142/303 [01:32<01:43,  1.56it/s] 47%|████▋     | 143/303 [01:32<01:42,  1.56it/s] 48%|████▊     | 144/303 [01:33<01:41,  1.56it/s] 48%|████▊     | 145/303 [01:34<01:40,  1.57it/s] 48%|████▊     | 146/303 [01:34<01:40,  1.56it/s] 49%|████▊     | 147/303 [01:35<01:39,  1.57it/s] 49%|████▉     | 148/303 [01:36<01:39,  1.56it/s] 49%|████▉     | 149/303 [01:36<01:38,  1.56it/s] 50%|████▉     | 150/303 [01:37<01:37,  1.56it/s]                                                  50%|████▉     | 150/303 [01:37<01:37,  1.56it/s] 50%|████▉     | 151/303 [01:37<01:37,  1.56it/s] 50%|█████     | 152/303 [01:38<01:36,  1.56it/s] 50%|█████     | 153/303 [01:39<01:35,  1.56it/s] 51%|█████     | 154/303 [01:39<01:35,  1.56it/s] 51%|█████     | 155/303 [01:40<01:34,  1.56it/s] 51%|█████▏    | 156/303 [01:41<01:34,  1.56it/s] 52%|█████▏    | 157/303 [01:41<01:33,  1.56it/s] 52%|█████▏    | 158/303 [01:42<01:32,  1.56it/s] 52%|█████▏    | 159/303 [01:43<01:31,  1.57it/s] 53%|█████▎    | 160/303 [01:43<01:31,  1.56it/s]                                                  53%|█████▎    | 160/303 [01:43<01:31,  1.56it/s] 53%|█████▎    | 161/303 [01:44<01:30,  1.56it/s] 53%|█████▎    | 162/303 [01:45<01:30,  1.56it/s] 54%|█████▍    | 163/303 [01:45<01:29,  1.56it/s] 54%|█████▍    | 164/303 [01:46<01:29,  1.56it/s] 54%|█████▍    | 165/303 [01:46<01:28,  1.56it/s] 55%|█████▍    | 166/303 [01:47<01:27,  1.56it/s] 55%|█████▌    | 167/303 [01:48<01:26,  1.57it/s] 55%|█████▌    | 168/303 [01:48<01:26,  1.56it/s] 56%|█████▌    | 169/303 [01:49<01:25,  1.56it/s] 56%|█████▌    | 170/303 [01:50<01:25,  1.56it/s]                                                  56%|█████▌    | 170/303 [01:50<01:25,  1.56it/s] 56%|█████▋    | 171/303 [01:50<01:24,  1.56it/s] 57%|█████▋    | 172/303 [01:51<01:24,  1.56it/s] 57%|█████▋    | 173/303 [01:52<01:23,  1.56it/s] 57%|█████▋    | 174/303 [01:52<01:22,  1.56it/s] 58%|█████▊    | 175/303 [01:53<01:21,  1.57it/s] 58%|█████▊    | 176/303 [01:53<01:21,  1.56it/s] 58%|█████▊    | 177/303 [01:54<01:20,  1.57it/s] 59%|█████▊    | 178/303 [01:55<01:19,  1.56it/s] 59%|█████▉    | 179/303 [01:55<01:19,  1.57it/s] 59%|█████▉    | 180/303 [01:56<01:18,  1.57it/s]                                                  59%|█████▉    | 180/303 [01:56<01:18,  1.57it/s] 60%|█████▉    | 181/303 [01:57<01:18,  1.56it/s] 60%|██████    | 182/303 [01:57<01:17,  1.56it/s] 60%|██████    | 183/303 [01:58<01:16,  1.56it/s] 61%|██████    | 184/303 [01:59<01:16,  1.56it/s] 61%|██████    | 185/303 [01:59<01:15,  1.57it/s] 61%|██████▏   | 186/303 [02:00<01:14,  1.56it/s] 62%|██████▏   | 187/303 [02:00<01:14,  1.57it/s] 62%|██████▏   | 188/303 [02:01<01:13,  1.56it/s] 62%|██████▏   | 189/303 [02:02<01:12,  1.57it/s] 63%|██████▎   | 190/303 [02:02<01:12,  1.56it/s]                                                  63%|██████▎   | 190/303 [02:02<01:12,  1.56it/s] 63%|██████▎   | 191/303 [02:03<01:11,  1.56it/s] 63%|██████▎   | 192/303 [02:04<01:11,  1.56it/s] 64%|██████▎   | 193/303 [02:04<01:10,  1.56it/s] 64%|██████▍   | 194/303 [02:05<01:09,  1.56it/s] 64%|██████▍   | 195/303 [02:06<01:08,  1.57it/s] 65%|██████▍   | 196/303 [02:06<01:08,  1.56it/s] 65%|██████▌   | 197/303 [02:07<01:07,  1.57it/s] 65%|██████▌   | 198/303 [02:08<01:07,  1.56it/s] 66%|██████▌   | 199/303 [02:08<01:06,  1.56it/s] 66%|██████▌   | 200/303 [02:09<01:05,  1.56it/s]                                                  66%|██████▌   | 200/303 [02:09<01:05,  1.56it/s] 66%|██████▋   | 201/303 [02:09<01:05,  1.56it/s] 67%|██████▋   | 202/303 [02:10<00:55,  1.83it/s] 67%|██████▋   | 203/303 [02:10<00:58,  1.72it/s] 67%|██████▋   | 204/303 [02:11<00:59,  1.67it/s] 68%|██████▊   | 205/303 [02:12<00:59,  1.63it/s] 68%|██████▊   | 206/303 [02:12<01:00,  1.62it/s] 68%|██████▊   | 207/303 [02:13<01:00,  1.60it/s] 69%|██████▊   | 208/303 [02:14<00:59,  1.59it/s] 69%|██████▉   | 209/303 [02:14<00:59,  1.58it/s] 69%|██████▉   | 210/303 [02:15<00:58,  1.58it/s]                                                  69%|██████▉   | 210/303 [02:15<00:58,  1.58it/s] 70%|██████▉   | 211/303 [02:16<00:58,  1.56it/s] 70%|██████▉   | 212/303 [02:16<00:58,  1.56it/s] 70%|███████   | 213/303 [02:17<00:57,  1.55it/s] 71%|███████   | 214/303 [02:18<00:57,  1.56it/s] 71%|███████   | 215/303 [02:18<00:56,  1.56it/s] 71%|███████▏  | 216/303 [02:19<00:55,  1.56it/s] 72%|███████▏  | 217/303 [02:19<00:55,  1.56it/s] 72%|███████▏  | 218/303 [02:20<00:54,  1.56it/s] 72%|███████▏  | 219/303 [02:21<00:53,  1.56it/s] 73%|███████▎  | 220/303 [02:21<00:53,  1.56it/s]                                                  73%|███████▎  | 220/303 [02:21<00:53,  1.56it/s] 73%|███████▎  | 221/303 [02:22<00:52,  1.55it/s] 73%|███████▎  | 222/303 [02:23<00:51,  1.56it/s] 74%|███████▎  | 223/303 [02:23<00:51,  1.56it/s] 74%|███████▍  | 224/303 [02:24<00:50,  1.56it/s] 74%|███████▍  | 225/303 [02:25<00:50,  1.56it/s] 75%|███████▍  | 226/303 [02:25<00:49,  1.56it/s] 75%|███████▍  | 227/303 [02:26<00:48,  1.56it/s] 75%|███████▌  | 228/303 [02:26<00:47,  1.56it/s] 76%|███████▌  | 229/303 [02:27<00:47,  1.56it/s] 76%|███████▌  | 230/303 [02:28<00:46,  1.57it/s]                                                  76%|███████▌  | 230/303 [02:28<00:46,  1.57it/s] 76%|███████▌  | 231/303 [02:28<00:46,  1.55it/s] 77%|███████▋  | 232/303 [02:29<00:45,  1.56it/s] 77%|███████▋  | 233/303 [02:30<00:44,  1.56it/s] 77%|███████▋  | 234/303 [02:30<00:44,  1.57it/s] 78%|███████▊  | 235/303 [02:31<00:43,  1.56it/s] 78%|███████▊  | 236/303 [02:32<00:42,  1.57it/s] 78%|███████▊  | 237/303 [02:32<00:42,  1.56it/s] 79%|███████▊  | 238/303 [02:33<00:41,  1.57it/s] 79%|███████▉  | 239/303 [02:34<00:41,  1.56it/s] 79%|███████▉  | 240/303 [02:34<00:40,  1.56it/s]                                                  79%|███████▉  | 240/303 [02:34<00:40,  1.56it/s] 80%|███████▉  | 241/303 [02:35<00:39,  1.55it/s] 80%|███████▉  | 242/303 [02:35<00:39,  1.56it/s] 80%|████████  | 243/303 [02:36<00:38,  1.56it/s] 81%|████████  | 244/303 [02:37<00:37,  1.56it/s] 81%|████████  | 245/303 [02:37<00:37,  1.56it/s] 81%|████████  | 246/303 [02:38<00:36,  1.56it/s] 82%|████████▏ | 247/303 [02:39<00:35,  1.56it/s] 82%|████████▏ | 248/303 [02:39<00:35,  1.57it/s] 82%|████████▏ | 249/303 [02:40<00:34,  1.56it/s] 83%|████████▎ | 250/303 [02:41<00:33,  1.57it/s]                                                  83%|████████▎ | 250/303 [02:41<00:33,  1.57it/s] 83%|████████▎ | 251/303 [02:41<00:33,  1.56it/s] 83%|████████▎ | 252/303 [02:42<00:32,  1.56it/s] 83%|████████▎ | 253/303 [02:42<00:32,  1.56it/s] 84%|████████▍ | 254/303 [02:43<00:31,  1.56it/s] 84%|████████▍ | 255/303 [02:44<00:30,  1.56it/s] 84%|████████▍ | 256/303 [02:44<00:30,  1.56it/s] 85%|████████▍ | 257/303 [02:45<00:29,  1.56it/s] 85%|████████▌ | 258/303 [02:46<00:28,  1.57it/s] 85%|████████▌ | 259/303 [02:46<00:28,  1.56it/s] 86%|████████▌ | 260/303 [02:47<00:27,  1.56it/s]                                                  86%|████████▌ | 260/303 [02:47<00:27,  1.56it/s] 86%|████████▌ | 261/303 [02:48<00:27,  1.55it/s] 86%|████████▋ | 262/303 [02:48<00:26,  1.56it/s] 87%|████████▋ | 263/303 [02:49<00:25,  1.56it/s] 87%|████████▋ | 264/303 [02:50<00:24,  1.56it/s] 87%|████████▋ | 265/303 [02:50<00:24,  1.56it/s] 88%|████████▊ | 266/303 [02:51<00:23,  1.57it/s] 88%|████████▊ | 267/303 [02:51<00:23,  1.56it/s] 88%|████████▊ | 268/303 [02:52<00:22,  1.56it/s] 89%|████████▉ | 269/303 [02:53<00:21,  1.56it/s] 89%|████████▉ | 270/303 [02:53<00:21,  1.57it/s]                                                  89%|████████▉ | 270/303 [02:53<00:21,  1.57it/s] 89%|████████▉ | 271/303 [02:54<00:20,  1.56it/s] 90%|████████▉ | 272/303 [02:55<00:19,  1.56it/s] 90%|█████████ | 273/303 [02:55<00:19,  1.56it/s] 90%|█████████ | 274/303 [02:56<00:18,  1.56it/s] 91%|█████████ | 275/303 [02:57<00:17,  1.56it/s] 91%|█████████ | 276/303 [02:57<00:17,  1.56it/s] 91%|█████████▏| 277/303 [02:58<00:16,  1.56it/s] 92%|█████████▏| 278/303 [02:58<00:15,  1.57it/s] 92%|█████████▏| 279/303 [02:59<00:15,  1.56it/s] 92%|█████████▏| 280/303 [03:00<00:14,  1.56it/s]                                                  92%|█████████▏| 280/303 [03:00<00:14,  1.56it/s] 93%|█████████▎| 281/303 [03:00<00:14,  1.55it/s] 93%|█████████▎| 282/303 [03:01<00:13,  1.56it/s] 93%|█████████▎| 283/303 [03:02<00:12,  1.56it/s] 94%|█████████▎| 284/303 [03:02<00:12,  1.56it/s] 94%|█████████▍| 285/303 [03:03<00:11,  1.56it/s] 94%|█████████▍| 286/303 [03:04<00:10,  1.57it/s] 95%|█████████▍| 287/303 [03:04<00:10,  1.57it/s] 95%|█████████▌| 288/303 [03:05<00:09,  1.57it/s] 95%|█████████▌| 289/303 [03:06<00:08,  1.56it/s] 96%|█████████▌| 290/303 [03:06<00:08,  1.56it/s]                                                  96%|█████████▌| 290/303 [03:06<00:08,  1.56it/s] 96%|█████████▌| 291/303 [03:07<00:07,  1.55it/s] 96%|█████████▋| 292/303 [03:07<00:07,  1.56it/s] 97%|█████████▋| 293/303 [03:08<00:06,  1.56it/s] 97%|█████████▋| 294/303 [03:09<00:05,  1.56it/s] 97%|█████████▋| 295/303 [03:09<00:05,  1.56it/s] 98%|█████████▊| 296/303 [03:10<00:04,  1.56it/s] 98%|█████████▊| 297/303 [03:11<00:03,  1.56it/s] 98%|█████████▊| 298/303 [03:11<00:03,  1.57it/s] 99%|█████████▊| 299/303 [03:12<00:02,  1.57it/s] 99%|█████████▉| 300/303 [03:13<00:01,  1.57it/s]                                                  99%|█████████▉| 300/303 [03:13<00:01,  1.57it/s] 99%|█████████▉| 301/303 [03:13<00:01,  1.56it/s]100%|█████████▉| 302/303 [03:14<00:00,  1.57it/s]100%|██████████| 303/303 [03:14<00:00,  1.84it/s][INFO|trainer.py:4309] 2026-03-10 17:39:02,880 >> Saving model checkpoint to /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/checkpoint-303
+[INFO|configuration_utils.py:763] 2026-03-10 17:39:02,916 >> loading configuration file /home/mnt/cuishaoting/.lazyllm/model/qwen2.5-0.5B-instruct/config.json
+[INFO|configuration_utils.py:839] 2026-03-10 17:39:02,917 >> Model config Qwen2Config {
+  "architectures": [
+    "Qwen2ForCausalLM"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 896,
+  "initializer_range": 0.02,
+  "intermediate_size": 4864,
+  "layer_types": [
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention"
+  ],
+  "max_position_embeddings": 32768,
+  "max_window_layers": 21,
+  "model_type": "qwen2",
+  "num_attention_heads": 14,
+  "num_hidden_layers": 24,
+  "num_key_value_heads": 2,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": null,
+  "rope_theta": 1000000.0,
+  "sliding_window": null,
+  "tie_word_embeddings": true,
+  "transformers_version": "4.57.1",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "vocab_size": 151936
+}
+
+[INFO|tokenization_utils_base.py:2421] 2026-03-10 17:39:03,018 >> chat template saved in /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/checkpoint-303/chat_template.jinja
+[INFO|tokenization_utils_base.py:2590] 2026-03-10 17:39:03,021 >> tokenizer config file saved in /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/checkpoint-303/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2599] 2026-03-10 17:39:03,023 >> Special tokens file saved in /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/checkpoint-303/special_tokens_map.json
+[INFO|trainer.py:2810] 2026-03-10 17:39:03,447 >> 
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+                                                 100%|██████████| 303/303 [03:15<00:00,  1.84it/s]100%|██████████| 303/303 [03:15<00:00,  1.55it/s]
+[INFO|trainer.py:4309] 2026-03-10 17:39:03,459 >> Saving model checkpoint to /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora
+[INFO|configuration_utils.py:763] 2026-03-10 17:39:03,488 >> loading configuration file /home/mnt/cuishaoting/.lazyllm/model/qwen2.5-0.5B-instruct/config.json
+[INFO|configuration_utils.py:839] 2026-03-10 17:39:03,489 >> Model config Qwen2Config {
+  "architectures": [
+    "Qwen2ForCausalLM"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 896,
+  "initializer_range": 0.02,
+  "intermediate_size": 4864,
+  "layer_types": [
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention",
+    "full_attention"
+  ],
+  "max_position_embeddings": 32768,
+  "max_window_layers": 21,
+  "model_type": "qwen2",
+  "num_attention_heads": 14,
+  "num_hidden_layers": 24,
+  "num_key_value_heads": 2,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": null,
+  "rope_theta": 1000000.0,
+  "sliding_window": null,
+  "tie_word_embeddings": true,
+  "transformers_version": "4.57.1",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "vocab_size": 151936
+}
+
+[INFO|tokenization_utils_base.py:2421] 2026-03-10 17:39:03,579 >> chat template saved in /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/chat_template.jinja
+[INFO|tokenization_utils_base.py:2590] 2026-03-10 17:39:03,582 >> tokenizer config file saved in /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2599] 2026-03-10 17:39:03,585 >> Special tokens file saved in /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/special_tokens_map.json
+{'loss': 0.727, 'grad_norm': 0.6972829699516296, 'learning_rate': 2.9032258064516133e-05, 'epoch': 0.1}
+{'loss': 0.618, 'grad_norm': 0.4290718734264374, 'learning_rate': 6.129032258064517e-05, 'epoch': 0.2}
+{'loss': 0.5458, 'grad_norm': 0.4213830828666687, 'learning_rate': 9.35483870967742e-05, 'epoch': 0.3}
+{'loss': 0.5299, 'grad_norm': 0.36966103315353394, 'learning_rate': 9.978670881475172e-05, 'epoch': 0.4}
+{'loss': 0.4896, 'grad_norm': 0.4297245740890503, 'learning_rate': 9.892333119903046e-05, 'epoch': 0.5}
+{'loss': 0.4711, 'grad_norm': 0.39927950501441956, 'learning_rate': 9.74080323795483e-05, 'epoch': 0.59}
+{'loss': 0.4031, 'grad_norm': 0.4218445420265198, 'learning_rate': 9.526100426487409e-05, 'epoch': 0.69}
+{'loss': 0.4253, 'grad_norm': 0.4371374547481537, 'learning_rate': 9.251085678648072e-05, 'epoch': 0.79}
+{'loss': 0.417, 'grad_norm': 0.4871806800365448, 'learning_rate': 8.919423666098969e-05, 'epoch': 0.89}
+{'loss': 0.4152, 'grad_norm': 0.5062107443809509, 'learning_rate': 8.535533905932738e-05, 'epoch': 0.99}
+{'loss': 0.3934, 'grad_norm': 0.49423450231552124, 'learning_rate': 8.104531868997858e-05, 'epoch': 1.09}
+{'loss': 0.3732, 'grad_norm': 0.5248826146125793, 'learning_rate': 7.63216081438678e-05, 'epoch': 1.19}
+{'loss': 0.377, 'grad_norm': 0.550078272819519, 'learning_rate': 7.12471525841711e-05, 'epoch': 1.29}
+{'loss': 0.3667, 'grad_norm': 0.5084838271141052, 'learning_rate': 6.588957097909508e-05, 'epoch': 1.39}
+{'loss': 0.3717, 'grad_norm': 0.5122256875038147, 'learning_rate': 6.0320255054501985e-05, 'epoch': 1.49}
+{'loss': 0.3639, 'grad_norm': 0.6255597472190857, 'learning_rate': 5.4613417973165106e-05, 'epoch': 1.58}
+{'loss': 0.3614, 'grad_norm': 0.5374562740325928, 'learning_rate': 4.884510541734995e-05, 'epoch': 1.68}
+{'loss': 0.3667, 'grad_norm': 0.5184198021888733, 'learning_rate': 4.30921822524059e-05, 'epoch': 1.78}
+{'loss': 0.3531, 'grad_norm': 0.6182808876037598, 'learning_rate': 3.7431308274444865e-05, 'epoch': 1.88}
+{'loss': 0.3344, 'grad_norm': 0.5340696573257446, 'learning_rate': 3.1937916690642356e-05, 'epoch': 1.98}
+{'loss': 0.2951, 'grad_norm': 0.4907718300819397, 'learning_rate': 2.668520894428259e-05, 'epoch': 2.08}
+{'loss': 0.3416, 'grad_norm': 0.5281000137329102, 'learning_rate': 2.1743179278870407e-05, 'epoch': 2.18}
+{'loss': 0.3282, 'grad_norm': 0.5485855937004089, 'learning_rate': 1.7177682039347876e-05, 'epoch': 2.28}
+{'loss': 0.3231, 'grad_norm': 0.581646740436554, 'learning_rate': 1.3049554138967051e-05, 'epoch': 2.38}
+{'loss': 0.3144, 'grad_norm': 0.5053566694259644, 'learning_rate': 9.41380438526694e-06, 'epoch': 2.48}
+{'loss': 0.3313, 'grad_norm': 0.49370893836021423, 'learning_rate': 6.318880467681526e-06, 'epoch': 2.57}
+{'loss': 0.341, 'grad_norm': 0.5658541917800903, 'learning_rate': 3.8060233744356633e-06, 'epoch': 2.67}
+{'loss': 0.312, 'grad_norm': 0.5535506010055542, 'learning_rate': 1.908717841359048e-06, 'epoch': 2.77}
+{'loss': 0.3424, 'grad_norm': 0.6566448211669922, 'learning_rate': 6.522461555877213e-07, 'epoch': 2.87}
+{'loss': 0.3346, 'grad_norm': 0.523173987865448, 'learning_rate': 5.3351259881379014e-08, 'epoch': 2.97}
+{'train_runtime': 195.2337, 'train_samples_per_second': 37.063, 'train_steps_per_second': 1.552, 'train_loss': 0.39822818737218874, 'epoch': 3.0}
+***** train metrics *****
+  epoch                    =        3.0
+  total_flos               =  7499242GF
+  train_loss               =     0.3982
+  train_runtime            = 0:03:15.23
+  train_samples_per_second =     37.063
+  train_steps_per_second   =      1.552
+Figure saved at: /home/mnt/cuishaoting/LazyLLM/save_ckpt/qwen2_ruct/qwen2_ruct-LazySplit-train.json-LazySplit-26031017344167/lazyllm_lora/training_loss.png
+[WARNING|2026-03-10 17:39:04] llamafactory.extras.ploting:148 >> No metric eval_loss to plot.
+[WARNING|2026-03-10 17:39:04] llamafactory.extras.ploting:148 >> No metric eval_accuracy to plot.
+[INFO|trainer.py:4643] 2026-03-10 17:39:04,061 >> 
+***** Running Evaluation *****
+[INFO|trainer.py:4645] 2026-03-10 17:39:04,062 >>   Num examples = 268
+[INFO|trainer.py:4648] 2026-03-10 17:39:04,062 >>   Batch size = 1
+  0%|          | 0/268 [00:00<?, ?it/s]  1%|          | 3/268 [00:00<00:10, 26.48it/s]  2%|▏         | 6/268 [00:00<00:12, 20.77it/s]  3%|▎         | 9/268 [00:00<00:12, 19.94it/s]  4%|▍         | 12/268 [00:00<00:13, 19.64it/s]  6%|▌         | 15/268 [00:00<00:12, 20.14it/s]  7%|▋         | 18/268 [00:00<00:12, 20.10it/s]  8%|▊         | 21/268 [00:01<00:12, 19.52it/s]  9%|▊         | 23/268 [00:01<00:12, 19.37it/s]  9%|▉         | 25/268 [00:01<00:12, 19.21it/s] 10%|█         | 27/268 [00:01<00:12, 19.20it/s] 11%|█         | 29/268 [00:01<00:12, 19.36it/s] 12%|█▏        | 31/268 [00:01<00:12, 19.36it/s] 13%|█▎        | 34/268 [00:01<00:11, 19.51it/s] 13%|█▎        | 36/268 [00:01<00:11, 19.56it/s] 14%|█▍        | 38/268 [00:01<00:11, 19.50it/s] 15%|█▍        | 40/268 [00:02<00:11, 19.37it/s] 16%|█▌        | 42/268 [00:02<00:11, 19.02it/s] 16%|█▋        | 44/268 [00:02<00:11, 19.19it/s] 18%|█▊        | 47/268 [00:02<00:11, 19.89it/s] 18%|█▊        | 49/268 [00:02<00:11, 19.73it/s] 19%|█▉        | 52/268 [00:02<00:10, 19.69it/s] 20%|██        | 54/268 [00:02<00:10, 19.76it/s] 21%|██        | 56/268 [00:02<00:10, 19.48it/s] 22%|██▏       | 58/268 [00:02<00:10, 19.57it/s] 23%|██▎       | 61/268 [00:03<00:10, 20.01it/s] 24%|██▎       | 63/268 [00:03<00:10, 19.69it/s] 25%|██▍       | 66/268 [00:03<00:10, 19.78it/s] 25%|██▌       | 68/268 [00:03<00:10, 19.78it/s] 26%|██▋       | 71/268 [00:03<00:09, 20.03it/s] 27%|██▋       | 73/268 [00:03<00:09, 20.00it/s] 28%|██▊       | 76/268 [00:03<00:09, 19.89it/s] 29%|██▉       | 79/268 [00:03<00:09, 20.05it/s] 31%|███       | 82/268 [00:04<00:09, 19.83it/s] 31%|███▏      | 84/268 [00:04<00:09, 19.80it/s] 32%|███▏      | 86/268 [00:04<00:09, 19.64it/s] 33%|███▎      | 89/268 [00:04<00:09, 19.78it/s] 34%|███▍      | 91/268 [00:04<00:09, 19.55it/s] 35%|███▌      | 94/268 [00:04<00:08, 19.65it/s] 36%|███▌      | 96/268 [00:04<00:08, 19.73it/s] 37%|███▋      | 99/268 [00:05<00:08, 19.97it/s] 38%|███▊      | 101/268 [00:05<00:08, 19.84it/s] 38%|███▊      | 103/268 [00:05<00:08, 19.66it/s] 40%|███▉      | 106/268 [00:05<00:08, 20.09it/s] 40%|████      | 108/268 [00:05<00:08, 19.79it/s] 41%|████      | 110/268 [00:05<00:08, 19.74it/s] 42%|████▏     | 113/268 [00:05<00:07, 19.75it/s] 43%|████▎     | 115/268 [00:05<00:07, 19.62it/s] 44%|████▎     | 117/268 [00:05<00:07, 19.54it/s] 44%|████▍     | 119/268 [00:06<00:07, 19.36it/s] 46%|████▌     | 122/268 [00:06<00:07, 19.53it/s] 46%|████▋     | 124/268 [00:06<00:07, 19.61it/s] 47%|████▋     | 127/268 [00:06<00:07, 19.83it/s] 49%|████▊     | 130/268 [00:06<00:06, 19.88it/s] 50%|████▉     | 133/268 [00:06<00:06, 19.97it/s] 50%|█████     | 135/268 [00:06<00:06, 19.79it/s] 51%|█████     | 137/268 [00:06<00:06, 19.72it/s] 52%|█████▏    | 140/268 [00:07<00:06, 20.14it/s] 53%|█████▎    | 143/268 [00:07<00:06, 20.03it/s] 54%|█████▍    | 146/268 [00:07<00:06, 20.16it/s] 56%|█████▌    | 149/268 [00:07<00:05, 19.94it/s] 56%|█████▋    | 151/268 [00:07<00:05, 19.65it/s] 57%|█████▋    | 154/268 [00:07<00:05, 19.83it/s] 58%|█████▊    | 156/268 [00:07<00:05, 19.85it/s] 59%|█████▉    | 158/268 [00:07<00:05, 19.89it/s] 60%|██████    | 161/268 [00:08<00:05, 20.31it/s] 61%|██████    | 164/268 [00:08<00:05, 20.37it/s] 62%|██████▏   | 167/268 [00:08<00:05, 19.75it/s] 63%|██████▎   | 169/268 [00:08<00:05, 19.59it/s] 64%|██████▍   | 172/268 [00:08<00:04, 19.71it/s] 65%|██████▌   | 175/268 [00:08<00:04, 19.80it/s] 66%|██████▌   | 177/268 [00:08<00:04, 19.35it/s] 67%|██████▋   | 179/268 [00:09<00:04, 19.08it/s] 68%|██████▊   | 181/268 [00:09<00:04, 19.05it/s] 68%|██████▊   | 183/268 [00:09<00:04, 19.14it/s] 69%|██████▉   | 185/268 [00:09<00:04, 18.71it/s] 70%|██████▉   | 187/268 [00:09<00:04, 18.75it/s] 71%|███████   | 190/268 [00:09<00:04, 19.10it/s] 72%|███████▏  | 192/268 [00:09<00:03, 19.32it/s] 72%|███████▏  | 194/268 [00:09<00:03, 19.29it/s] 74%|███████▎  | 197/268 [00:10<00:03, 19.47it/s] 75%|███████▍  | 200/268 [00:10<00:03, 19.79it/s] 75%|███████▌  | 202/268 [00:10<00:03, 19.73it/s] 76%|███████▋  | 205/268 [00:10<00:03, 20.17it/s] 78%|███████▊  | 208/268 [00:10<00:02, 20.07it/s] 79%|███████▊  | 211/268 [00:10<00:02, 19.54it/s] 80%|███████▉  | 214/268 [00:10<00:02, 19.56it/s] 81%|████████  | 216/268 [00:10<00:02, 19.54it/s] 82%|████████▏ | 219/268 [00:11<00:02, 19.84it/s] 82%|████████▏ | 221/268 [00:11<00:02, 19.58it/s] 83%|████████▎ | 223/268 [00:11<00:02, 19.56it/s] 84%|████████▍ | 225/268 [00:11<00:02, 19.45it/s] 85%|████████▌ | 228/268 [00:11<00:02, 19.96it/s] 86%|████████▌ | 230/268 [00:11<00:01, 19.92it/s] 87%|████████▋ | 232/268 [00:11<00:01, 19.83it/s] 88%|████████▊ | 235/268 [00:11<00:01, 20.04it/s] 88%|████████▊ | 237/268 [00:12<00:01, 19.83it/s] 90%|████████▉ | 240/268 [00:12<00:01, 19.94it/s] 91%|█████████ | 243/268 [00:12<00:01, 19.95it/s] 92%|█████████▏| 246/268 [00:12<00:01, 20.07it/s] 93%|█████████▎| 249/268 [00:12<00:00, 20.16it/s] 94%|█████████▍| 252/268 [00:12<00:00, 19.76it/s] 95%|█████████▍| 254/268 [00:12<00:00, 19.75it/s] 96%|█████████▌| 256/268 [00:12<00:00, 19.70it/s] 96%|█████████▋| 258/268 [00:13<00:00, 19.54it/s] 97%|█████████▋| 261/268 [00:13<00:00, 20.09it/s] 99%|█████████▊| 264/268 [00:13<00:00, 20.05it/s]100%|█████████▉| 267/268 [00:13<00:00, 19.96it/s]100%|██████████| 268/268 [00:13<00:00, 19.72it/s]
+[INFO|modelcard.py:456] 2026-03-10 17:39:17,745 >> Dropping the following result as it does not have all the necessary fields:
+{'task': {'name': 'Causal Language Modeling', 'type': 'text-generation'}}
+***** eval metrics *****
+  epoch                   =        3.0
+  eval_loss               =      0.339
+  eval_runtime            = 0:00:13.66
+  eval_samples_per_second =     19.618
+  eval_steps_per_second   =     19.618
