@@ -25,7 +25,7 @@ from transformers import (
 )
 import lazyllm
 from lazyllm import finetune, launchers
-from lazyllm.tools.data.pipelines.pt_img_ppl import build_mm_pt_pipeline
+from lazyllm.tools.data.pipelines.pt_data_ppl import build_mm_pt_pipeline
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
