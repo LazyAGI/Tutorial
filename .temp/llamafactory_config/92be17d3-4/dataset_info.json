@@ -1,6 +1,0 @@
-{
-    "train_tooluse_sft": {
-        "file_name": "/home/mnt/huangchongjin/LLM/GRPO/agent_sft/run_ppl_sh/data/train_tooluse_sft.json",
-        "formatting": "alpaca"
-    }
-}
