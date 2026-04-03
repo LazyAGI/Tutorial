@@ -32,8 +32,21 @@ SFT_EPOCHS = float(os.environ.get('TOOLUSE_SFT_EPOCHS', '3.0'))
 SFT_LEARNING_RATE = float(os.environ.get('TOOLUSE_SFT_LEARNING_RATE', '5e-5'))
 SFT_BATCH_SIZE = int(os.environ.get('TOOLUSE_SFT_BATCH_SIZE', '8'))
 SFT_MAX_SAMPLES = int(os.environ.get('TOOLUSE_SFT_MAX_SAMPLES', '10000'))
+INFERENCE_MAX_MODEL_LEN = int(
+    os.environ.get('TOOLUSE_INFERENCE_MAX_MODEL_LEN', '4096')
+)
+INFERENCE_GPU_MEMORY_UTILIZATION = float(
+    os.environ.get('TOOLUSE_INFERENCE_GPU_MEMORY_UTILIZATION', '0.8')
+)
 INFERENCE_MAX_NUM_SEQS = int(
     os.environ.get('TOOLUSE_INFERENCE_MAX_NUM_SEQS', '128')
+)
+INFERENCE_TEMPERATURE = float(
+    os.environ.get('TOOLUSE_INFERENCE_TEMPERATURE', '0.1')
+)
+INFERENCE_TOP_P = float(os.environ.get('TOOLUSE_INFERENCE_TOP_P', '0.9'))
+INFERENCE_MAX_TOKENS = int(
+    os.environ.get('TOOLUSE_INFERENCE_MAX_TOKENS', '512')
 )
 JUDGE_WORKERS = int(os.environ.get('JUDGE_WORKERS', '4'))
 JUDGE_MAX_MODEL_LEN = int(os.environ.get('JUDGE_MAX_MODEL_LEN', '4096'))
@@ -837,7 +850,13 @@ def step3_inference(step_label='[3/4]'):
     model = lazyllm.TrainableModule(str(model_path)).deploy_method(
         (
             deploy.vllm,
-            {'max_num_seqs': CONFIG['inference_max_num_seqs']},
+            {
+                'max_model_len': INFERENCE_MAX_MODEL_LEN,
+                'gpu_memory_utilization': (
+                    INFERENCE_GPU_MEMORY_UTILIZATION
+                ),
+                'max_num_seqs': CONFIG['inference_max_num_seqs'],
+            },
         )
     )
     model.start()
@@ -846,7 +865,12 @@ def step3_inference(step_label='[3/4]'):
         results = []
         for index, item in enumerate(test_data):
             prompt = item.get('prompt', '')
-            response = model(prompt)
+            response = model(
+                prompt,
+                temperature=INFERENCE_TEMPERATURE,
+                top_p=INFERENCE_TOP_P,
+                max_tokens=INFERENCE_MAX_TOKENS,
+            )
             response_text = (
                 response if isinstance(response, str) else str(response)
             )
