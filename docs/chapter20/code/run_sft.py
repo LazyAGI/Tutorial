@@ -19,22 +19,6 @@ os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 SFT_MODEL = '/models/qwen2.5-0.5b-instruct'
 
 
-def check_model_path(path: str, name: str) -> str:
-    '''检查模型路径是否存在，不存在则抛出错误提示用户配置'''
-    if Path(path).exists():
-        return path
-    raise RuntimeError(
-        f'\n{"="*60}\n'
-        f'{name} 路径不存在: {path}\n'
-        f'{"="*60}\n'
-        f'请通过以下方式之一配置:\n'
-        f'1. 命令行参数: --sft-model /path/to/model\n'
-        f'2. 修改脚本中的 {name} 变量\n'
-        f'3. 设置环境变量: export {name}=/path/to/model\n'
-        f'{"="*60}\n'
-    )
-
-
 TINY_CODES_DATASET_ENDPOINT = os.environ.get(
     'TINY_CODES_DATASET_ENDPOINT', HF_ENDPOINT
 )
@@ -238,7 +222,7 @@ def step2_sft_training():
 
     model = (
         lazyllm.TrainableModule(
-            check_model_path(CONFIG['sft_model'], 'SFT_MODEL'),
+            CONFIG['sft_model'],
             target_path=str(checkpoint_dir)
         )
         .mode('finetune')
@@ -728,6 +712,11 @@ def main():
     LOG_FILE = config['log_dir'] / (
         'run_sft_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
     )
+
+    if not Path(config['sft_model']).exists():
+        log_error(f"SFT_MODEL 不存在: {config['sft_model']}")
+        log('请使用 --sft-model 参数指定正确路径')
+        safe_exit(1)
 
     log('==========================================')
     log('无 pipeline 的一键代码SFT训练脚本')

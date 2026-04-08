@@ -51,7 +51,10 @@ LOG_DIR = BASE_DIR / 'logs'
 for d in [DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
-LOG_FILE = LOG_DIR / f'run_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+LOG_FILE = (
+    LOG_DIR / f'run_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+)
+
 
 def log(msg: str):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -60,14 +63,18 @@ def log(msg: str):
     with open(LOG_FILE, 'a', encoding='utf-8') as f:
         f.write(formatted + '\n')
 
+
 def log_error(msg: str):
     log(f'[ERROR] {msg}')
+
 
 def log_info(msg: str):
     log(f'[INFO] {msg}')
 
+
 def log_step(msg: str):
     log(f'[STEP] {msg}')
+
 
 def safe_exit(code: int = 0):
     if code != 0:
@@ -259,10 +266,10 @@ def step2_dpo_training():
     log('    - 模板: qwen')
     log('    - DPO Beta: 0.1')
 
-    model = lazyllm.TrainableModule(DPO_BASE_MODEL, target_path=str(checkpoint_dir))\
-        .mode('finetune')\
-        .trainset(str(train_file))\
-        .finetune_method((finetune.llamafactory, {
+    model = lazyllm.TrainableModule(
+        DPO_BASE_MODEL, target_path=str(checkpoint_dir)
+    ).mode('finetune').trainset(str(train_file)).finetune_method(
+        (finetune.llamafactory, {
             'learning_rate': 5e-6,
             'cutoff_len': 2048,
             'max_samples': 10000,
@@ -279,7 +286,8 @@ def step2_dpo_training():
             'save_steps': 100,
             'save_total_limit': 2,
             'launcher': launchers.sco(ngpus=1, partition='a800'),
-        }))
+        })
+    )
 
     model.update()
     log(f'  模型保存: {checkpoint_dir}')
@@ -782,6 +790,18 @@ def main():
     args = parse_args()
     apply_cli_overrides(args)
     setup_runtime_paths()
+
+    model_paths = [
+        ('LAZYLLM_PATH', LAZYLLM_PATH),
+        ('DPO_BASE_MODEL', DPO_BASE_MODEL),
+        ('JUDGE_MODEL', JUDGE_MODEL),
+    ]
+    for name, path in model_paths:
+        if not Path(path).exists():
+            log_error(f'{name} 不存在: {path}')
+            log(f'请使用 --{name.lower().replace("_", "-")} 参数指定正确路径')
+            safe_exit(1)
+
     log_configuration()
 
     skip_steps = parse_skip_steps(args.skip_steps)

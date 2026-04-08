@@ -9,9 +9,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
-LAZYLLM_PATH = '/path/to/your/lazyllm'
-SFT_BASE_MODEL = '/path/to/sft/base/model'
-JUDGE_MODEL = '/path/to/judge/model'
+LAZYLLM_PATH = '/LAZYLLM'
+SFT_BASE_MODEL = '/models/qwen2.5-0.5b-instruct'
+JUDGE_MODEL = '/models/Qwen3-30B-A3B-Instruct-2507'
 JUDGE_WORKERS = int(os.environ.get('JUDGE_WORKERS', '4'))
 JUDGE_MAX_MODEL_LEN = int(os.environ.get('JUDGE_MAX_MODEL_LEN', '4096'))
 JUDGE_GPU_MEMORY_UTILIZATION = float(
@@ -736,10 +736,16 @@ def main():
         'run_sft_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
     )
 
-    if not Path(config['lazyllm_path']).exists():
-        log_error(f"LAZYLLM_PATH 不存在: {config['lazyllm_path']}")
-        log('请修改脚本中的 LAZYLLM_PATH 配置')
-        safe_exit(1)
+    model_paths = [
+        ('LAZYLLM_PATH', config['lazyllm_path']),
+        ('SFT_BASE_MODEL', config['sft_base_model']),
+        ('JUDGE_MODEL', config['judge_model']),
+    ]
+    for name, path in model_paths:
+        if not Path(path).exists():
+            log_error(f'{name} 不存在: {path}')
+            log(f'请使用 --{name.lower().replace("_", "-")} 参数指定正确路径')
+            safe_exit(1)
 
     log('==========================================')
     log('无 Pipeline 的一键 Text2SQL 训练脚本')

@@ -22,22 +22,6 @@ PIPELINE_MODEL = '/models/Qwen3-30B-A3B-Instruct-2507'
 SFT_MODEL = '/models/qwen2.5-0.5b-instruct'
 
 
-def check_path(path: str, name: str) -> str:
-    '''检查路径是否存在，不存在则抛出错误提示用户配置'''
-    if Path(path).exists():
-        return path
-    raise RuntimeError(
-        f'\n{"="*60}\n'
-        f'{name} 路径不存在: {path}\n'
-        f'{"="*60}\n'
-        f'请通过以下方式之一配置:\n'
-        f'1. 命令行参数: --{name.lower().replace("_", "-")} /path/to/model\n'
-        f'2. 修改脚本中的 {name} 变量\n'
-        f'3. 设置环境变量: export {name}=/path/to/model\n'
-        f'{"="*60}\n'
-    )
-
-
 TINY_CODES_DATASET_ENDPOINT = os.environ.get(
     'TINY_CODES_DATASET_ENDPOINT', HF_ENDPOINT
 )
@@ -214,7 +198,7 @@ def step1_download_data():
 def step2_data_pipeline():
     log_step('[2/5] 运行数据增强 pipeline...')
 
-    check_path(LAZYLLM_PATH, 'LAZYLLM_PATH')
+    pass
 
     sys.path.insert(0, LAZYLLM_PATH)
     sys.path.insert(0, str(Path(LAZYLLM_PATH).parent))
@@ -236,7 +220,7 @@ def step2_data_pipeline():
 
     log(f'  加载数据: {len(data)} 条')
 
-    model = lazyllm.TrainableModule(check_path(PIPELINE_MODEL, 'PIPELINE_MODEL'))
+    model = lazyllm.TrainableModule(PIPELINE_MODEL)
     model.start()
 
     ppl = build_codegen_pipeline(
@@ -294,7 +278,7 @@ def step3_sft_training():
 
     model = (
         lazyllm.TrainableModule(
-            check_path(SFT_MODEL, 'SFT_MODEL'),
+            SFT_MODEL,
             target_path=str(checkpoint_dir)
         )
         .mode('finetune')
@@ -782,6 +766,17 @@ def main():
     LOG_FILE = config['log_dir'] / (
         'run_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
     )
+
+    model_paths = [
+        ('LAZYLLM_PATH', config['lazyllm_path']),
+        ('PIPELINE_MODEL', config['pipeline_model']),
+        ('SFT_MODEL', config['sft_model']),
+    ]
+    for name, path in model_paths:
+        if not Path(path).exists():
+            log_error(f'{name} 不存在: {path}')
+            log(f'请使用 --{name.lower().replace("_", "-")} 参数指定正确路径')
+            safe_exit(1)
 
     log('==========================================')
     log('一键代码SFT训练脚本')

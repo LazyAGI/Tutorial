@@ -259,11 +259,6 @@ def step1_prepare_data():
 def step2_preference_pipeline():
     log_step('[2/5] 运行 Preference Pipeline...')
 
-    if not Path(LAZYLLM_PATH).exists():
-        log_error(f'LAZYLLM_PATH 不存在: {LAZYLLM_PATH}')
-        log('请修改脚本中的 LAZYLLM_PATH 配置')
-        return False
-
     sys.path.insert(0, LAZYLLM_PATH)
     sys.path.insert(0, str(Path(LAZYLLM_PATH).parent))
 
@@ -683,6 +678,21 @@ def init_config(args):
         d.mkdir(parents=True, exist_ok=True)
     return CONFIG
 def main():
+    args = parse_args()
+    init_config(args)
+
+    model_paths = [
+        ('LAZYLLM_PATH', CONFIG['lazyllm_path']),
+        ('PIPELINE_MODEL', CONFIG['pipeline_model']),
+        ('DPO_BASE_MODEL', CONFIG['dpo_base_model']),
+        ('JUDGE_MODEL', CONFIG['judge_model']),
+    ]
+    for name, path in model_paths:
+        if not Path(path).exists():
+            log_error(f'{name} 不存在: {path}')
+            log(f'请使用 --{name.lower().replace("_", "-")} 参数指定正确路径')
+            safe_exit(1)
+
     log('==========================================')
     log('一键DPO安全对齐训练脚本')
     log('==========================================')

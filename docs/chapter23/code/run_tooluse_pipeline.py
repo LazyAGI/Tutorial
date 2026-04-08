@@ -13,10 +13,12 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-SFT_BASE_MODEL = '/path/to/sft/base/model'
-LAZYLLM_PATH = '/path/to/lazyllm'
-PIPELINE_MODEL = '/path/to/pipeline/model'
-JUDGE_MODEL = '/path/to/judge/model'
+SFT_BASE_MODEL = '/models/qwen2.5-0.5b-instruct'
+LAZYLLM_PATH = '/LAZYLLM'
+PIPELINE_MODEL = '/models/Qwen3-30B-A3B-Instruct-2507'
+JUDGE_MODEL = '/models/qwen2.5-14b-instruct'
+
+
 TRAIN_DATASET_REPO = 'WizardLM/WizardLM_evol_instruct_70k'
 TRAIN_DATASET_SPLIT = os.environ.get('TOOLUSE_TRAIN_DATASET_SPLIT', 'train')
 TRAIN_DATASET_ENDPOINT = os.environ.get(
@@ -98,7 +100,7 @@ LOG_FILE = LOG_DIR / (
 CONFIG = {}
 
 TOOLUSE_DIALOGUE_SYSTEM_PROMPT = (
-    """You are a multi-turn dialogue data generation assistant.
+    '''You are a multi-turn dialogue data generation assistant.
 You need to simulate a multi-turn dialogue based on the composed task
 and available functions.
 
@@ -126,11 +128,10 @@ Expected JSON structure:
     },
     {"role": "tool", "name": "function_name", "content": "..."}
   ]
-}
-"""
+}'''
 )
 
-TOOLUSE_INFERENCE_SYSTEM_PROMPT = """You are a helpful assistant with
+TOOLUSE_INFERENCE_SYSTEM_PROMPT = '''You are a helpful assistant with
 tool use capabilities.
 Think through the task before answering.
 
@@ -144,9 +145,9 @@ If no tool is needed, still respond in this structure:
 <answer>Your final answer</answer>
 
 Return only the assistant response and nothing else.
-"""
+'''
 
-JUDGE_PROMPT = """You are a strict AI model evaluation expert.
+JUDGE_PROMPT = '''You are a strict AI model evaluation expert.
 Your task is to evaluate a model's performance on tool-use tasks.
 
 ### Evaluation Context
@@ -175,7 +176,7 @@ Return JSON only, no extra explanation:
   "reason": "Perfect"
 }}
 ```
-"""
+'''
 
 
 def log(msg: str):
@@ -702,7 +703,128 @@ class ToolUseJudge:
             }
 
 
-def step1_prepare_data(step_label='[1/5]'):
+def _download_train_data(train_path: Path) -> bool:
+    '''下载并准备训练数据。'''
+    previous_endpoint = override_hf_endpoint(
+        CONFIG['train_dataset_endpoint']
+    )
+    try:
+        from datasets import load_dataset
+
+        log(
+            '  正在下载训练集: '
+            f'{CONFIG["train_dataset_repo"]}@'
+            f'{CONFIG["train_dataset_split"]}'
+        )
+        if CONFIG['train_dataset_endpoint']:
+            log(f'  训练集下载端点: {CONFIG["train_dataset_endpoint"]}')
+
+        dataset = load_dataset(
+            CONFIG['train_dataset_repo'],
+            split=CONFIG['train_dataset_split'],
+            streaming=True,
+        )
+        train_data = []
+        log('  正在解析 WizardLM 训练数据并适配算子输入格式...')
+        for entry in dataset:
+            normalized = normalize_raw_record(entry, len(train_data))
+            if not normalized:
+                continue
+            if len(normalized['content'].strip()) <= 10:
+                continue
+
+            normalized['id'] = len(train_data) + 1
+            metadata = dict(normalized.get('metadata', {}))
+            metadata.update(
+                {
+                    'source': 'universal_source',
+                    'dataset_repo': CONFIG['train_dataset_repo'],
+                    'dataset_split': CONFIG['train_dataset_split'],
+                }
+            )
+            normalized['metadata'] = metadata
+            train_data.append(normalized)
+
+            if len(train_data) >= CONFIG['train_num_samples']:
+                break
+    except ImportError as exc:
+        log_error(f'缺少依赖，请先安装 datasets: {exc}')
+        return False
+    except Exception as exc:
+        log_error(f'加载训练集失败: {exc}')
+        return False
+    finally:
+        restore_hf_endpoint(previous_endpoint)
+
+    if not train_data:
+        log_error('训练集下载成功，但未解析出有效样本')
+        return False
+
+    write_json_file(train_path, train_data)
+    log(f'  原始训练数据: {train_path} ({len(train_data)} 条)')
+    return True
+
+
+def _download_eval_data(eval_path: Path) -> bool:
+    '''下载并准备评测数据。'''
+    previous_endpoint = override_hf_endpoint(
+        CONFIG['eval_dataset_endpoint']
+    )
+    try:
+        from huggingface_hub import hf_hub_download
+
+        log(f'  正在解析评测集仓库: {CONFIG["eval_dataset_repo"]}')
+        if CONFIG['eval_dataset_endpoint']:
+            log(f'  评测集下载端点: {CONFIG["eval_dataset_endpoint"]}')
+        eval_data_file = resolve_eval_dataset_file(
+            CONFIG['eval_dataset_repo'], CONFIG['eval_dataset_file']
+        )
+        log(f'  选中的评测集文件: {eval_data_file}')
+
+        local_eval_file = hf_hub_download(
+            repo_id=CONFIG['eval_dataset_repo'],
+            filename=eval_data_file,
+            repo_type='dataset',
+        )
+        raw_eval_data = load_records_from_local_dataset_file(
+            Path(local_eval_file)
+        )
+    except ImportError as exc:
+        log_error(f'缺少依赖，请先安装 huggingface_hub: {exc}')
+        return False
+    except Exception as exc:
+        log_error(f'下载或加载评测集失败: {exc}')
+        return False
+    finally:
+        restore_hf_endpoint(previous_endpoint)
+
+    eval_data = []
+    for index, item in enumerate(raw_eval_data):
+        normalized = normalize_eval_record(item, index)
+        if normalized:
+            metadata = dict(normalized.get('metadata', {}))
+            metadata.update(
+                {
+                    'source': 'huggingface_eval',
+                    'dataset_repo': CONFIG['eval_dataset_repo'],
+                    'dataset_file': eval_data_file,
+                }
+            )
+            normalized['metadata'] = metadata
+            eval_data.append(normalized)
+        if len(eval_data) >= CONFIG['eval_num_samples']:
+            break
+
+    if not eval_data:
+        log_error('评测集下载成功，但未解析出有效样本')
+        return False
+
+    write_jsonl_file(eval_path, eval_data)
+    log(f'  原始评测数据: {eval_path} ({len(eval_data)} 条)')
+    return True
+
+
+def step1_prepare_data(step_label='[1/5]'):  # noqa: C901
     log_step(f'{step_label} 下载并准备 Tool Use 原始数据...')
     ensure_local_site_packages()
 
@@ -720,119 +842,12 @@ def step1_prepare_data(step_label='[1/5]'):
         return True
 
     if not is_raw_train_dataset_ready(train_path):
-        previous_endpoint = override_hf_endpoint(
-            CONFIG['train_dataset_endpoint']
-        )
-        try:
-            from datasets import load_dataset
-
-            log(
-                '  正在下载训练集: '
-                f'{CONFIG["train_dataset_repo"]}@'
-                f'{CONFIG["train_dataset_split"]}'
-            )
-            if CONFIG['train_dataset_endpoint']:
-                log(f'  训练集下载端点: {CONFIG["train_dataset_endpoint"]}')
-
-            dataset = load_dataset(
-                CONFIG['train_dataset_repo'],
-                split=CONFIG['train_dataset_split'],
-                streaming=True,
-            )
-            train_data = []
-            log('  正在解析 WizardLM 训练数据并适配算子输入格式...')
-            for entry in dataset:
-                normalized = normalize_raw_record(entry, len(train_data))
-                if not normalized:
-                    continue
-                if len(normalized['content'].strip()) <= 10:
-                    continue
-
-                normalized['id'] = len(train_data) + 1
-                metadata = dict(normalized.get('metadata', {}))
-                metadata.update(
-                    {
-                        'source': 'universal_source',
-                        'dataset_repo': CONFIG['train_dataset_repo'],
-                        'dataset_split': CONFIG['train_dataset_split'],
-                    }
-                )
-                normalized['metadata'] = metadata
-                train_data.append(normalized)
-
-                if len(train_data) >= CONFIG['train_num_samples']:
-                    break
-        except ImportError as exc:
-            log_error(f'缺少依赖，请先安装 datasets: {exc}')
+        if not _download_train_data(train_path):
             return False
-        except Exception as exc:
-            log_error(f'加载训练集失败: {exc}')
-            return False
-        finally:
-            restore_hf_endpoint(previous_endpoint)
-
-        if not train_data:
-            log_error('训练集下载成功，但未解析出有效样本')
-            return False
-
-        write_json_file(train_path, train_data)
-        log(f'  原始训练数据: {train_path} ({len(train_data)} 条)')
 
     if not is_raw_eval_dataset_ready(eval_path):
-        previous_endpoint = override_hf_endpoint(
-            CONFIG['eval_dataset_endpoint']
-        )
-        try:
-            from huggingface_hub import hf_hub_download
-
-            log(f'  正在解析评测集仓库: {CONFIG["eval_dataset_repo"]}')
-            if CONFIG['eval_dataset_endpoint']:
-                log(f'  评测集下载端点: {CONFIG["eval_dataset_endpoint"]}')
-            eval_data_file = resolve_eval_dataset_file(
-                CONFIG['eval_dataset_repo'], CONFIG['eval_dataset_file']
-            )
-            log(f'  选中的评测集文件: {eval_data_file}')
-
-            local_eval_file = hf_hub_download(
-                repo_id=CONFIG['eval_dataset_repo'],
-                filename=eval_data_file,
-                repo_type='dataset',
-            )
-            raw_eval_data = load_records_from_local_dataset_file(
-                Path(local_eval_file)
-            )
-        except ImportError as exc:
-            log_error(f'缺少依赖，请先安装 huggingface_hub: {exc}')
+        if not _download_eval_data(eval_path):
             return False
-        except Exception as exc:
-            log_error(f'下载或加载评测集失败: {exc}')
-            return False
-        finally:
-            restore_hf_endpoint(previous_endpoint)
-
-        eval_data = []
-        for index, item in enumerate(raw_eval_data):
-            normalized = normalize_eval_record(item, index)
-            if normalized:
-                metadata = dict(normalized.get('metadata', {}))
-                metadata.update(
-                    {
-                        'source': 'huggingface_eval',
-                        'dataset_repo': CONFIG['eval_dataset_repo'],
-                        'dataset_file': eval_data_file,
-                    }
-                )
-                normalized['metadata'] = metadata
-                eval_data.append(normalized)
-            if len(eval_data) >= CONFIG['eval_num_samples']:
-                break
-
-        if not eval_data:
-            log_error('评测集下载成功，但未解析出有效样本')
-            return False
-
-        write_jsonl_file(eval_path, eval_data)
-        log(f'  原始评测数据: {eval_path} ({len(eval_data)} 条)')
 
     return True
 
@@ -961,7 +976,8 @@ def step3_sft_training():
 
     model = (
         lazyllm.TrainableModule(
-            CONFIG['sft_base_model'], target_path=str(checkpoint_dir)
+            CONFIG['sft_base_model'],
+            target_path=str(checkpoint_dir)
         )
         .mode('finetune')
         .trainset(str(train_file))
@@ -1529,10 +1545,17 @@ def main():
 
     os.chdir(BASE_DIR)
 
-    if not Path(config['lazyllm_path']).exists():
-        log_error(f'LAZYLLM_PATH 不存在: {config["lazyllm_path"]}')
-        log('请修改脚本中的 LAZYLLM_PATH 配置')
-        safe_exit(1)
+    model_paths = [
+        ('LAZYLLM_PATH', config['lazyllm_path']),
+        ('PIPELINE_MODEL', config['pipeline_model']),
+        ('SFT_BASE_MODEL', config['sft_base_model']),
+        ('JUDGE_MODEL', config['judge_model']),
+    ]
+    for name, path in model_paths:
+        if not Path(path).exists():
+            log_error(f'{name} 不存在: {path}')
+            log(f'请使用 --{name.lower().replace("_", "-")} 参数指定正确路径')
+            safe_exit(1)
 
     log('==========================================')
     log('一键 Tool Use Pipeline 训练脚本')
