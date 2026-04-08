@@ -21,7 +21,7 @@ saved_rows = []
 
 @fc_register('tool')
 def regenerate_row(row: dict) -> dict:
-    """
+    '''
     Generate QA pairs based on the input content.
 
     Args:
@@ -35,8 +35,8 @@ def regenerate_row(row: dict) -> dict:
             content : str
         }
 
-    """
-    q = f"""
+    '''
+    q = f'''
     Generate a QA pair based on the input.
     The output format must be:
     ```
@@ -48,7 +48,7 @@ def regenerate_row(row: dict) -> dict:
     ```
 
    Input: {row['content']}
-    """
+    '''
     response = llm(q)
     if '</think>' in response:
         response = response.split('</think>')[-1]
@@ -66,7 +66,7 @@ def regenerate_row(row: dict) -> dict:
 
 @fc_register('tool')
 def evaluate_row(row: dict) -> bool:
-    """
+    '''
     Check whether the QA pair is generated based on the 'content'.
 
     Args:
@@ -75,13 +75,13 @@ def evaluate_row(row: dict) -> bool:
     Returns:
         bool: True or False
 
-    """
-    q = f"""
+    '''
+    q = f'''
     Check whether the QA pair is generated based on the 'content'.
     The output must be either True or False
 
     Target row: {row}
-    """
+    '''
     response = llm(q).lower()
     result = False
     if 'true' in response:
@@ -97,7 +97,7 @@ def evaluate_row(row: dict) -> bool:
 
 for row in input_list:
     row = input_list[0]
-# agent_prompt = """
+# agent_prompt = '''
 # 你是一个严格的数据质量校验 Agent。
 
 # ⚠️ 工具调用格式必须【完全严格】：
@@ -109,33 +109,33 @@ for row in input_list:
 
 # 格式必须完全如下（一行）：
 # Action: evaluate_row
-# Action Input: {"row":{"query":"...","answer":"...","content":"..."}}
+# Action Input: {'row':{'query':'...','answer':'...','content':'...'}}
 
 
 # 示例（正确）：
 # Action: evaluate_row
-# Action Input: {"row":{"query":"Q","answer":"A","content":"C"}}
+# Action Input: {'row':{'query':'Q','answer':'A','content':'C'}}
 
 # 示例（错误）：
 # Action Input:
 # {
-#   "row": {...}
+#   'row': {...}
 # }
 
 # 执行逻辑：
 # 1. evaluate_row
 # 2. False → regenerate_row
 # 3. 直到 True
-# """
+# '''
 
 
-agent_prompt = """
+agent_prompt = '''
 你必须立刻调用 evaluate_row。
 
 格式必须完全如下（一行）：
 Action: evaluate_row
-Action Input: {"row":{"query":"...","answer":"...","content":"..."}}
-"""
+Action Input: {'row':{'query':'...','answer':'...','content':'...'}}
+'''
 
 
 tools = ['regenerate_row', 'evaluate_row']
@@ -146,10 +146,10 @@ agent = ReactAgent(
 )
 
 
-query = f"""
+query = f'''
 当前数据（必须原样使用，不要格式化）：
 {json.dumps(row, ensure_ascii=False, separators=(',', ':'))}
-"""
+'''
 
 result = agent(query)
 print(result)

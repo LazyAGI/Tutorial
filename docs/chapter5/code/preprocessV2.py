@@ -24,18 +24,18 @@ input_list = [
 
 @fc_register('tool')
 def regenerate_row(row: Dict[str, Any]) -> Dict[str, Any]:
-    q = f"""
+    q = f'''
 Generate a QA pair strictly based on the following content.
 
 Return JSON only:
 {{
-  "query": "...",
-  "answer": "..."
+  'query': '...',
+  'answer': '...'
 }}
 
 Content:
 {row['content']}
-"""
+'''
     resp = llm(q)
     if '</think>' in resp:
         resp = resp.split('</think>')[-1]
@@ -49,14 +49,14 @@ Content:
 
 @fc_register('tool')
 def evaluate_row(row: Dict[str, Any]) -> bool:
-    q = f"""
+    q = f'''
 Answer True or False ONLY.
 
 Is the QA pair strictly derived from the content?
 
 Row:
 {json.dumps(row, ensure_ascii=False)}
-"""
+'''
     resp = llm(q).lower()
     print(f'{row} 评估结果：{resp}')
     return 'true' in resp
@@ -66,7 +66,7 @@ Row:
 # Agent 控制器（外部 FSM）
 # =========================
 
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT = '''
 You are a decision agent.
 
 You must respond in JSON only.
@@ -75,22 +75,22 @@ Allowed outputs:
 
 1. Request a tool:
 {
-  "type": "tool_call",
-  "name": "evaluate_row" | "regenerate_row",
-  "arguments": { ... }
+  'type': 'tool_call',
+  'name': 'evaluate_row' | 'regenerate_row',
+  'arguments': { ... }
 }
 
 2. Finish:
 {
-  "type": "final",
-  "row": { ... }
+  'type': 'final',
+  'row': { ... }
 }
 
 Rules:
 - No explanations
 - No thoughts
 - No assumptions about tool results
-"""
+'''
 
 
 def agent_loop(row: Dict[str, Any]) -> Dict[str, Any]:

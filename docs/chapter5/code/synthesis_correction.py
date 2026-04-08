@@ -8,7 +8,7 @@ llm = lazyllm.OnlineChatModule()
 
 @fc_register('tool')
 def data_synthesis(content: str) -> dict:
-    """
+    '''
     Generate QA pairs based on the input content.
 
     Args:
@@ -21,8 +21,8 @@ def data_synthesis(content: str) -> dict:
             answer : str,
         }
 
-    """
-    q = f"""
+    '''
+    q = f'''
     Generate a QA pair based on the user's input.
     The output format must be:
     ```
@@ -34,7 +34,7 @@ def data_synthesis(content: str) -> dict:
     ```
 
     user's input: {content}
-    """
+    '''
     response = llm(q)
     if '</think>' in response:
         response = response.split('</think>')[-1]
@@ -51,7 +51,7 @@ def data_synthesis(content: str) -> dict:
 
 @fc_register('tool')
 def self_correction(qa_pair: dict, content: str) -> dict:
-    """
+    '''
     Check whether the QA pair is generated based on the input content.
 
     Args:
@@ -65,8 +65,8 @@ def self_correction(qa_pair: dict, content: str) -> dict:
             answer : str,
         }
 
-    """
-    q = f"""
+    '''
+    q = f'''
     Check whether the QA pair is generated based on the input content.
     If the QA pair is valid, output the original QA pair.
     Otherwise, regenerate it.
@@ -81,7 +81,7 @@ def self_correction(qa_pair: dict, content: str) -> dict:
     ```
     generated_pair: {qa_pair}
     user's input: {content}
-    """
+    '''
     response = llm(q)
     if '</think>' in response:
         response = response.split('</think>')[-1]
@@ -111,7 +111,7 @@ agent = ReactAgent(
 # =========================
 content = input('请输入原文本：\n')
 
-agent_prompt = f"""
+agent_prompt = f'''
 你是一个数据构建 Agent，需要完成「生成 + 自检」的数据流水线。
 
 你的目标：
@@ -125,11 +125,11 @@ agent_prompt = f"""
 
 原始文本：
 {content}
-"""
+'''
 
 print('\n模型启动：\n')
 result = agent(agent_prompt)
-# print("\n最终输出：")
+# print('\n最终输出：')
 # print(result)
 
-# 根据以下内容生成sft微调训练内容 "LazyLLM是一款高性能的开源人工智能框架。"
+# 根据以下内容生成sft微调训练内容 'LazyLLM是一款高性能的开源人工智能框架。'

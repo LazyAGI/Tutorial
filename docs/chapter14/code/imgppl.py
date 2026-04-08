@@ -24,17 +24,17 @@ random.seed(42)
 # 路径配置
 # =========================
 BASE_DIR = Path(__file__).resolve().parent
-OUTPUT_DIR = BASE_DIR / "vqa_rad_simple"
-IMAGE_DIR = OUTPUT_DIR / "images"
+OUTPUT_DIR = BASE_DIR / 'vqa_rad_simple'
+IMAGE_DIR = OUTPUT_DIR / 'images'
 
-TRAIN_JSON = OUTPUT_DIR / "train.json"
-TEST_JSON = OUTPUT_DIR / "test.json"
+TRAIN_JSON = OUTPUT_DIR / 'train.json'
+TEST_JSON = OUTPUT_DIR / 'test.json'
 
-SFT_RESULT_JSON = BASE_DIR / "sft_result.json"
-INFER_RESULT_JSON = BASE_DIR / "infer_result.json"
+SFT_RESULT_JSON = BASE_DIR / 'sft_result.json'
+INFER_RESULT_JSON = BASE_DIR / 'infer_result.json'
 
-SFT_SCORE_JSON = BASE_DIR / "sft_score.json"
-INFER_SCORE_JSON = BASE_DIR / "infer_score.json"
+SFT_SCORE_JSON = BASE_DIR / 'sft_score.json'
+INFER_SCORE_JSON = BASE_DIR / 'infer_score.json'
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
@@ -43,65 +43,61 @@ os.makedirs(IMAGE_DIR, exist_ok=True)
 # Step 1: 下载 + 转换数据
 # =========================
 def prepare_dataset():
-    print("📥 Loading dataset...")
-    dataset = load_dataset("flaviagiammarino/vqa-rad")
+    print('📥 Loading dataset...')
+    dataset = load_dataset('flaviagiammarino/vqa-rad')
 
     def process_split(split_name, save_path):
         data_out = []
         split = dataset[split_name]
 
-        print(f"Processing {split_name}...")
+        print(f'Processing {split_name}...')
 
         for i, sample in enumerate(tqdm(split)):
-            img = sample["image"].convert("RGB")
-            question = sample["question"]
-            answer = sample["answer"]
+            img = sample['image'].convert('RGB')
+            question = sample['question']
+            answer = sample['answer']
 
-            img_path = IMAGE_DIR / f"{split_name}_{i}.jpg"
+            img_path = IMAGE_DIR / f'{split_name}_{i}.jpg'
             img.save(img_path)
 
             data_out.append({
-                "instruction": question,
-                "input": str(img_path),
-                "output": answer
+                'instruction': question,
+                'input': str(img_path),
+                'output': answer
             })
 
-        with open(save_path, "w", encoding="utf-8") as f:
+        with open(save_path, 'w', encoding='utf-8') as f:
             json.dump(data_out, f, ensure_ascii=False, indent=2)
 
-    process_split("train", TRAIN_JSON)
-    process_split("test", TEST_JSON)
+    process_split('train', TRAIN_JSON)
+    process_split('test', TEST_JSON)
 
 
 # =========================
 # Step 2: img2qa 推理增强
 # =========================
 def run_img2qa():
-    print("🧠 Generating reasoning data...")
+    print('🧠 Generating reasoning data...')
 
     gen_prompt = (
-        "You are given a medical image, "
-        "a specific question (Context), and a short "
-        "ground-truth answer (Reference). "
-        "Your mission is NOT to re-answer the "
-        "question, but to RECONSTRUCT the logical reasoning process "
-        "that leads to that answer. Step-by-Step Instructions: "
-        "1. Visual Observation: Identify "
-        "the specific anatomical regions mentioned (e.g., temporal horn). "
-        "2. Evidence Extraction: "
-        "Describe the specific visual enhancements or "
-        "abnormalities visible beyond the main mass. "
-        "3. Logical Synthesis: Explain "
-        "how these visual findings directly support the short answer."
-        "Constraint:  DO NOT just output 'Yes' or 'No'."
-        "The 'answer' field in your JSON must "
-        "be a full paragraph containing both the [Reasoning Process] and the "
-        "[Conclusion]. Output format: {\"query\": \"The original question\", "
-        "\"answer\": \"Reasoning: ... Therefore, the answer"
-        "is [Short Answer].\"}"
+        '''Role: You are an expert radiologist and medical educator.
+        Task: Given a medical image, a specific question (Context),
+        and its ground-truth answer (Reference),
+        your goal is to reverse-engineer the diagnostic reasoning path.
+
+        Step-by-Step Logic:
+        1. Anatomical Localization: Specify the key anatomical structures and markers relevant to the question.
+        2. Radiographic Evidence: Pinpoint the specific visual characteristics
+        (e.g., intensity, margins, enhancement, mass effect) that serve as evidence.
+        3. Clinical Synthesis: Bridge the gap between observations and the Reference answer.
+
+        Constraint:
+        - The 'answer' field must be a cohesive, professional paragraph.
+        - Format: Reasoning: [Your step-by-step analysis]. Therefore, the final answer is [Reference].
+        - Output strictly in JSON format: {"query": "...", "answer": "..."}'''
     )
 
-    model = lazyllm.TrainableModule("Qwen2.5-VL-32B-Instruct").deploy_method(
+    model = lazyllm.TrainableModule('Qwen2.5-VL-32B-Instruct').deploy_method(
         lazyllm.deploy.vllm,
         openai_api=True
     )
@@ -120,7 +116,7 @@ def run_img2qa():
 
     train_data = ppl(train_data)
 
-    with open(TRAIN_JSON, "w") as f:
+    with open(TRAIN_JSON, 'w') as f:
         json.dump(train_data, f, ensure_ascii=False, indent=2)
 
     model.stop()
@@ -132,28 +128,28 @@ def run_img2qa():
 def build_sft_model(model_path):
     return (
         lazyllm.TrainableModule(model_path, type='vlm', target_path=BASE_DIR)
-        .mode("finetune")
+        .mode('finetune')
         .trainset(str(TRAIN_JSON))
         .finetune_method(
             (
                 finetune.llamafactory,
                 {
-                    "learning_rate": 1e-5,
-                    "cutoff_len": 1024,
-                    "max_samples": 10000,
-                    "preprocessing_num_workers": 1,
-                    "val_size": 0.1,
-                    "per_device_train_batch_size": 12,
-                    "num_train_epochs": 3.0,
-                    "gradient_accumulation_steps": 10,
-                    "overwrite_cache": False,
+                    'learning_rate': 1e-5,
+                    'cutoff_len': 1024,
+                    'max_samples': 10000,
+                    'preprocessing_num_workers': 1,
+                    'val_size': 0.1,
+                    'per_device_train_batch_size': 12,
+                    'num_train_epochs': 3.0,
+                    'gradient_accumulation_steps': 10,
+                    'overwrite_cache': False,
                 }
             )
         )
         .prompt(
             dict(
-                system="You are a medical assistant, answer the question, "
-                       "answer no if you are not sure about the result.",
+                system='You are a medical assistant, answer the question, '
+                       'answer no if you are not sure about the result.',
                 drop_builtin_system=True
             )
         )
@@ -168,7 +164,7 @@ def build_infer_model(model_path):
         model_path,
         type='vlm'
     ).prompt(
-        dict(system="", drop_builtin_system=True)
+        dict(system='', drop_builtin_system=True)
     )
 
 
@@ -180,21 +176,21 @@ def score_with_model(data, scorer, save_path):
 
     for x in data:
         prompt = (
-            f"Q: {x['instruction']}\n"
-            f"GT: {x['output']}\n"
-            f"Pred: {x['prediction']}"
+            f"Q: {x['instruction']}\n"  # noqa: Q000
+            f"GT: {x['output']}\n"  # noqa: Q000
+            f"Pred: {x['prediction']}"  # noqa: Q000
         )
 
         try:
             r = scorer(prompt)
-            score = int(r.get("score", 0))
+            score = int(r.get('score', 0))
         except Exception:
             score = 0
 
-        x["score"] = score
+        x['score'] = score
         out.append(x)
 
-    with open(save_path, "w") as f:
+    with open(save_path, 'w') as f:
         json.dump(out, f, indent=2)
 
     return out
@@ -204,16 +200,16 @@ def score_with_model(data, scorer, save_path):
 # Step 6: 分析
 # =========================
 def analyze(data, name):
-    scores = [x["score"] for x in data]
+    scores = [x['score'] for x in data]
     acc = sum(scores) / len(scores) if scores else 0
 
     counter = Counter(scores)
 
-    print(f"\n📊 {name}")
-    print(f"Accuracy: {acc:.4f}")
-    print("Distribution:")
+    print(f'\n📊 {name}')
+    print(f'Accuracy: {acc:.4f}')
+    print('Distribution:')
     for k in sorted(counter):
-        print(f"{k}: {counter[k]}")
+        print(f'{k}: {counter[k]}')
 
 
 # =========================
@@ -232,29 +228,29 @@ def main():
         test_data = json.load(f)
 
     eval_prompts = [
-        encode_query_with_filepaths(x["instruction"], files=[x["input"]])
+        encode_query_with_filepaths(x['instruction'], files=[x['input']])
         for x in test_data
     ]
 
     # =========================
     # Step 3: SFT
     # =========================
-    sft_model = build_sft_model("Qwen2.5-VL-3B-Instruct")
+    sft_model = build_sft_model('Qwen2.5-VL-3B-Instruct')
 
     sft_model.evalset(eval_prompts)
     sft_model.update()
 
     sft_output = [
         {
-            "instruction": item["instruction"],
-            "input": item["input"],
-            "output": item["output"],
-            "prediction": pred
+            'instruction': item['instruction'],
+            'input': item['input'],
+            'output': item['output'],
+            'prediction': pred
         }
         for item, pred in zip(test_data, sft_model.eval_result)
     ]
 
-    with open(SFT_RESULT_JSON, "w") as f:
+    with open(SFT_RESULT_JSON, 'w') as f:
         json.dump(sft_output, f, indent=2)
 
     sft_model.stop()
@@ -262,7 +258,7 @@ def main():
     # =========================
     # Step 4: 推理
     # =========================
-    infer_model = build_infer_model("Qwen2.5-VL-3B-Instruct")
+    infer_model = build_infer_model('Qwen2.5-VL-3B-Instruct')
 
     infer_model.start()
     infer_model.evalset(eval_prompts)
@@ -270,15 +266,15 @@ def main():
 
     infer_output = [
         {
-            "instruction": item["instruction"],
-            "input": item["input"],
-            "output": item["output"],
-            "prediction": pred
+            'instruction': item['instruction'],
+            'input': item['input'],
+            'output': item['output'],
+            'prediction': pred
         }
         for item, pred in zip(test_data, infer_model.eval_result)
     ]
 
-    with open(INFER_RESULT_JSON, "w") as f:
+    with open(INFER_RESULT_JSON, 'w') as f:
         json.dump(infer_output, f, indent=2)
 
     infer_model.stop()
@@ -287,18 +283,18 @@ def main():
     # Step 5: 打分（只启动一次）
     # =========================
     scorer = (
-        lazyllm.TrainableModule("qwen2.5-14b-instruct").deploy_method(
+        lazyllm.TrainableModule('qwen2.5-14b-instruct').deploy_method(
             lazyllm.deploy.vllm,
             openai_api=True
         )
         .prompt(
-            """
+            '''
 Task: Accuracy Check.
-Judge if the "Prediction" logically supports.
+Judge if the 'Prediction' logically supports.
 1 = Correct & Consistent
 0 = Incorrect or Irrelevant
-Only output JSON: {"score": 0 or 1}
-"""
+Only output JSON: {'score': 0 or 1}
+'''
         )
         .formatter(JsonFormatter())
         .start()
@@ -312,9 +308,9 @@ Only output JSON: {"score": 0 or 1}
     # =========================
     # Step 6: 分析
     # =========================
-    analyze(sft_scored, "SFT")
-    analyze(infer_scored, "Infer")
+    analyze(sft_scored, 'SFT')
+    analyze(infer_scored, 'Infer')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

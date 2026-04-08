@@ -5,12 +5,12 @@ import wikipedia
 
 @fc_register('tool')
 def WikipediaWorker(input: str):
-    """
+    '''
     Find information in Wikipedia
 
     Args:
         input(str): search content
-    """
+    '''
     print('Pedia Worker Called')
     try:
         evidence = wikipedia.page(input).content
@@ -29,12 +29,12 @@ def WikipediaWorker(input: str):
 
 @fc_register('tool')
 def LLMWorker(input: str):
-    """
+    '''
     Docstring for LLMWorker
 
     Args:
         input(str): Worker's input.
-    """
+    '''
     print('LLMWorker Called')
     llm = lazyllm.OnlineChatModule(stream=False)
     query = f'Respond in short directly with no extra words.\n\n{input}'

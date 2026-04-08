@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 import random
 from collections import Counter
-from huggingface_hub import snapshot_download
+from huggingface_hub import snapshot_download  # NID002
 
 import lazyllm
 from lazyllm import finetune, deploy
@@ -28,7 +28,7 @@ INFER_SCORE_JSON = BASE_DIR / 'infer_score_result.json'
 
 snapshot_download(
     repo_id='scui382/pdf-ppl',
-    repo_type='dataset',  # 如果你传的是 Dataset 选这个，如果是 Model 选 'model'
+    repo_type='dataset',
     local_dir=BASE_DIR,  # 下载到本地的路径
     allow_patterns='*.pdf'  # 只下载 PDF 文件（可选）
 )
@@ -42,7 +42,7 @@ def generate_qa_from_pdfs(model):
     print(data)
     print(f'找到 {len(data)} 个 PDF 文件')
 
-    generator_prompt = """
+    generator_prompt = '''
 你是一个用于构建训练数据的助手，需要基于给定的图像或文本内容，生成一个高质量的中文问答对（QA），用于监督微调（SFT）。
 
 【任务要求】
@@ -64,7 +64,7 @@ def generate_qa_from_pdfs(model):
 
 【输出格式要求】
 只能输出 JSON，不能包含任何额外说明或解释
-"""
+'''
 
     ppl = build_pdf2qa_pipeline(
         model=model,
@@ -138,16 +138,16 @@ def build_infer_model(model_path):
 # Step 3: 打分
 # =========================
 def score_predictions_with_model(data, scorer, result_file):
-    """
+    '''
     使用已部署的打分模型对数据评分
-    """
+    '''
     scored = []
     for item in data:
         instruction = item.get('instruction', '')
         answer = item.get('output', '')
         prediction = item.get('prediction', '')
         input_text = item.get('input', '')
-        prompt = f"""
+        prompt = f'''
 问题：
 {instruction}
 
@@ -160,7 +160,7 @@ def score_predictions_with_model(data, scorer, result_file):
 
 模型预测：
 {prediction}
-"""
+'''
         result = scorer(prompt)
         try:
             score = float(result.get('score', 0))
@@ -265,7 +265,7 @@ def main():
     # =========================
     scorer_model = (
         lazyllm.TrainableModule(score_model)
-        .prompt("""
+        .prompt('''
 请判断“模型预测”和“标准答案”是否相符。
 
 评分标准：
@@ -275,12 +275,12 @@ def main():
 
 输出格式必须严格为 JSON：
 {
-    "score": 0 或 0.5 或 1
+    'score': 0 或 0.5 或 1
 }
 
 不要输出解释。
 不要输出额外内容。
-""")
+''')
         .formatter(JsonFormatter())
         .start()
     )

@@ -22,7 +22,7 @@ def call_llm_with_retry(prompt: str, retries: int = 5) -> str:
 
 @fc_register('tool')
 def generate_row(row: Dict[str, Any]) -> Dict[str, Any]:
-    """
+    '''
     Generate a question–answer (QA) pair strictly based on the given content.
 
     This function calls the LLM to generate a QA pair that must be directly
@@ -37,22 +37,22 @@ def generate_row(row: Dict[str, Any]) -> Dict[str, Any]:
             - query: generated question
             - answer: generated answer
             - content: original content
-    """
-    q = f"""
+    '''
+    q = f'''
 Generate a QA pair strictly based on the following content.
 
 Return JSON only:
 
 ```json
 {{
-  "query": "...",
-  "answer": "..."
+  'query': '...',
+  'answer': '...'
 }}
 ```
 
 Content:
 {row['content']}
-"""
+'''
     resp = call_llm_with_retry(q)
     if '</think>' in resp:
         resp = resp.split('</think>')[-1]
@@ -65,7 +65,7 @@ Content:
 
 @fc_register('tool')
 def evaluate_row(row: Dict[str, Any]) -> bool:
-    """
+    '''
     Evaluate whether a QA pair is strictly derived from the given content.
 
     This function asks the LLM to act as a binary judge and return
@@ -78,15 +78,15 @@ def evaluate_row(row: Dict[str, Any]) -> bool:
     Returns:
         bool: True if the QA pair is strictly derived from the content,
               False otherwise.
-    """
-    q = f"""
+    '''
+    q = f'''
 Answer True or False ONLY.
 
 Is the QA pair strictly derived from the content?
 
 Row:
 {json.dumps(row, ensure_ascii=False)}
-"""
+'''
     resp = call_llm_with_retry(q).lower()
     print(f'{row} 评估结果：{resp}')
     return 'true' in resp
@@ -94,7 +94,7 @@ Row:
 
 @fc_register('tool')
 def add_cot(row: Dict[str, Any]) -> Dict[str, Any]:
-    """
+    '''
     Add a chain-of-thought (CoT) explanation to a validated QA pair.
 
     This function generates a concise step-by-step reasoning that explains
@@ -109,8 +109,8 @@ def add_cot(row: Dict[str, Any]) -> Dict[str, Any]:
         Dict[str, Any]: The input row augmented with an additional key:
             - cot: chain-of-thought explanation
     用中文回答 CoT
-    """
-    q = f"""
+    '''
+    q = f'''
 Return JSON only.
 
 Add a concise step-by-step reasoning (CoT) explaining how the answer is derived
@@ -119,12 +119,12 @@ STRICTLY from the content.
 JSON format:
 ```json
 {{
-  "cot": "..."
+  'cot': '...'
 }}
 ```
 Row:
 {json.dumps(row, ensure_ascii=False)}
-"""
+'''
     resp = call_llm_with_retry(q)
     if '</think>' in resp:
         resp = resp.split('</think>')[-1]
@@ -158,11 +158,11 @@ def agent_manager(paragraph: str) -> list:
     return results
 
 
-paragraph = """
+paragraph = '''
 今天天气很好，阳光明媚。
 小明今年十八岁，是一名大学生。
 LazyLLM是一款高性能的开源人工智能框架。
-"""
+'''
 
 manager = agent_manager(paragraph)
 print('✅ 最终结果：')

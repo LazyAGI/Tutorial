@@ -2,12 +2,13 @@ import lazyllm
 import json
 import re
 questions = [
-    "2 + 3 * 4 等于多少？",
-    "如果 A 是 B 的导师，B 获得了奖项，那么谁的学生获得了奖项？"
+    '2 + 3 * 4 等于多少？',
+    '如果 A 是 B 的导师，B 获得了奖项，那么谁的学生获得了奖项？'
 ]
 
+
 def model_infer(model, question, k=5):
-    prompt = f"""
+    prompt = f'''
     请一步一步思考并给出答案。
     问题：{question}
     给出{k}个CoTs
@@ -20,23 +21,23 @@ def model_infer(model, question, k=5):
 ```json
 [
   {{
-    "result": "cot1 ### answer"
+    'result': 'cot1 ### answer'
   }},
   {{
-    "result": "cot2 ### answer"
+    'result': 'cot2 ### answer'
   }}
 ]
 ```
-    """
+    '''
 
     res = model(
-    prompt,
-    static_params={
-        "temperature": 0.8,
-        "top_p": 0.9,
-        "max_tokens": 1500,
-    }
-)
+        prompt,
+        static_params={
+            'temperature': 0.8,
+            'top_p': 0.9,
+            'max_tokens': 1500,
+        }
+    )
 
     # 提取 JSON
     match = re.search(r'```json\s*([\s\S]*?)\s*```', res)
@@ -45,17 +46,18 @@ def model_infer(model, question, k=5):
     try:
         data = json.loads(json_str)
     except json.JSONDecodeError:
-        print("解析失败")
+        print('解析失败')
         return []
 
-    cots = [item["result"] for item in data if "result" in item]
+    cots = [item['result'] for item in data if 'result' in item]
 
     return cots[:k]
 
+
 def model_eval(model, q, CoTs):
     scores = []
-    # 让模型 给cot 打分， 
-    prompt = f"""
+    # 让模型 给cot 打分
+    prompt = f'''
     根据问题{q}
     给下面CoTs 打分
     问题：{CoTs}
@@ -65,22 +67,21 @@ def model_eval(model, q, CoTs):
 ```json
 [
   {{
-    "score": "score1"
+    'score': 'score1'
   }},
   {{
-    "score": "score2"
+    'score': 'score2'
   }}
 ]
 ```
-    """
-
+    '''
 
     res = model(
-    prompt,
-    static_params={
-        "temperature": 0.0,
-        "max_tokens": 512,
-    }
+        prompt,
+        static_params={
+            'temperature': 0.0,
+            'max_tokens': 512,
+        }
     )
 
     match = re.search(r'```json\s*([\s\S]*?)\s*```', res)
@@ -89,12 +90,11 @@ def model_eval(model, q, CoTs):
     try:
         scores_data = json.loads(json_str)
     except json.JSONDecodeError:
-        print("⚠️ eval JSON 解析失败")
+        print('⚠️ eval JSON 解析失败')
         return []
 
-    scores = [int(item["score"]) for item in scores_data if "score" in item]
+    scores = [int(item['score']) for item in scores_data if 'score' in item]
     return scores
-
 
 
 def rft(baseline, questions, eval_model):
@@ -102,7 +102,7 @@ def rft(baseline, questions, eval_model):
 
     for q in questions:
         cots = model_infer(baseline, q)
-        print(f"问题：{q}输出的CoTs为：\n{cots}")
+        print(f'问题：{q}输出的CoTs为：\n{cots}')
         if not cots:
             continue
 
@@ -113,9 +113,9 @@ def rft(baseline, questions, eval_model):
         best_idx = max(range(len(scores)), key=lambda i: scores[i])
 
         train_set.append({
-            "question": q,
-            "cot": cots[best_idx],
-            "score": scores[best_idx]
+            'question': q,
+            'cot': cots[best_idx],
+            'score': scores[best_idx]
         })
 
     return train_set
@@ -124,11 +124,13 @@ def rft(baseline, questions, eval_model):
 # =========================
 # 4. 模型初始化
 # =========================
-baseline_model = lazyllm.OnlineChatModule(source = "sensenova",
-    model="SenseChat-Vision")
+baseline_model = lazyllm.OnlineChatModule(
+    source='sensenova',
+    model='SenseChat-Vision'
+)
 evalate_model = lazyllm.OnlineChatModule(
-    source = "sensenova",
-    model="SenseNova-V6-5-Pro"
+    source='sensenova',
+    model='SenseNova-V6-5-Pro'
 )
 
 # =========================
@@ -137,10 +139,7 @@ evalate_model = lazyllm.OnlineChatModule(
 train_set = rft(baseline_model, questions, evalate_model)
 
 for item in train_set:
-    print("======")
-    print("Q:", item["question"])
-    print("Score:", item["score"])
-    print("CoT:", item["cot"])
-
-
-
+    print('======')
+    print('Q:', item['question'])
+    print('Score:', item['score'])
+    print('CoT:', item['cot'])
