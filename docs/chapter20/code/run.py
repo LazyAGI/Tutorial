@@ -16,9 +16,28 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-LAZYLLM_PATH = '/path/to/your/lazyllm'
-PIPELINE_MODEL = '/path/to/pipeline/model'
-SFT_MODEL = '/path/to/sft/base/model'
+# 路径配置 - 如果路径不存在会提示用户配置
+LAZYLLM_PATH = '/LAZYLLM'
+PIPELINE_MODEL = '/models/Qwen3-30B-A3B-Instruct-2507'
+SFT_MODEL = '/models/qwen2.5-0.5b-instruct'
+
+
+def check_path(path: str, name: str) -> str:
+    '''检查路径是否存在，不存在则抛出错误提示用户配置'''
+    if Path(path).exists():
+        return path
+    raise RuntimeError(
+        f'\n{"="*60}\n'
+        f'{name} 路径不存在: {path}\n'
+        f'{"="*60}\n'
+        f'请通过以下方式之一配置:\n'
+        f'1. 命令行参数: --{name.lower().replace("_", "-")} /path/to/model\n'
+        f'2. 修改脚本中的 {name} 变量\n'
+        f'3. 设置环境变量: export {name}=/path/to/model\n'
+        f'{"="*60}\n'
+    )
+
+
 TINY_CODES_DATASET_ENDPOINT = os.environ.get(
     'TINY_CODES_DATASET_ENDPOINT', HF_ENDPOINT
 )
@@ -195,10 +214,7 @@ def step1_download_data():
 def step2_data_pipeline():
     log_step('[2/5] 运行数据增强 pipeline...')
 
-    if not Path(LAZYLLM_PATH).exists():
-        log_error(f'LAZYLLM_PATH 不存在: {LAZYLLM_PATH}')
-        log('请修改脚本中的 LAZYLLM_PATH 配置')
-        return False
+    check_path(LAZYLLM_PATH, 'LAZYLLM_PATH')
 
     sys.path.insert(0, LAZYLLM_PATH)
     sys.path.insert(0, str(Path(LAZYLLM_PATH).parent))
@@ -220,7 +236,7 @@ def step2_data_pipeline():
 
     log(f'  加载数据: {len(data)} 条')
 
-    model = lazyllm.TrainableModule(PIPELINE_MODEL)
+    model = lazyllm.TrainableModule(check_path(PIPELINE_MODEL, 'PIPELINE_MODEL'))
     model.start()
 
     ppl = build_codegen_pipeline(
@@ -277,7 +293,10 @@ def step3_sft_training():
         return True
 
     model = (
-        lazyllm.TrainableModule(SFT_MODEL, target_path=str(checkpoint_dir))
+        lazyllm.TrainableModule(
+            check_path(SFT_MODEL, 'SFT_MODEL'),
+            target_path=str(checkpoint_dir)
+        )
         .mode('finetune')
         .trainset(str(train_file))
         .finetune_method(
