@@ -8,6 +8,7 @@ import time
 
 llm = lazyllm.OnlineChatModule()
 
+
 def call_llm_with_retry(prompt: str, retries: int = 5) -> str:
     last_err = None
     for _ in range(retries):
@@ -19,7 +20,7 @@ def call_llm_with_retry(prompt: str, retries: int = 5) -> str:
     raise last_err
 
 
-@fc_register("tool")
+@fc_register('tool')
 def generate_row(row: Dict[str, Any]) -> Dict[str, Any]:
     """
     Generate a question–answer (QA) pair strictly based on the given content.
@@ -29,7 +30,7 @@ def generate_row(row: Dict[str, Any]) -> Dict[str, Any]:
     to return JSON only, which is then parsed and normalized.
 
     Args:
-        row (Dict[str, Any]): A dictionary containing at least the key "content".
+        row (Dict[str, Any]): A dictionary with the required content field.
 
     Returns:
         Dict[str, Any]: A dictionary with keys:
@@ -50,19 +51,19 @@ Return JSON only:
 ```
 
 Content:
-{row["content"]}
+{row['content']}
 """
     resp = call_llm_with_retry(q)
     if '</think>' in resp:
         resp = resp.split('</think>')[-1]
     match = re.search(r'\{[\s\S]*?\}', resp)
     data = json5.loads(match.group(0))
-    data["content"] = row["content"]
-    print(f"{row} 重写为 {data}")
+    data['content'] = row['content']
+    print(f'{row} 重写为 {data}')
     return data
 
 
-@fc_register("tool")
+@fc_register('tool')
 def evaluate_row(row: Dict[str, Any]) -> bool:
     """
     Evaluate whether a QA pair is strictly derived from the given content.
@@ -72,7 +73,7 @@ def evaluate_row(row: Dict[str, Any]) -> bool:
     by the content without hallucination or external knowledge.
 
     Args:
-        row (Dict[str, Any]): A dictionary containing query, answer, and content.
+        row (Dict[str, Any]): A dictionary containing query, answer, content.
 
     Returns:
         bool: True if the QA pair is strictly derived from the content,
@@ -87,11 +88,11 @@ Row:
 {json.dumps(row, ensure_ascii=False)}
 """
     resp = call_llm_with_retry(q).lower()
-    print(f"{row} 评估结果：{resp}")
-    return "true" in resp
+    print(f'{row} 评估结果：{resp}')
+    return 'true' in resp
 
 
-@fc_register("tool")
+@fc_register('tool')
 def add_cot(row: Dict[str, Any]) -> Dict[str, Any]:
     """
     Add a chain-of-thought (CoT) explanation to a validated QA pair.
@@ -130,8 +131,8 @@ Row:
     match = re.search(r'\{[\s\S]*?\}', resp)
     data = json5.loads(match.group(0))
     row = dict(row)
-    row["cot"] = data["cot"]
-    print(f"添加 CoT: {row}")
+    row['cot'] = data['cot']
+    print(f'添加 CoT: {row}')
     return row
 
 
@@ -145,7 +146,7 @@ def agent_manager(paragraph: str) -> list:
     for chunk in chunks:
         if not chunk.strip():
             continue
-        row = {"content": chunk}
+        row = {'content': chunk}
         row = generate_row(row)
         for _ in range(3):
             ok = evaluate_row(row=row)
@@ -164,5 +165,5 @@ LazyLLM是一款高性能的开源人工智能框架。
 """
 
 manager = agent_manager(paragraph)
-print("✅ 最终结果：")
+print('✅ 最终结果：')
 print(json.dumps(manager, ensure_ascii=False, indent=2))

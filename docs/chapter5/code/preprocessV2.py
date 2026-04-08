@@ -1,4 +1,4 @@
-from typing import Dict, Any, Literal
+from typing import Dict, Any
 import json
 import lazyllm
 from lazyllm.tools import fc_register
@@ -21,7 +21,8 @@ input_list = [
 # 工具（严格：纯函数）
 # =========================
 
-@fc_register("tool")
+
+@fc_register('tool')
 def regenerate_row(row: Dict[str, Any]) -> Dict[str, Any]:
     q = f"""
 Generate a QA pair strictly based on the following content.
@@ -33,7 +34,7 @@ Return JSON only:
 }}
 
 Content:
-{row["content"]}
+{row['content']}
 """
     resp = llm(q)
     if '</think>' in resp:
@@ -41,12 +42,12 @@ Content:
 
     match = re.search(r'\{[\s\S]*?\}', resp)
     data = json5.loads(match.group(0))
-    data["content"] = row["content"]
-    print(f"{row} 重写为 {data}")
+    data['content'] = row['content']
+    print(f'{row} 重写为 {data}')
     return data
 
 
-@fc_register("tool")
+@fc_register('tool')
 def evaluate_row(row: Dict[str, Any]) -> bool:
     q = f"""
 Answer True or False ONLY.
@@ -57,8 +58,8 @@ Row:
 {json.dumps(row, ensure_ascii=False)}
 """
     resp = llm(q).lower()
-    print(f"{row} 评估结果：{resp}")
-    return "true" in resp
+    print(f'{row} 评估结果：{resp}')
+    return 'true' in resp
 
 
 # =========================
@@ -91,40 +92,43 @@ Rules:
 - No assumptions about tool results
 """
 
+
 def agent_loop(row: Dict[str, Any]) -> Dict[str, Any]:
     current = row
 
     while True:
-        prompt = SYSTEM_PROMPT + "\nCurrent row:\n" + json.dumps(current, ensure_ascii=False)
+        prompt = (
+            SYSTEM_PROMPT + '\nCurrent row:\n'
+            + json.dumps(current, ensure_ascii=False)
+        )
         resp = llm(prompt)
 
         try:
             action = json.loads(resp)
         except Exception:
-            raise RuntimeError("Invalid JSON from LLM")
+            raise RuntimeError('Invalid JSON from LLM')
 
-        if action["type"] == "tool_call":
-            name = action["name"]
-            args = action["arguments"]
+        if action['type'] == 'tool_call':
+            name = action['name']
+            args = action['arguments']
 
-            if name == "evaluate_row":
+            if name == 'evaluate_row':
                 ok = evaluate_row(**args)
                 if ok:
                     return current
-                else:
-                    current = regenerate_row(row=current)
+                current = regenerate_row(row=current)
 
-            elif name == "regenerate_row":
+            elif name == 'regenerate_row':
                 current = regenerate_row(**args)
 
             else:
-                raise RuntimeError("Unknown tool")
+                raise RuntimeError('Unknown tool')
 
-        elif action["type"] == "final":
-            return action["row"]
+        elif action['type'] == 'final':
+            return action['row']
 
         else:
-            raise RuntimeError("Invalid agent output")
+            raise RuntimeError('Invalid agent output')
 
 
 # =========================
@@ -132,5 +136,5 @@ def agent_loop(row: Dict[str, Any]) -> Dict[str, Any]:
 # =========================
 
 result = agent_loop(input_list[0])
-print("✅ 最终结果：")
+print('✅ 最终结果：')
 print(json.dumps(result, ensure_ascii=False, indent=2))

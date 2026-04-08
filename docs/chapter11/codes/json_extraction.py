@@ -2,7 +2,6 @@ import json
 import re
 import ast
 from pathlib import Path
-
 import lazyllm
 from lazyllm import finetune, deploy
 from datasets import load_dataset
@@ -54,7 +53,8 @@ def prepare_data(base_dir):
         if i >= 5000:
             break
 
-        answers = json.loads(item["answers"]) if isinstance(item["answers"], str) else item["answers"]
+        answers = json.loads(item["answers"])\
+            if isinstance(item["answers"], str) else item["answers"]
         output = answers[0] if answers else ""
 
         if isinstance(output, str):
@@ -154,11 +154,11 @@ def evaluate(file_path):
             try:
                 json.loads(result)
                 json_ok += 1
-            except:
+            except json.JSONDecodeError:
                 try:
                     ast.literal_eval(result)
                     dict_ok += 1
-                except:
+                except (ValueError, SyntaxError):
                     pass
 
     print(f"\n📊 Evaluation: {file_path}")

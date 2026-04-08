@@ -11,8 +11,11 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 import lazyllm
-from lazyllm import finetune, deploy
-from lazyllm.components.formatter import JsonFormatter, encode_query_with_filepaths
+from lazyllm import finetune
+from lazyllm.components.formatter import (
+    JsonFormatter,
+    encode_query_with_filepaths
+)
 from lazyllm.tools.data.pipelines.img_pipelines import build_img2qa_pipeline
 
 random.seed(42)
@@ -34,6 +37,7 @@ SFT_SCORE_JSON = BASE_DIR / "sft_score.json"
 INFER_SCORE_JSON = BASE_DIR / "infer_score.json"
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
+
 
 # =========================
 # Step 1: 下载 + 转换数据
@@ -75,32 +79,32 @@ def prepare_dataset():
 def run_img2qa():
     print("🧠 Generating reasoning data...")
 
-    gen_prompt = """
-You are given a medical image, a specific question (Context), and a short ground-truth answer (Reference). 
-
-Your mission is NOT to re-answer the question, but to RECONSTRUCT the logical reasoning process that leads to that answer.
-
-Step-by-Step Instructions:
-1. Visual Observation: Identify the specific anatomical regions mentioned (e.g., temporal horn).
-2. Evidence Extraction: Describe the specific visual enhancements or abnormalities visible beyond the main mass.
-3. Logical Synthesis: Explain how these visual findings directly support the short answer.
-
-Constraint: 
-- DO NOT just output 'Yes' or 'No'.
-- The "answer" field in your JSON must be a full paragraph containing both the [Reasoning Process] and the [Conclusion].
----
-
-Outpout format：
-{
-    "query": "The original question",
-    "answer": "Reasoning: [Detailed analysis]... Therefore, the answer is [Short Answer]."
-}
-"""
+    gen_prompt = (
+        "You are given a medical image, "
+        "a specific question (Context), and a short "
+        "ground-truth answer (Reference). "
+        "Your mission is NOT to re-answer the "
+        "question, but to RECONSTRUCT the logical reasoning process "
+        "that leads to that answer. Step-by-Step Instructions: "
+        "1. Visual Observation: Identify "
+        "the specific anatomical regions mentioned (e.g., temporal horn). "
+        "2. Evidence Extraction: "
+        "Describe the specific visual enhancements or "
+        "abnormalities visible beyond the main mass. "
+        "3. Logical Synthesis: Explain "
+        "how these visual findings directly support the short answer."
+        "Constraint:  DO NOT just output 'Yes' or 'No'."
+        "The 'answer' field in your JSON must "
+        "be a full paragraph containing both the [Reasoning Process] and the "
+        "[Conclusion]. Output format: {\"query\": \"The original question\", "
+        "\"answer\": \"Reasoning: ... Therefore, the answer"
+        "is [Short Answer].\"}"
+    )
 
     model = lazyllm.TrainableModule("Qwen2.5-VL-32B-Instruct").deploy_method(
-    lazyllm.deploy.vllm,
-    openai_api=True
-)
+        lazyllm.deploy.vllm,
+        openai_api=True
+    )
 
     ppl = build_img2qa_pipeline(
         model=model,
@@ -131,8 +135,10 @@ def build_sft_model(model_path):
         .mode("finetune")
         .trainset(str(TRAIN_JSON))
         .finetune_method(
-        (finetune.llamafactory, {
-            "learning_rate": 1e-5,
+            (
+                finetune.llamafactory,
+                {
+                    "learning_rate": 1e-5,
                     "cutoff_len": 1024,
                     "max_samples": 10000,
                     "preprocessing_num_workers": 1,
@@ -141,10 +147,16 @@ def build_sft_model(model_path):
                     "num_train_epochs": 3.0,
                     "gradient_accumulation_steps": 10,
                     "overwrite_cache": False,
-        }
+                }
+            )
         )
-    )
-        .prompt(dict(system="You are a medical assistant, answer the question, answer no if you are not sure about the result.", drop_builtin_system=True))
+        .prompt(
+            dict(
+                system="You are a medical assistant, answer the question, "
+                       "answer no if you are not sure about the result.",
+                drop_builtin_system=True
+            )
+        )
     )
 
 
@@ -153,8 +165,11 @@ def build_sft_model(model_path):
 # =========================
 def build_infer_model(model_path):
     return lazyllm.TrainableModule(
-        model_path, type='vlm'
-    ).prompt(dict(system="", drop_builtin_system=True))
+        model_path,
+        type='vlm'
+    ).prompt(
+        dict(system="", drop_builtin_system=True)
+    )
 
 
 # =========================
@@ -162,16 +177,18 @@ def build_infer_model(model_path):
 # =========================
 def score_with_model(data, scorer, save_path):
     out = []
+
     for x in data:
-        prompt = f"""
-Q: {x['instruction']}
-GT: {x['output']}
-Pred: {x['prediction']}
-"""
-        r = scorer(prompt)
+        prompt = (
+            f"Q: {x['instruction']}\n"
+            f"GT: {x['output']}\n"
+            f"Pred: {x['prediction']}"
+        )
+
         try:
+            r = scorer(prompt)
             score = int(r.get("score", 0))
-        except:
+        except Exception:
             score = 0
 
         x["score"] = score
@@ -215,9 +232,8 @@ def main():
         test_data = json.load(f)
 
     eval_prompts = [
-        encode_query_with_filepaths(
-            x["instruction"], files=[x["input"]]
-        ) for x in test_data
+        encode_query_with_filepaths(x["instruction"], files=[x["input"]])
+        for x in test_data
     ]
 
     # =========================
@@ -228,14 +244,15 @@ def main():
     sft_model.evalset(eval_prompts)
     sft_model.update()
 
-    sft_output = []
-    for item, pred in zip(test_data, sft_model.eval_result):
-        sft_output.append({
+    sft_output = [
+        {
             "instruction": item["instruction"],
             "input": item["input"],
             "output": item["output"],
             "prediction": pred
-        })
+        }
+        for item, pred in zip(test_data, sft_model.eval_result)
+    ]
 
     with open(SFT_RESULT_JSON, "w") as f:
         json.dump(sft_output, f, indent=2)
@@ -251,14 +268,15 @@ def main():
     infer_model.evalset(eval_prompts)
     infer_model.eval()
 
-    infer_output = []
-    for item, pred in zip(test_data, infer_model.eval_result):
-        infer_output.append({
+    infer_output = [
+        {
             "instruction": item["instruction"],
             "input": item["input"],
             "output": item["output"],
             "prediction": pred
-        })
+        }
+        for item, pred in zip(test_data, infer_model.eval_result)
+    ]
 
     with open(INFER_RESULT_JSON, "w") as f:
         json.dump(infer_output, f, indent=2)
@@ -270,17 +288,18 @@ def main():
     # =========================
     scorer = (
         lazyllm.TrainableModule("qwen2.5-14b-instruct").deploy_method(
-    lazyllm.deploy.vllm,
-    openai_api=True
-)
-        .prompt("""
+            lazyllm.deploy.vllm,
+            openai_api=True
+        )
+        .prompt(
+            """
 Task: Accuracy Check.
-Judge if the "Prediction" logically supports and includes the "Standard Answer".
+Judge if the "Prediction" logically supports.
 1 = Correct & Consistent
 0 = Incorrect or Irrelevant
-
 Only output JSON: {"score": 0 or 1}
-""")
+"""
+        )
         .formatter(JsonFormatter())
         .start()
     )

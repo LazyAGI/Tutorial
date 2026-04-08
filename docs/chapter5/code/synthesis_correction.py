@@ -1,5 +1,3 @@
-from typing import Literal
-import json
 import lazyllm
 from lazyllm.tools import fc_register, ReactAgent
 import re
@@ -8,14 +6,14 @@ import json5
 llm = lazyllm.OnlineChatModule()
 
 
-@fc_register("tool")
+@fc_register('tool')
 def data_synthesis(content: str) -> dict:
-    '''
+    """
     Generate QA pairs based on the input content.
 
     Args:
         content (str): The content from the origianl document.
-        
+
     Returns:
         dict: a QA pair
         {
@@ -23,7 +21,7 @@ def data_synthesis(content: str) -> dict:
             answer : str,
         }
 
-    '''
+    """
     q = f"""
     Generate a QA pair based on the user's input.
     The output format must be:
@@ -46,20 +44,20 @@ def data_synthesis(content: str) -> dict:
     judge = json5.loads(json_str)
 
     print()
-    print("QA对生成工具被调用，生成结果为：")
+    print('QA对生成工具被调用，生成结果为：')
     print(judge)
     return judge
 
 
-@fc_register("tool")
+@fc_register('tool')
 def self_correction(qa_pair: dict, content: str) -> dict:
-    '''
+    """
     Check whether the QA pair is generated based on the input content.
-    
+
     Args:
         qa_pair (Dict[str, str]): A qa pair generated based on the content.
         content (str): The content from the origianl document.
-        
+
     Returns:
         dict: a QA pair
         {
@@ -67,7 +65,7 @@ def self_correction(qa_pair: dict, content: str) -> dict:
             answer : str,
         }
 
-    '''
+    """
     q = f"""
     Check whether the QA pair is generated based on the input content.
     If the QA pair is valid, output the original QA pair.
@@ -93,17 +91,15 @@ def self_correction(qa_pair: dict, content: str) -> dict:
     judge = json5.loads(json_str)
 
     print()
-    print("自我修正function被调用：")
+    print('自我修正function被调用：')
     if judge['query'] == qa_pair['query']:
-        print("QA对未被修改")
+        print('QA对未被修改')
         return qa_pair
-    else:
-        print(f"修改后的QA对：{judge}")
+    print(f'修改后的QA对：{judge}')
     return judge
 
 
-
-tools = ["data_synthesis", "self_correction"]
+tools = ['data_synthesis', 'self_correction']
 agent = ReactAgent(
     llm=llm,
     tools=tools,
@@ -113,7 +109,7 @@ agent = ReactAgent(
 # =========================
 # Prompt
 # =========================
-content = input("请输入原文本：\n")
+content = input('请输入原文本：\n')
 
 agent_prompt = f"""
 你是一个数据构建 Agent，需要完成「生成 + 自检」的数据流水线。
@@ -131,7 +127,7 @@ agent_prompt = f"""
 {content}
 """
 
-print("\n模型启动：\n")
+print('\n模型启动：\n')
 result = agent(agent_prompt)
 # print("\n最终输出：")
 # print(result)
