@@ -68,7 +68,7 @@ def generate_qa_from_pdfs(model):
 
     ppl = build_pdf2qa_pipeline(
         model=model,
-        mineru_api='http://10.119.23.139:20234',
+        mineru_api='http://10.119.23.139:20234',  # 需要填入你自己的服务地址
         image_output_folder=IMAGE_OUTPUT_FOLDER,
         chunk_key='chunk',
         image_key='image_path',
