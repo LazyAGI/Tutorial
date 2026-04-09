@@ -22,9 +22,9 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-LAZYLLM_PATH = '/path/to/your/lazyllm'
-DPO_BASE_MODEL = '/path/to/dpo/base/model'
-JUDGE_MODEL = '/path/to/judge/model'
+LAZYLLM_PATH = '/LAZYLLM'
+DPO_BASE_MODEL = '/models/qwen2.5-0.5b-instruct'
+JUDGE_MODEL = '/models/qwen2.5-14b-instruct'
 PKU_SAFERLHF_DATASET_ENDPOINT = os.environ.get(
     'PKU_SAFERLHF_DATASET_ENDPOINT', HF_ENDPOINT
 )
