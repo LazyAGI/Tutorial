@@ -440,10 +440,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model_path',
         type=str,
-        default=(
-            '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
-            'Qwen2.5-0.5B-Instruct'
-        ),
+        default='Qwen2.5-0.5B-Instruct',
         help='基座模型路径',
     )
     parser.add_argument(

@@ -42,9 +42,7 @@ TRAIN_SAMPLES = 3000
 EVAL_SAMPLES = 200
 SOURCE_LOAD_LIMIT = 4000
 
-BASE_MODEL_PATH = (
-    '/mnt/lustre/share_data/lazyllm/models/Qwen2.5-VL-3B-Instruct'
-)
+BASE_MODEL_PATH = 'Qwen2.5-VL-3B-Instruct'
 MAX_NEW_TOKENS = 128
 GEN_BATCH_SIZE = 8
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

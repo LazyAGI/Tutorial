@@ -50,10 +50,7 @@ EVAL_SAMPLES = 200
 SOURCE_LOAD_LIMIT = 4000
 TRAIN_CONTEXT_WINDOW = 8192
 
-BASE_MODEL_PATH = (
-    '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
-    'Qwen2.5-7B-Instruct'
-)
+BASE_MODEL_PATH = 'Qwen2.5-7B-Instruct'
 PPL_MODEL = 'qwen2.5-32b-instruct'
 PPL_TARGET_WORDS = '700-1100'
 
