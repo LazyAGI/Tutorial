@@ -1,8 +1,8 @@
-"""
+'''
 CMeIE 医疗信息抽取微调：数据准备、训练、推理、评测一体化。
 数据集：Aunderline/CMeIE，输出格式为单个 JSON 三元组（subject/predicate/object）。
 支持 --mode: prepare | infer | train | eval | full
-"""
+'''
 import os
 import re
 import json
@@ -38,7 +38,7 @@ PROMPT_TEMPLATE = '{instruction}\n\n输入文本：\n{input}'
 
 
 def _format_cmeie_to_sft_single(item: Dict) -> Optional[Dict]:
-    """将 CMeIE 一条样本转为 SFT 格式，output 为单个三元组 JSON。"""
+    '''将 CMeIE 一条样本转为 SFT 格式，output 为单个三元组 JSON。'''
     text = item.get('text', '').strip().replace('\n', ' ')
     raw_spo_list = item.get('spo_list', [])
     if not raw_spo_list:
@@ -81,7 +81,7 @@ def _is_valid_single(entry: Dict, max_length: int = 512) -> bool:
 
 
 def prepare_dataset():
-    """从 HuggingFace 加载 CMeIE，转为单三元组 SFT 格式，切分训练/评测并落盘。"""
+    '''从 HuggingFace 加载 CMeIE，转为单三元组 SFT 格式，切分训练/评测并落盘。'''
     os.makedirs(DATA_DIR, exist_ok=True)
     if os.path.exists(TRAIN_JSON_PATH) and os.path.exists(EVAL_JSONL_PATH):
         print('训练集与评测集已存在，跳过生成')
@@ -128,7 +128,7 @@ def prepare_dataset():
 
 
 def load_eval_samples(path: str) -> List[Dict]:
-    """加载评测样本，每条含 instruction/input/output。"""
+    '''加载评测样本，每条含 instruction/input/output。'''
     samples = []
     with open(path, 'r', encoding='utf-8') as f:
         for line in f:
@@ -141,7 +141,7 @@ def load_eval_samples(path: str) -> List[Dict]:
 
 
 def build_eval_prompts(samples: List[Dict]) -> List[str]:
-    """根据 samples 构建评测用 prompt 列表。"""
+    '''根据 samples 构建评测用 prompt 列表。'''
     return [
         PROMPT_TEMPLATE.format(
             instruction=s.get('instruction', INSTRUCTION),
@@ -152,7 +152,7 @@ def build_eval_prompts(samples: List[Dict]) -> List[str]:
 
 
 def _parse_triple(s: Optional[str]) -> Optional[Dict[str, str]]:
-    """从字符串解析出 subject/predicate/object，支持被 ``` 包裹。"""
+    '''从字符串解析出 subject/predicate/object，支持被 ``` 包裹。'''
     if not s or not str(s).strip():
         return None
     raw = str(s).strip()
@@ -181,7 +181,7 @@ def _compute_metrics_from_preds(
     samples: List[Dict],
     preds: List[str],
 ) -> Dict[str, float]:
-    """根据 samples 的 output 与 preds 计算各项指标。"""
+    '''根据 samples 的 output 与 preds 计算各项指标。'''
     n = len(samples)
     if not n or not preds or len(preds) != n:
         return {}
@@ -203,9 +203,11 @@ def _compute_metrics_from_preds(
         if gold_t is None:
             continue
         if pred_t is not None:
-            if (gold_t.get('subject') == pred_t.get('subject') and
-                    gold_t.get('predicate') == pred_t.get('predicate') and
-                    gold_t.get('object') == pred_t.get('object')):
+            if (
+                gold_t.get('subject') == pred_t.get('subject')
+                and gold_t.get('predicate') == pred_t.get('predicate')
+                and gold_t.get('object') == pred_t.get('object')
+            ):
                 exact_match += 1
                 tp += 1
             else:
@@ -247,7 +249,7 @@ def _print_metrics(label: str, m: Dict[str, float]):
 
 
 def _norm_preds(raw: Any) -> List[str]:
-    """将模型评测原始输出规范为与 samples 等长的字符串列表。"""
+    '''将模型评测原始输出规范为与 samples 等长的字符串列表。'''
     if raw is None:
         return []
     if isinstance(raw, list):
@@ -262,7 +264,7 @@ def default_cmeie_eval(
     save_dir: Optional[str],
     eval_fn=None,
 ):
-    """统一评测入口：计算 base/ckpt 指标、打印、可选落盘。"""
+    '''统一评测入口：计算 base/ckpt 指标、打印、可选落盘。'''
     if eval_fn is not None:
         eval_fn(samples, base_preds, ckpt_preds, save_dir)
         return

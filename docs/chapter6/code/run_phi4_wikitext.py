@@ -1,4 +1,4 @@
-"""
+'''
 Phi-4 风格预训练一体化脚本：数据准备、训练、评测一步到位。
 数据来源：data/wikitext_cleaned.jsonl（已清洗处理）
 数据合成：build_phi4_pt_pipeline 对 chunk 生成 QA 对
@@ -7,7 +7,7 @@ Phi-4 风格预训练一体化脚本：数据准备、训练、评测一步到�
 预训练方案：
 - 数据格式：单条为 "Question: {q}\\nAnswer: {a}"，与纯文本 PT 一致。
 - 训练目标：当前采用「全序列因果 LM」——整段 token 均算 loss。
-"""
+'''
 import os
 import json
 import torch
@@ -50,7 +50,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def _extract_qa_pairs_from_record(rec):
-    """Phi4QAGenerator 输出格式：每条含 qa_pairs 列表。"""
+    '''Phi4QAGenerator 输出格式：每条含 qa_pairs 列表。'''
     pairs = []
     for item in rec.get('qa_pairs') or []:
         if not isinstance(item, dict):

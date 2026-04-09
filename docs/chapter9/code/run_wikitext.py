@@ -1,7 +1,7 @@
-"""
+'''
 Wikitext 预训练一体化脚本：数据准备、训练、评测一步到位。
 支持 --mode: prepare | train | eval | full
-"""
+'''
 import os
 import re
 import json
