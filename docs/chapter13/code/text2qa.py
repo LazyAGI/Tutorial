@@ -56,7 +56,7 @@ def run_ppl(input_path, output_path):
             data_list.append({'text': item['vanilla']})
 
     model = lazyllm.TrainableModule(
-        'qwen2.5-14b-instruct'
+        'qwen3-14b'
     )
 
     qa_prompt = '''你现在的任务是：根据给定文本，构造一个用于监督微调（SFT）的中文问答样本。
@@ -380,10 +380,10 @@ def main():
     run_infer('qwen2.5-0.5B-instruct', test_path, infer_path)
     run_sft('qwen2.5-0.5B-instruct', train_path, test_path, sft_path)
 
-    score(infer_path, 'qwen2.5-14b-instruct', infer_score_path)
+    score(infer_path, 'qwen3-14b', infer_score_path)
     analyze(infer_score_path)
 
-    score(sft_path, 'qwen2.5-14b-instruct', sft_score_path)
+    score(sft_path, 'qwen3-14b', sft_score_path)
     analyze(sft_score_path)
 
 

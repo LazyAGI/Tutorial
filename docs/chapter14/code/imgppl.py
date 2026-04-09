@@ -283,7 +283,7 @@ def main():
     # Step 5: 打分（只启动一次）
     # =========================
     scorer = (
-        lazyllm.TrainableModule('qwen2.5-14b-instruct').deploy_method(
+        lazyllm.TrainableModule('qwen3-14b').deploy_method(
             lazyllm.deploy.vllm,
             openai_api=True
         )

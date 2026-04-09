@@ -204,7 +204,7 @@ def analyze_scores(path):
 def main():
     model_path = 'Qwen2.5-VL-32B-Instruct'
     sft_base_model = 'qwen1.5-0.5b-chat'
-    score_model = 'qwen2.5-14b-instruct'
+    score_model = 'qwen3-14b'
 
     # =========================
     # Step 0: 部署生成模型（用于 PDF → QA）

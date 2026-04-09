@@ -378,7 +378,7 @@ def main():
     # ======================
     # ppl + score 使用大模型
     large_model = lazyllm.TrainableModule(
-        'qwen2.5-14b-instruct'
+        'qwen3-14b'
     )
     large_model.start()
 
@@ -406,7 +406,7 @@ def main():
     # ======================
 
     large_model = lazyllm.TrainableModule(
-        'qwen2.5-14b-instruct'
+        'qwen3-14b'
     )
     large_model.start()
     score(infer_path, large_model, infer_score_path)
