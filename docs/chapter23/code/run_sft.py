@@ -12,9 +12,9 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-SFT_BASE_MODEL = '/models/qwen2.5-0.5b-instruct'
+SFT_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
 LAZYLLM_PATH = '/LAZYLLM'
-JUDGE_MODEL = '/models/qwen2.5-14b-instruct'
+JUDGE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
 
 
 TRAIN_DATASET_REPO = 'glaiveai/glaive-function-calling-v2'

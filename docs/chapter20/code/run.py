@@ -18,8 +18,8 @@ os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
 # 路径配置 - 如果路径不存在会提示用户配置
 LAZYLLM_PATH = '/LAZYLLM'
-PIPELINE_MODEL = '/models/Qwen3-30B-A3B-Instruct-2507'
-SFT_MODEL = '/models/qwen2.5-0.5b-instruct'
+PIPELINE_MODEL = 'Qwen/Qwen3-30B-A3B-Instruct-2507'
+SFT_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
 
 
 TINY_CODES_DATASET_ENDPOINT = os.environ.get(

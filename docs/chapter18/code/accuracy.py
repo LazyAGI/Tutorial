@@ -5,7 +5,36 @@ Calculate accuracy of model responses.
 Extract answers from boxed{} format and compare with ground truth.
 '''
 import json
+import os
 import re
+
+HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
+os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
+
+from huggingface_hub import hf_hub_download
+
+
+DATASET_REPO_ID = os.environ.get(
+    'CH18_DATASET_REPO_ID',
+    'rirqing/18chapter_data',
+)
+PREDICTIONS_FILENAME = os.environ.get(
+    'CH18_PREDICTIONS_FILENAME',
+    'problem_codesft.json',
+)
+GROUND_TRUTH_FILENAME = os.environ.get(
+    'CH18_GROUND_TRUTH_FILENAME',
+    'gsm8k_test_converted.jsonl',
+)
+
+
+def download_dataset_file(filename):
+    '''Download a file from the chapter 18 Hugging Face dataset repo.'''
+    return hf_hub_download(
+        repo_id=DATASET_REPO_ID,
+        filename=filename,
+        repo_type='dataset',
+    )
 
 
 def extract_boxed_answer(response):
@@ -139,14 +168,8 @@ def save_results(accuracy_data, output_file):
 
 def main():
     '''Main function.'''
-    predictions_file = (
-        '/home/mnt/huangchongjin/LLM/GRPO/cold_sft/sft_dataset/'
-        'problem_codesft.json'
-    )
-    ground_truth_file = (
-        '/home/mnt/huangchongjin/LLM/GRPO/grpo_dataset/'
-        'gsm8k_test_converted.jsonl'
-    )
+    predictions_file = download_dataset_file(PREDICTIONS_FILENAME)
+    ground_truth_file = download_dataset_file(GROUND_TRUTH_FILENAME)
     output_file = 'accuracy_codesft.json'
 
     print('=' * 80)

@@ -16,9 +16,9 @@ HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
 LAZYLLM_PATH = '/LAZYLLM'
-PIPELINE_MODEL = '/models/qwen2.5-14b-instruct'
-DPO_BASE_MODEL = '/models/qwen2.5-0.5b-instruct'
-JUDGE_MODEL = '/models/qwen2.5-14b-instruct'
+PIPELINE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
+DPO_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
+JUDGE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
 PKU_SAFERLHF_DATASET_ENDPOINT = os.environ.get(
     'PKU_SAFERLHF_DATASET_ENDPOINT', HF_ENDPOINT
 )

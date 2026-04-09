@@ -10,8 +10,8 @@ from datetime import datetime
 from pathlib import Path
 
 LAZYLLM_PATH = '/LAZYLLM'
-SFT_BASE_MODEL = '/models/qwen2.5-0.5b-instruct'
-JUDGE_MODEL = '/models/Qwen3-30B-A3B-Instruct-2507'
+SFT_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
+JUDGE_MODEL = 'Qwen/Qwen3-30B-A3B-Instruct-2507'
 JUDGE_WORKERS = int(os.environ.get('JUDGE_WORKERS', '4'))
 JUDGE_MAX_MODEL_LEN = int(os.environ.get('JUDGE_MAX_MODEL_LEN', '4096'))
 JUDGE_GPU_MEMORY_UTILIZATION = float(

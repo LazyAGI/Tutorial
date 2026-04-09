@@ -13,13 +13,13 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-SFT_BASE_MODEL = '/models/qwen2.5-0.5b-instruct'
+SFT_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
 LAZYLLM_PATH = '/LAZYLLM'
-PIPELINE_MODEL = '/models/Qwen3-30B-A3B-Instruct-2507'
-JUDGE_MODEL = '/models/qwen2.5-14b-instruct'
+PIPELINE_MODEL = 'Qwen/Qwen3-30B-A3B-Instruct-2507'
+JUDGE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
 
 
-TRAIN_DATASET_REPO = 'WizardLM/WizardLM_evol_instruct_70k'
+TRAIN_DATASET_REPO = 'WizardLMTeam/WizardLM_evol_instruct_70k'
 TRAIN_DATASET_SPLIT = os.environ.get('TOOLUSE_TRAIN_DATASET_SPLIT', 'train')
 TRAIN_DATASET_ENDPOINT = os.environ.get(
     'TOOLUSE_TRAIN_DATASET_ENDPOINT', HF_ENDPOINT
