@@ -1,11 +1,11 @@
-"""
+'''
 Flickr8k 多模态预训练一体化脚本：数据准备、训练、评测一步到位。
 数据集：Flickr8k（HuggingFace: clip-benchmark/wds_flickr8k）
 模型：Qwen2.5-VL-3B
 Pipeline：build_mm_pt_pipeline（图像完整性/分辨率过滤、去重）
 评测：对齐能力（R@K）+ 生成能力（CIDEr）+ 语义一致性（CLIP Score）
 支持 --mode: prepare | train | eval | full
-"""
+'''
 import os
 import json
 import math
@@ -42,9 +42,7 @@ TRAIN_SAMPLES = 3000
 EVAL_SAMPLES = 200
 SOURCE_LOAD_LIMIT = 4000
 
-BASE_MODEL_PATH = (
-    '/mnt/lustre/share_data/lazyllm/models/Qwen2.5-VL-3B-Instruct'
-)
+BASE_MODEL_PATH = 'Qwen2.5-VL-3B-Instruct'
 MAX_NEW_TOKENS = 128
 GEN_BATCH_SIZE = 8
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -55,7 +53,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 # ──────────────────────────────────────────────
 
 def _load_flickr_raw(limit):
-    """从 HuggingFace 加载 Flickr8k，保存原始记录到 RAW_JSONL_PATH，返回记录列表。"""
+    '''从 HuggingFace 加载 Flickr8k，保存原始记录到 RAW_JSONL_PATH，返回记录列表。'''
     if os.path.exists(RAW_JSONL_PATH):
         print(f'原始数据已存在，直接加载: {RAW_JSONL_PATH}')
         records = []
@@ -114,7 +112,7 @@ def _load_flickr_raw(limit):
 
 
 def _run_mm_pipeline(raw_records):
-    """运行 build_mm_pt_pipeline 并保存到 CLEANED_JSONL_PATH。"""
+    '''运行 build_mm_pt_pipeline 并保存到 CLEANED_JSONL_PATH。'''
     # print(f'\n正在启动基座 VLM（vllm）用于图文相关性过滤...')
     # vlm = TrainableModule(BASE_MODEL_PATH).deploy_method((deploy.vllm, {
     #     'tensor_parallel_size': 1,
@@ -355,8 +353,8 @@ def _generate_caption(model, processor, image_path) -> str:
     return pred
 
 
-def _get_image_embedding(model, processor, image_path) -> torch.Tensor:
-    """用 Qwen2.5-VL 视觉编码器提取图像均值特征作为 CLIP Score 代理。"""
+def _get_image_embedding(model, processor, image_path) -> 'torch.Tensor':
+    '''用 Qwen2.5-VL 视觉编码器提取图像均值特征作为 CLIP Score 代理。'''
     path = _norm_image_path(image_path)
     image = Image.open(path).convert('RGB')
     messages = [{'role': 'user', 'content': [
@@ -380,7 +378,7 @@ def _get_image_embedding(model, processor, image_path) -> torch.Tensor:
     return emb / (emb.norm() + 1e-8)
 
 
-def _get_text_embedding(model, processor, text: str) -> torch.Tensor:
+def _get_text_embedding(model, processor, text: str) -> 'torch.Tensor':
     inputs = processor(text=[text], return_tensors='pt').to(DEVICE)
     with torch.no_grad():
         outputs = model(**inputs, output_hidden_states=True)
@@ -389,7 +387,9 @@ def _get_text_embedding(model, processor, text: str) -> torch.Tensor:
     return emb / (emb.norm() + 1e-8)
 
 
-def _clip_score(img_emb: torch.Tensor, txt_emb: torch.Tensor) -> float:
+def _clip_score(
+    img_emb: 'torch.Tensor', txt_emb: 'torch.Tensor'
+) -> float:
     return max(0.0, torch.dot(img_emb.float(), txt_emb.float()).item()) * 2.5
 
 
@@ -397,8 +397,10 @@ def _tokenize_caption(cap: str) -> List[str]:
     return cap.lower().split()
 
 
-def _compute_cider(refs_list: List[List[str]], preds: List[str]) -> float:
-    """简化版 CIDEr-D（n=1..4 TF-IDF 加权 n-gram cosine，不做高斯平滑）。"""
+def _compute_cider(  # noqa: C901
+    refs_list: List[List[str]], preds: List[str]
+) -> float:
+    '''简化版 CIDEr-D（n=1..4 TF-IDF 加权 n-gram cosine，不做高斯平滑）。'''
     n_max = 4
     doc_freq: Dict[Tuple, int] = defaultdict(int)
     all_ref_ngrams = []
@@ -449,11 +451,11 @@ def _compute_cider(refs_list: List[List[str]], preds: List[str]) -> float:
 
 
 def _recall_at_k(
-    img_embs: List[torch.Tensor],
-    txt_embs: List[torch.Tensor],
+    img_embs: List['torch.Tensor'],
+    txt_embs: List['torch.Tensor'],
     k_list: Tuple = (1, 5, 10),
 ) -> Dict[str, float]:
-    """Image-to-Text R@K：看 ground-truth 是否进入 top-K。"""
+    '''Image-to-Text R@K：看 ground-truth 是否进入 top-K。'''
     n = len(img_embs)
     img_mat = torch.stack(img_embs).float()
     txt_mat = torch.stack(txt_embs).float()

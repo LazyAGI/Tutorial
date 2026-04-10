@@ -1,13 +1,14 @@
-"""
+'''
 Phi-4 风格预训练一体化脚本：数据准备、训练、评测一步到位。
-数据来源：data/wikitext_cleaned.jsonl（已清洗处理）
+数据来源：自动从 HuggingFace 下载并缓存至
+          data/wikitext_cleaned.jsonl；若文件已存在则跳过下载。
 数据合成：build_phi4_pt_pipeline 对 chunk 生成 QA 对
 支持 --mode: prepare | train | eval | full
 
 预训练方案：
 - 数据格式：单条为 "Question: {q}\\nAnswer: {a}"，与纯文本 PT 一致。
 - 训练目标：当前采用「全序列因果 LM」——整段 token 均算 loss。
-"""
+'''
 import os
 import json
 import torch
@@ -16,6 +17,7 @@ from datetime import datetime
 from typing import List, Dict, Tuple
 
 from tqdm import tqdm
+from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import lazyllm
 from lazyllm import finetune, launchers, deploy, TrainableModule
@@ -36,10 +38,7 @@ EVAL_SAMPLES = 200
 NUM_QA = 3
 SOURCE_LOAD_LIMIT = 2000
 
-BASE_MODEL_PATH = (
-    '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
-    'Qwen2.5-0.5B-Instruct'
-)
+BASE_MODEL_PATH = 'Qwen2.5-0.5B-Instruct'
 MAX_EVAL_SAMPLES = None
 MAX_NEW_TOKENS = 256
 GEN_BATCH_SIZE = 32
@@ -50,7 +49,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def _extract_qa_pairs_from_record(rec):
-    """Phi4QAGenerator 输出格式：每条含 qa_pairs 列表。"""
+    '''Phi4QAGenerator 输出格式：每条含 qa_pairs 列表。'''
     pairs = []
     for item in rec.get('qa_pairs') or []:
         if not isinstance(item, dict):
@@ -62,9 +61,22 @@ def _extract_qa_pairs_from_record(rec):
     return pairs
 
 
+def _download_source_jsonl():
+    '''从 HuggingFace 下载 chenzhe0000/wikitext_cleaned 并保存为 JSONL。'''
+    if os.path.exists(SOURCE_JSONL_PATH):
+        print(f'源数据已存在，跳过下载: {SOURCE_JSONL_PATH}')
+        return
+    print('正在从 HuggingFace 下载 chenzhe0000/wikitext_cleaned ...')
+    ds = load_dataset('chenzhe0000/wikitext_cleaned', split='train')
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(SOURCE_JSONL_PATH, 'w', encoding='utf-8') as f:
+        for row in ds:
+            f.write(json.dumps(row, ensure_ascii=False) + '\n')
+    print(f'下载完成，已保存至: {SOURCE_JSONL_PATH}（共 {len(ds)} 条）')
+
+
 def _load_source_chunks(limit=None):
-    if not os.path.exists(SOURCE_JSONL_PATH):
-        raise FileNotFoundError(f'源数据不存在: {SOURCE_JSONL_PATH}')
+    _download_source_jsonl()
     contexts = []
     with open(SOURCE_JSONL_PATH, 'r', encoding='utf-8') as f:
         for line in f:
