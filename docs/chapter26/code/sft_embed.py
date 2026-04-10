@@ -233,6 +233,8 @@ def parse_args() -> argparse.Namespace:
                         help='Number of GPUs for training')
     parser.add_argument('--build_dataset', action='store_true',
                         help='Force rebuild the dataset')
+    parser.add_argument('--one_click', action='store_true',
+                        help='One-click run: rebuild dataset then continue')
     return parser.parse_args()
 
 
@@ -247,7 +249,11 @@ def main(args: argparse.Namespace) -> None:
             test_size=args.test_size,
             seed=args.seed
         )
-        return
+        # Keep backward compatibility:
+        # --build_dataset only => rebuild then exit;
+        # --build_dataset --one_click => rebuild then continue running.
+        if not args.one_click:
+            return
     else:
         work_path = os.getcwd()
         train_path = os.path.join(work_path, 'dataset', 'train.json')
@@ -313,6 +319,9 @@ Usage Examples:
 
     # Build dataset
     python sft_embed.py --build_dataset --neg_num 10 --test_size 0.1
+
+    # One-click run (rebuild + train/eval)
+    python sft_embed.py --build_dataset --one_click --train_flag --ngpus 1
 
     # Basic evaluation
     python sft_embed.py --embed_path your_embed_path

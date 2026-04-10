@@ -280,6 +280,10 @@ if __name__ == '__main__':
         '--build_dataset', action='store_true',
         help='Force rebuild dataset ignoring existing files'
     )
+    parser.add_argument(
+        '--one_click', action='store_true',
+        help='One-click run: rebuild dataset then continue full pipeline'
+    )
     args = parser.parse_args()
 
     # Data path handling
@@ -290,7 +294,10 @@ if __name__ == '__main__':
     eval_data_path = args.eval_data_path or eval_data_path
 
     # Execute main pipeline
-    if not args.build_dataset:
+    # Keep backward compatibility:
+    # --build_dataset only => rebuild then exit;
+    # --build_dataset --one_click => rebuild then continue running.
+    if (not args.build_dataset) or args.one_click:
         main(args.model_path, args.mode, eval_data_path, train_data_path,
              args.eval_res_path)
 
