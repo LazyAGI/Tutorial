@@ -9,18 +9,19 @@ try:
 except ImportError:
     np = None
 
-# 确保 LazyLLM 在路径中
-_LAZYLLM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../LazyLLM'))
-if _LAZYLLM_ROOT not in sys.path:
-    sys.path.insert(0, _LAZYLLM_ROOT)
-
 import lazyllm
-from lazyllm import LOG, finetune, launchers
-from lazyllm import pipeline
+from lazyllm import LOG, finetune, launchers, pipeline
 from lazyllm.tools.data.pipelines.domain_finetune_pipelines import (
     build_domain_finetune_pipeline,
     build_train_test_split_pipeline,
 )
+
+# 确保 LazyLLM 在路径中
+_LAZYLLM_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../LazyLLM')
+)
+if _LAZYLLM_ROOT not in sys.path:
+    sys.path.insert(0, _LAZYLLM_ROOT)
 
 try:
     from datasets import load_dataset
@@ -33,12 +34,12 @@ except ImportError:
     def tqdm(iterable, **kwargs):
         return iterable
 
-
-
 HUATUO_DATASET_NAME = 'FreedomIntelligence/HuatuoGPT-sft-data-v1'
 
 MEDICAL_INSTRUCTION_ZH = (
-    '你是一位专业的医疗信息助手。请注意：提供的信息仅供参考，不构成医疗建议、诊断或治疗。'
+    '你是一位专业的医疗信息助手。'
+    '请注意：提供的信息仅供参考，'
+    '不构成医疗建议、诊断或治疗。'
     '如有医疗问题，请咨询专业医生。'
 )
 
@@ -48,7 +49,6 @@ MEDICAL_FILTERS = [
 ]
 
 OUTPUT_KEY = 'formatted_text'
-
 
 
 def load_huatuo(
@@ -72,7 +72,8 @@ def load_huatuo(
     raw_n = len(ds)
     if max_samples and raw_n > max_samples:
         ds = ds.select(range(max_samples))
-        LOG.info(f'截取前 {max_samples} 条原始对话（原始 {raw_n} 条）')
+        LOG.info(f'截取前 {max_samples} 条原始对话'
+                 f'（原始 {raw_n} 条）')
 
     items = [dict(row) for row in ds]
     LOG.info(f'加载完成：{len(items)} 条原始对话记录')
@@ -142,7 +143,10 @@ def build_medical_dataset(
                 for item in items:
                     record = {
                         'split': split_name,
-                        **({OUTPUT_KEY: item[OUTPUT_KEY]} if OUTPUT_KEY in item else item),
+                        **(
+                            {OUTPUT_KEY: item[OUTPUT_KEY]}
+                            if OUTPUT_KEY in item else item
+                        ),
                     }
                     f.write(json.dumps(record, ensure_ascii=False) + '\n')
         LOG.info(f'全量结果已保存: {output_file}')
@@ -150,25 +154,29 @@ def build_medical_dataset(
 
     with pipeline() as ppl:
         ppl.process = core_pipeline
-        ppl.split   = split_pipeline
-        ppl.save    = _save
+        ppl.split = split_pipeline
+        ppl.save = _save
 
     result = ppl(raw_items)
 
     train_cnt = len(result.get('train', []))
-    val_cnt   = len(result.get('validation', []))
-    test_cnt  = len(result.get('test', []))
-    total     = train_cnt + val_cnt + test_cnt
+    val_cnt = len(result.get('validation', []))
+    test_cnt = len(result.get('test', []))
+    total = train_cnt + val_cnt + test_cnt
 
-    print(f'\n  过滤后保留 : {total} 条（过滤/去重 {len(raw_items) - total} 条）')
-    print(f'  划分       : train={train_cnt}, validation={val_cnt}, test={test_cnt}')
+    print(f'\n  过滤后保留 : {total} 条'
+          f'（过滤/去重 {len(raw_items) - total} 条）')
+    print(f'  划分       : train={train_cnt}, '
+          f'validation={val_cnt}, test={test_cnt}')
 
     train_file = os.path.join(output_dir, 'medical_train.jsonl')
     with open(train_file, 'w', encoding='utf-8') as f:
         for item in result.get('train', []):
             ft = item.get(OUTPUT_KEY)
             if isinstance(ft, dict):
-                record = {k: ft.get(k, '') for k in ('instruction', 'input', 'output')}
+                record = {k: ft.get(k, '') for k in (
+                    'instruction', 'input', 'output'
+                )}
             elif isinstance(ft, str):
                 record = {'text': ft}
             else:
@@ -181,7 +189,9 @@ def build_medical_dataset(
         for item in result.get('test', []):
             ft = item.get(OUTPUT_KEY)
             if isinstance(ft, dict):
-                record = {k: ft.get(k, '') for k in ('instruction', 'input', 'output')}
+                record = {k: ft.get(k, '') for k in (
+                    'instruction', 'input', 'output'
+                )}
             elif isinstance(ft, str):
                 record = {'text': ft}
             else:
@@ -201,11 +211,13 @@ def build_medical_dataset(
     print('---\n')
 
     return {
-        'train_file'  : train_file,
-        'test_file'   : test_file,
-        'output_file' : output_file,
-        'output_dir'  : output_dir,
-        'counts'      : {'train': train_cnt, 'validation': val_cnt, 'test': test_cnt},
+        'train_file': train_file,
+        'test_file': test_file,
+        'output_file': output_file,
+        'output_dir': output_dir,
+        'counts': {
+            'train': train_cnt, 'validation': val_cnt, 'test': test_cnt
+        },
     }
 
 
@@ -230,7 +242,9 @@ def load_test_data(test_file: str) -> List[Dict[str, Any]]:
             try:
                 obj = json.loads(line)
                 if 'text' in obj:
-                    items.append({'instruction': '', 'input': '', 'output': obj['text']})
+                    items.append({
+                        'instruction': '', 'input': '', 'output': obj['text']
+                    })
                 else:
                     items.append({
                         'instruction': obj.get('instruction', ''),
@@ -258,7 +272,11 @@ def build_eval_data_from_test(
         inp = item.get('input', '')
         prompt = instr + '\n\n' + inp if instr and inp else (instr or inp)
         eval_data.append(prompt)
-        eval_set.append({'instruction': instr, 'input': inp, 'answers': item.get('output', '')})
+        eval_set.append({
+            'instruction': instr,
+            'input': inp,
+            'answers': item.get('output', '')
+        })
     return eval_data, eval_set
 
 
@@ -275,8 +293,13 @@ def calculate_score(
     summary_path: Optional[str] = None,
 ) -> Tuple[Dict[str, Any], str]:
     assert results, 'results 为空'
-    infer_set = [_normalize_for_embed(r.get('predicted', '') or '') for r in results]
-    eval_set = [{'answers': _normalize_for_embed(r.get('reference', '') or '')} for r in results]
+    infer_set = [
+        _normalize_for_embed(r.get('predicted', '') or '') for r in results
+    ]
+    eval_set = [
+        {'answers': _normalize_for_embed(r.get('reference', '') or '')}
+        for r in results
+    ]
     n = len(eval_set)
     embed_texts = []
     for i in range(n):
@@ -320,10 +343,13 @@ def calculate_score(
     if summary_path:
         os.makedirs(os.path.dirname(summary_path) or '.', exist_ok=True)
         with open(summary_path, 'a', encoding='utf-8') as f:
-            json.dump({'cosine_score': [cosine_ratio, round(cosine_ratio, 4) * 100]}, f, ensure_ascii=False)
+            json.dump({
+                'cosine_score': [cosine_ratio, round(cosine_ratio, 4) * 100]
+            }, f, ensure_ascii=False)
             f.write('\n')
 
-    score_str = f'Cosine Score: {accu_cosine}/{total}, {round(cosine_ratio, 4) * 100}%\n'
+    score_str = (f'Cosine Score: {accu_cosine}/{total}, '
+                 f'{round(cosine_ratio, 4) * 100}%\n')
     return metrics, score_str
 
 
@@ -333,7 +359,9 @@ def _pred_to_str(x: Any) -> str:
     if isinstance(x, str):
         return x.strip()
     if isinstance(x, dict):
-        return (x.get('content') or x.get('text') or x.get('output') or '').strip()
+        return (
+            x.get('content') or x.get('text') or x.get('output') or ''
+        ).strip()
     return str(x).strip()
 
 
@@ -366,17 +394,26 @@ def evaluate_llm_effect(
     print(f'\n开始效果测试（测试集 {n_use} 条）')
     print(f'  基座模型: {base_model}')
     if finetuned_model:
-        print(f'  微调模型: {finetuned_model}' if isinstance(finetuned_model, str) else '  微调模型: 已传入实例')
+        print(f'  微调模型: {finetuned_model}' if isinstance(
+            finetuned_model, str) else '  微调模型: 已传入实例')
 
     print('\n>>> 微调前：基座模型推理...')
     infer_before = run_model_eval(base_model, eval_data)
     results_before = [
-        {'predicted': infer_before[i] if i < len(infer_before) else '', 'reference': eval_set[i]['answers'], **eval_set[i]}
+        {
+            'predicted': infer_before[i] if i < len(infer_before) else '',
+            'reference': eval_set[i]['answers'],
+            **eval_set[i]
+        }
         for i in range(n_use)
     ]
 
-    detail_before = os.path.join(output_dir, 'medical_eval_detail_before.json') if output_dir else None
-    summary_path = os.path.join(output_dir, 'medical_eval_scores.jsonl') if output_dir else None
+    detail_before = os.path.join(
+        output_dir, 'medical_eval_detail_before.json'
+    ) if output_dir else None
+    summary_path = os.path.join(
+        output_dir, 'medical_eval_scores.jsonl'
+    ) if output_dir else None
     metrics_before, score_str_before = calculate_score(
         results_before, embedding_model=embedding_model,
         detail_path=detail_before, summary_path=summary_path,
@@ -387,7 +424,9 @@ def evaluate_llm_effect(
     score_str_after = ''
     if finetuned_model:
         print('\n>>> 微调后：微调模型推理...')
-        eval_result_pre = getattr(finetuned_model, 'eval_result', None) if not isinstance(finetuned_model, str) else None
+        eval_result_pre = getattr(
+            finetuned_model, 'eval_result', None
+        ) if not isinstance(finetuned_model, str) else None
         if eval_result_pre is not None and len(eval_result_pre) == n_use:
             infer_after = eval_result_pre
         elif isinstance(finetuned_model, str):
@@ -398,10 +437,18 @@ def evaluate_llm_effect(
             infer_after = finetuned_model.eval_result or []
         infer_after_str = [_pred_to_str(x) for x in infer_after]
         results_after = [
-            {'predicted': infer_after_str[i] if i < len(infer_after_str) else '', 'reference': eval_set[i]['answers'], **eval_set[i]}
+            {
+                'predicted': (
+                    infer_after_str[i] if i < len(infer_after_str) else ''
+                ),
+                'reference': eval_set[i]['answers'],
+                **eval_set[i]
+            }
             for i in range(n_use)
         ]
-        detail_after = os.path.join(output_dir, 'medical_eval_detail_after.json') if output_dir else None
+        detail_after = os.path.join(
+            output_dir, 'medical_eval_detail_after.json'
+        ) if output_dir else None
         metrics_after, score_str_after = calculate_score(
             results_after, embedding_model=embedding_model,
             detail_path=detail_after, summary_path=summary_path,
@@ -418,13 +465,17 @@ def evaluate_llm_effect(
         print(score_str_after)
     print('=' * 60 + '\n')
 
-    out = {'metrics_before': metrics_before, 'metrics_after': metrics_after, 'n_eval': n_use}
+    out = {
+        'metrics_before': metrics_before,
+        'metrics_after': metrics_after,
+        'n_eval': n_use
+    }
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-        with open(os.path.join(output_dir, 'medical_eval_summary.json'), 'w', encoding='utf-8') as f:
+        summary_file = os.path.join(output_dir, 'medical_eval_summary.json')
+        with open(summary_file, 'w', encoding='utf-8') as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
     return out
-
 
 
 def run_finetune(
@@ -445,7 +496,10 @@ def run_finetune(
     print(f'  基座模型: {base_model}')
     print(f'  训练数据: {train_data_path}')
     print(f'  输出目录: {output_dir}')
-    print(f'  num_epochs={num_epochs}, lr={learning_rate}, batch={per_device_batch_size}, grad_accum={gradient_accumulation_steps}, cutoff_len={cutoff_len}, warmup_ratio={warmup_ratio}')
+    print(f'  num_epochs={num_epochs}, lr={learning_rate}, '
+          f'batch={per_device_batch_size}, '
+          f'grad_accum={gradient_accumulation_steps}, '
+          f'cutoff_len={cutoff_len}, warmup_ratio={warmup_ratio}')
     if eval_data:
         print(f'  evalset: {len(eval_data)} 条')
     print(f'{"=" * 60}\n')
@@ -472,7 +526,6 @@ def run_finetune(
     return model
 
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description='HuatuoGPT 医疗领域微调 Pipeline（LazyLLM）',
@@ -481,27 +534,39 @@ def parse_args() -> argparse.Namespace:
 示例:
   python medical_domain_ft_ppl.py --build_dataset --max_samples 500   # 试跑
   python medical_domain_ft_ppl.py --build_dataset                   # 全量
-  python medical_domain_ft_ppl.py --build_dataset --train_flag      # 构建+微调
-  python medical_domain_ft_ppl.py --eval_test --max_eval_samples 50 # 效果测试
+  python medical_domain_ft_ppl.py --build_dataset --train_flag      #
+    构建+微调
+  python medical_domain_ft_ppl.py --eval_test --max_eval_samples 50 #
+    效果测试
         """,
     )
 
     data = parser.add_argument_group('数据参数')
-    data.add_argument('--build_dataset', action='store_true', help='构建数据集')
-    data.add_argument('--dataset_name', type=str, default=HUATUO_DATASET_NAME, help='HuggingFace 数据集名称')
+    data.add_argument('--build_dataset', action='store_true',
+                      help='构建数据集')
+    data.add_argument('--dataset_name', type=str,
+                      default=HUATUO_DATASET_NAME,
+                      help='HuggingFace 数据集名称')
     data.add_argument('--split', type=str, default='train')
-    data.add_argument('--max_samples', type=int, default=None, help='最多加载条数，None=全量')
-    data.add_argument('--output_dir', type=str, default='/home/mnt/zhangkejun/work/dataset/huatuo_ft')
+    data.add_argument('--max_samples', type=int, default=None,
+                      help='最多加载条数，None=全量')
+    data.add_argument('--output_dir', type=str,
+                      default='./dataset/huatuo_ft')
 
     ppl = parser.add_argument_group('Pipeline 参数')
-    ppl.add_argument('--output_format', type=str, default='alpaca', choices=['alpaca', 'sharegpt', 'chatml', 'raw'])
+    ppl.add_argument('--output_format', type=str, default='alpaca',
+                     choices=['alpaca', 'sharegpt', 'chatml', 'raw'])
     ppl.add_argument('--train_ratio', type=float, default=0.8)
     ppl.add_argument('--validation_ratio', type=float, default=0.1)
     ppl.add_argument('--test_ratio', type=float, default=0.1)
 
     model = parser.add_argument_group('模型参数')
-    model.add_argument('--base_model', type=str, default='/mnt/lustre/share_data/lazyllm/models/qwen2.5-14b-instruct')
-    model.add_argument('--train_flag', action='store_true', help='执行微调')
+    model.add_argument(
+        '--base_model', type=str,
+        default='Qwen/Qwen2.5-14B-Instruct'
+    )
+    model.add_argument('--train_flag', action='store_true',
+                       help='执行微调')
 
     eval_group = parser.add_argument_group('效果测试参数')
     eval_group.add_argument('--eval_test', action='store_true')
@@ -522,7 +587,8 @@ def parse_args() -> argparse.Namespace:
 
 def main(args: argparse.Namespace) -> None:
     print(f'\n{"=" * 80}')
-    print(' ' * 10 + 'HuatuoGPT-sft-data-v1  医疗领域微调 Pipeline（LazyLLM）')
+    print(' ' * 10 + 'HuatuoGPT-sft-data-v1  '
+          '医疗领域微调 Pipeline（LazyLLM）')
     print(f'{"=" * 80}\n')
     llm = lazyllm.TrainableModule(args.base_model)
     train_file = os.path.join(args.output_dir, 'medical_train.jsonl')
@@ -535,7 +601,8 @@ def main(args: argparse.Namespace) -> None:
             split=args.split,
             max_samples=args.max_samples,
         )
-        print('\n>>> 步骤 2：Pipeline 处理（归一化 → 过滤 → 去重 → 格式化 → 划分）')
+        print('\n>>> 步骤 2：Pipeline 处理'
+              '（归一化 → 过滤 → 去重 → 格式化 → 划分）')
         paths = build_medical_dataset(
             raw_items=raw_items,
             output_format=args.output_format,
@@ -548,17 +615,20 @@ def main(args: argparse.Namespace) -> None:
         train_file = paths['train_file']
         test_file = paths.get('test_file', test_file)
         counts = paths['counts']
-        print(f'数据集构建完成！train={counts["train"]}, validation={counts["validation"]}, test={counts["test"]}')
+        print(f'数据集构建完成！train={counts["train"]}, '
+              f'validation={counts["validation"]}, test={counts["test"]}')
 
     finetuned_model = None
     if args.train_flag:
         if not os.path.exists(train_file):
-            print('\n错误：训练数据不存在，请先运行 --build_dataset')
+            print('\n错误：训练数据不存在，'
+                  '请先运行 --build_dataset')
             return
         eval_data = None
         if args.eval_test and os.path.isfile(test_file):
             eval_data, _ = build_eval_data_from_test(
-                test_file, args.max_eval_samples, default_instruction=MEDICAL_INSTRUCTION_ZH
+                test_file, args.max_eval_samples,
+                default_instruction=MEDICAL_INSTRUCTION_ZH
             )
         print('\n>>> 步骤 3：执行 LLM 微调')
         finetuned_model = run_finetune(
@@ -577,7 +647,8 @@ def main(args: argparse.Namespace) -> None:
 
     if args.eval_test:
         if not os.path.isfile(test_file):
-            print(f'\n错误：测试集不存在，请先运行 --build_dataset 生成 {test_file}')
+            print(f'\n错误：测试集不存在，'
+                  f'请先运行 --build_dataset 生成 {test_file}')
             return
         finetuned_for_eval = finetuned_model
         if finetuned_for_eval is None and args.finetuned_model_path:
@@ -586,7 +657,8 @@ def main(args: argparse.Namespace) -> None:
             p = os.path.join(args.output_dir, 'finetuned_model')
             if os.path.exists(p):
                 finetuned_for_eval = p
-        print('\n>>> 效果测试：微调前 vs 微调后（Cosine 语义相似度）')
+        print('\n>>> 效果测试：微调前 vs 微调后'
+              '（Cosine 语义相似度）')
         evaluate_llm_effect(
             test_file=test_file,
             base_model=args.base_model,
@@ -597,8 +669,10 @@ def main(args: argparse.Namespace) -> None:
         )
 
     if not args.build_dataset and not args.train_flag and not args.eval_test:
-        print('请指定 --build_dataset / --train_flag / --eval_test 至少其一')
-        print('示例：python medical_domain_ft_ppl.py --build_dataset --max_samples 500')
+        print('请指定 --build_dataset / --train_flag '
+              '/ --eval_test 至少其一')
+        print('示例：python medical_domain_ft_ppl.py '
+              '--build_dataset --max_samples 500')
 
 
 if __name__ == '__main__':

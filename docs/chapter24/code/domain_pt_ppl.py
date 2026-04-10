@@ -1,3 +1,11 @@
+from lazyllm.tools.data.prompts.domain_finetune import DOMAIN_PRESETS
+from lazyllm.tools.data.pipelines.domain_pretrain_pipelines import (
+    DOMAIN_PRETRAIN_FEATURES,
+    build_text_pt_plus_domain_pretrain_pipeline,
+)
+from lazyllm import pipeline
+from lazyllm import LOG, finetune, launchers
+import lazyllm
 import os
 import re
 import sys
@@ -7,19 +15,13 @@ import random
 from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple
 
-# 确保 LazyLLM 在路径中
-_LAZYLLM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../LazyLLM'))
+# Ensure LazyLLM is in the path
+_LAZYLLM_ROOT = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '../../LazyLLM'
+))
 if _LAZYLLM_ROOT not in sys.path:
     sys.path.insert(0, _LAZYLLM_ROOT)
 
-import lazyllm
-from lazyllm import LOG, finetune, launchers
-from lazyllm import pipeline
-from lazyllm.tools.data.pipelines.domain_pretrain_pipelines import (
-    DOMAIN_PRETRAIN_FEATURES,
-    build_text_pt_plus_domain_pretrain_pipeline,
-)
-from lazyllm.tools.data.prompts.domain_finetune import DOMAIN_PRESETS
 
 try:
     from datasets import load_dataset
@@ -32,25 +34,22 @@ except ImportError:
     def tqdm(iterable, **kwargs):
         return iterable
 
-
 FINANCE_DATASET_NAME = 'ashraq/financial-news-articles'
-FINANCE_CONTENT_KEY = 'content'  
+FINANCE_CONTENT_KEY = 'content'
 
 FINANCE_KEYWORDS = [
 
     'stock', 'stocks', 'equity', 'equities', 'bond', 'bonds', 'fund', 'funds',
-    'etf', 'derivative', 'derivatives', 'futures', 'options', 'swap',
+    'et', 'derivative', 'derivatives', 'futures', 'options', 'swap',
     'share', 'shares', 'index', 'indices', 'benchmark',
 
     'earnings', 'revenue', 'profit', 'loss', 'dividend', 'cash flow',
     'balance sheet', 'income statement', 'valuation',
-    'ipo', 'merger', 'acquisition', 'm&a', 'spin-off',
-
+    'ipo', 'merger', 'acquisition', 'm&a', 'spin-of',
 
     'inflation', 'gdp', 'interest rate', 'rates', 'central bank',
     'fed', 'ecb', 'monetary policy', 'fiscal policy',
     'unemployment', 'economic growth', 'recession',
-
 
     'investor', 'investors', 'trader', 'traders', 'analyst', 'analysts',
     'portfolio', 'hedge fund', 'asset manager', 'broker',
@@ -76,7 +75,7 @@ def resolve_domain_keywords(
 
 PREFIX_RATIO = 0.5
 
-MAX_EVAL_SAMPLES_DEFAULT = None  
+MAX_EVAL_SAMPLES_DEFAULT = None
 EVAL_MAX_LENGTH = 2048
 EVAL_MAX_NEW_TOKENS = 256
 EVAL_GEN_BATCH_SIZE = 32
@@ -93,7 +92,10 @@ def _split_at_sentence_boundary(
     text = (text or '').strip()
     if not text:
         return '', ''
-    use_zh_boundary = language == 'zh' or bool(re.search(r'[\u4e00-\u9fff]', text[: min(500, len(text))]))
+    use_zh_boundary = (
+        language == 'zh' or
+        bool(re.search(r'[\u4e00-\u9fff]', text[: min(500, len(text))]))
+    )
     if use_zh_boundary:
         parts = [p for p in re.split(r'(?<=[。！？!?])\s*', text) if p.strip()]
         if len(parts) <= 1:
@@ -113,14 +115,14 @@ def _split_at_sentence_boundary(
     i = min(i, len(parts) - 1)
     if use_zh_boundary:
         prefix = ''.join(parts[: i + 1])
-        continuation = ''.join(parts[i + 1 :]).strip()
+        continuation = ''.join(parts[i + 1:]).strip()
     else:
         prefix = ' '.join(parts[: i + 1])
-        continuation = ' '.join(parts[i + 1 :]).strip()
+        continuation = ' '.join(parts[i + 1:]).strip()
     return prefix, continuation
 
-
 # ---------------------------------------------------------------------------
+
 
 def load_text_data(
     dataset_name: str = FINANCE_DATASET_NAME,
@@ -175,7 +177,6 @@ def load_text_data(
     LOG.info(f'加载完成：{len(items)} 条记录')
     return items
 
-
 # ---------------------------------------------------------------------------
 
 
@@ -208,8 +209,9 @@ def build_pretrain_dataset(
     print(f'  输出目录    : {output_dir}')
     print(_sep)
 
-    domain_keywords = resolve_domain_keywords(domain, language, domain_keywords)
-
+    domain_keywords = resolve_domain_keywords(
+        domain, language, domain_keywords
+    )
 
     def _chunk_plain_text(item: Dict[str, Any]) -> str:
         return (item.get('content') or item.get(content_key) or '').strip()
@@ -226,22 +228,26 @@ def build_pretrain_dataset(
     def _save_chunks(chunked_items: List[Dict[str, Any]]) -> Dict[str, Any]:
         if not chunked_items:
             LOG.warning(
-                '分块后无数据。常见原因：① 每条样本不足 min_chars/min_words（中文默认已放宽）；'
-                '② JSON 无 text/content 等正文字段，需 --field_mapping；③ 领域 N-gram/关键词过滤过严。'
+                '分块后无数据。常见原因：① 每条样本不足 min_chars/min_words'
+                '（中文默认已放宽）；② JSON 无 text/content 等正文字段，'
+                '需 --field_mapping；③ 领域 N-gram/关键词过滤过严。'
             )
             return {'chunks': [], 'stats': {'total_chunks': 0}}
 
         total_chunks = len(chunked_items)
-        avg_chars = sum(len(_chunk_plain_text(item)) for item in chunked_items) / max(total_chunks, 1)
+        avg_chars = sum(len(_chunk_plain_text(item))
+                        for item in chunked_items) / max(total_chunks, 1)
         stats = {
             'total_chunks': total_chunks,
             'avg_chars_per_chunk': round(avg_chars, 1),
         }
         if '_keyword_hits' in chunked_items[0]:
-            avg_hits = sum(item.get('_keyword_hits', 0) for item in chunked_items) / total_chunks
+            avg_hits = sum(item.get('_keyword_hits', 0)
+                           for item in chunked_items) / total_chunks
             stats['avg_keyword_hits'] = round(avg_hits, 2)
         if '_ngram_repetition_ratio' in chunked_items[0]:
-            avg_rep = sum(item.get('_ngram_repetition_ratio', 0) for item in chunked_items) / total_chunks
+            avg_rep = sum(item.get('_ngram_repetition_ratio', 0)
+                          for item in chunked_items) / total_chunks
             stats['avg_ngram_repetition_ratio'] = round(avg_rep, 4)
         return {'chunks': chunked_items, 'stats': stats}
 
@@ -250,7 +256,6 @@ def build_pretrain_dataset(
         ppl.save = _save_chunks
 
     result = ppl(raw_items)
-
 
     chunks = result.get('chunks', [])
     stats = result.get('stats', {})
@@ -268,7 +273,8 @@ def build_pretrain_dataset(
         shuffled = list(range(total_chunks))
         rng.shuffle(shuffled)
         eval_idx = set(shuffled[:n_eval])
-        train_chunks = [chunks[i] for i in range(total_chunks) if i not in eval_idx]
+        train_chunks = [chunks[i]
+                        for i in range(total_chunks) if i not in eval_idx]
         eval_chunks = [chunks[i] for i in shuffled[:n_eval]]
     else:
 
@@ -278,9 +284,9 @@ def build_pretrain_dataset(
     train_contexts = [_chunk_plain_text(item) for item in train_chunks]
     train_contexts = [c for c in train_contexts if c]
     with open(train_file, 'w', encoding='utf-8') as f:
-        json.dump([{'text': c} for c in train_contexts], f, ensure_ascii=False, indent=2)
+        json.dump([{'text': c} for c in train_contexts],
+                  f, ensure_ascii=False, indent=2)
     print(f'预训练集已写入：{train_file}，共 {len(train_contexts)} 条')
-
 
     eval_samples = []
     if n_eval > 0:
@@ -295,7 +301,8 @@ def build_pretrain_dataset(
                     ctx, target_ratio=PREFIX_RATIO, language=language
                 )
                 if prefix and continuation:
-                    eval_samples.append({'prefix': prefix, 'continuation': continuation})
+                    eval_samples.append(
+                        {'prefix': prefix, 'continuation': continuation})
         else:
             for chunk in eval_chunks:
                 ctx = _chunk_plain_text(chunk)
@@ -303,21 +310,27 @@ def build_pretrain_dataset(
                     ctx, target_ratio=PREFIX_RATIO, language=language
                 )
                 if prefix and continuation:
-                    eval_samples.append({'prefix': prefix, 'continuation': continuation})
+                    eval_samples.append(
+                        {'prefix': prefix, 'continuation': continuation})
     with open(eval_file, 'w', encoding='utf-8') as f:
         for sample in eval_samples:
             f.write(json.dumps(sample, ensure_ascii=False) + '\n')
     LOG.info(f'测试集已保存: {eval_file}（{len(eval_samples)} 条，prefix+continuation）')
 
     if eval_from_train:
-        print(f'\n  处理后分块数: {total_chunks} 个（训练 {len(train_chunks)}，测试来自训练集抽样 {len(eval_samples)} 条）')
+        msg = f'\n  处理后分块数: {total_chunks} 个（训练 {len(train_chunks)}，'
+        msg += f'测试来自训练集抽样 {len(eval_samples)} 条）'
+        print(msg)
     else:
-        print(f'\n  处理后分块数: {total_chunks} 个（训练 {len(train_chunks)}，测试 {len(eval_chunks)}）')
+        msg = f'\n  处理后分块数: {total_chunks} 个（训练 {len(train_chunks)}，'
+        msg += f'测试 {len(eval_chunks)}）'
+        print(msg)
     print(f'  平均字符数 : {stats.get("avg_chars_per_chunk", 0):.1f}')
     if 'avg_keyword_hits' in stats:
         print(f'  平均关键词命中: {stats.get("avg_keyword_hits", 0):.2f}')
     if 'avg_ngram_repetition_ratio' in stats:
-        print(f'  平均N-gram重复率: {stats.get("avg_ngram_repetition_ratio", 0):.4f}')
+        print(
+            f'  平均N-gram重复率: {stats.get("avg_ngram_repetition_ratio", 0):.4f}')
 
     print('\n--- 样例分块（前 3 个）---')
     if chunks:
@@ -339,7 +352,9 @@ def build_pretrain_dataset(
         'eval_file': eval_file,
         'total_chunks': total_chunks,
         'train_count': len(train_chunks),
-        'eval_count': len(eval_samples) if eval_from_train else len(eval_chunks),
+        'eval_count': (
+            len(eval_samples) if eval_from_train else len(eval_chunks)
+        ),
         'stats': stats,
     }
 
@@ -363,7 +378,8 @@ def evaluate_chunk_quality(
         LOG.warning(f'JSON 数据为空或不是 list: {chunk_file}')
         return {}
     rows = data[:max_samples] if max_samples else data
-    texts = [(obj.get('text') or '').strip() for obj in rows if isinstance(obj, dict)]
+    texts = [(obj.get('text') or '').strip()
+             for obj in rows if isinstance(obj, dict)]
     texts = [t for t in texts if t]
     if not texts:
         LOG.warning(f'JSON 中未找到 text 字段: {chunk_file}')
@@ -393,7 +409,6 @@ def evaluate_chunk_quality(
 
     return stats
 
-
 # ---------------------------------------------------------------------------
 
 
@@ -405,7 +420,8 @@ def _get_eval_device():
         return 'cpu'
 
 
-def load_eval_samples(path: str, max_samples: Optional[int] = None) -> List[Dict[str, str]]:
+def load_eval_samples(
+        path: str, max_samples: Optional[int] = None) -> List[Dict[str, str]]:
 
     samples = []
     with open(path, 'r', encoding='utf-8') as f:
@@ -437,7 +453,8 @@ def load_model_and_tokenizer(model_path: str):
     path = model_path.rstrip('/\\')
     device = _get_eval_device()
     dtype = torch.bfloat16 if device == 'cuda' else torch.float32
-    tokenizer = thirdparty.transformers.AutoTokenizer.from_pretrained(path, trust_remote_code=True)
+    tokenizer = thirdparty.transformers.AutoTokenizer.from_pretrained(
+        path, trust_remote_code=True)
     tokenizer.padding_side = 'left'
     if tokenizer.pad_token_id is None and tokenizer.eos_token_id is not None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -452,7 +469,7 @@ def _word_ngrams(s: str, n: int = 2) -> List[Tuple[str, ...]]:
     tokens = s.split()
     if len(tokens) < n:
         return []
-    return [tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1)]
+    return [tuple(tokens[i: i + n]) for i in range(len(tokens) - n + 1)]
 
 
 def _bleu2_f1(reference: str, hypothesis: str) -> float:
@@ -483,11 +500,11 @@ def compute_ppl(
     loss_list: List[float] = []
     total_tokens = 0
     total_loss = 0.0
-    
+
     for item in tqdm(samples, desc='PPL/loss', unit='条'):
         prefix, continuation = item['prefix'], item['continuation']
         full_text = prefix + continuation
-        
+
         enc = tokenizer(
             full_text,
             return_tensors='pt',
@@ -495,13 +512,14 @@ def compute_ppl(
             max_length=max_length,
             add_special_tokens=True,
         ).to(dev)
-        
+
         input_ids = enc.input_ids
         seq_len = input_ids.size(1)
-        
+
         if mode == 'conditional':
 
-            prefix_enc = tokenizer(prefix, return_tensors='pt', add_special_tokens=True).to(dev)
+            prefix_enc = tokenizer(
+                prefix, return_tensors='pt', add_special_tokens=True).to(dev)
             prefix_len = min(prefix_enc.input_ids.size(1), seq_len - 1)
             labels = input_ids.clone()
             labels[:, :prefix_len] = -100
@@ -509,23 +527,23 @@ def compute_ppl(
         else:
 
             labels = input_ids.clone()
-            labels[:, 0] = -100  
+            labels[:, 0] = -100
             num_tokens = seq_len - 1
 
         with torch.no_grad():
             out = model(input_ids=input_ids, labels=labels)
             loss = out.loss.item()
-        
+
         total_loss += loss * num_tokens
         total_tokens += num_tokens
-        
+
         ppl = float(torch.exp(torch.tensor(min(loss, 50.0))).item())
         loss_list.append(loss)
         ppl_list.append(ppl)
-    
+
     avg_loss = total_loss / total_tokens if total_tokens > 0 else 0.0
     avg_ppl = float(torch.exp(torch.tensor(min(avg_loss, 50.0))).item())
-    
+
     return avg_ppl, avg_loss, ppl_list, loss_list
 
 
@@ -554,8 +572,9 @@ def run_generation(
         pad_token_id=pad_id,
     )
     results: List[Dict[str, Any]] = []
-    for start in tqdm(range(0, len(samples), batch_size), desc='生成', unit='batch'):
-        batch_items = samples[start : start + batch_size]
+    for start in tqdm(range(0, len(samples), batch_size),
+                      desc='生成', unit='batch'):
+        batch_items = samples[start: start + batch_size]
         prefixes = [item['prefix'] for item in batch_items]
         prefix_lens = []
         for p in prefixes:
@@ -578,17 +597,18 @@ def run_generation(
         with torch.no_grad():
             gen = model.generate(**enc, generation_config=gen_config)
         for i, item in enumerate(batch_items):
-            pred_ids = gen[i, prefix_lens[i] :]
+            pred_ids = gen[i, prefix_lens[i]:]
             pred = tokenizer.decode(pred_ids, skip_special_tokens=True)
             ref = item['continuation']
             score = _bleu2_f1(ref, pred)
             results.append({
                 'prefix': prefixes[i],
-                'continuation_ref': ref,
+                'continuation_re': ref,
                 'continuation_pred': pred,
                 'bleu': score,
             })
-    avg_bleu = sum(r['bleu'] for r in results) / len(results) if results else 0.0
+    avg_bleu = sum(r['bleu'] for r in results) / \
+        len(results) if results else 0.0
     return avg_bleu, results
 
 
@@ -608,7 +628,8 @@ def run_eval_for_model(
 
     LOG.info(f'[{label}] 计算 PPL 与交叉熵损失（模式: {ppl_mode}）...')
     avg_ppl, avg_loss, ppl_list, loss_list = compute_ppl(
-        model, tokenizer, samples, max_length=max_length, device=device, mode=ppl_mode
+        model, tokenizer, samples,
+        max_length=max_length, device=device, mode=ppl_mode
     )
     LOG.info(f'[{label}] 平均 PPL: {avg_ppl:.4f}  平均 loss: {avg_loss:.4f}')
 
@@ -669,8 +690,8 @@ def evaluate_pretrained_model(
         pass
 
     print(f'\n>>> PPL 计算模式: {ppl_mode}')
-    print(f'    - conditional: 条件 PPL（仅评估 continuation 部分）')
-    print(f'    - unconditional: 无条件 PPL（评估整个文本，推荐用于预训练评测）\n')
+    print('    - conditional: 条件 PPL（仅评估 continuation 部分）')
+    print('    - unconditional: 无条件 PPL（评估整个文本，推荐用于预训练评测）\n')
 
     base_metrics = run_eval_for_model(
         base_model_path, '基座模型', samples,
@@ -680,7 +701,8 @@ def evaluate_pretrained_model(
         ppl_mode=ppl_mode,
     )
     pt_metrics: Optional[Dict[str, Any]] = None
-    if pretrained_model_path and os.path.isdir(pretrained_model_path.rstrip('/\\')):
+    if pretrained_model_path and os.path.isdir(
+            pretrained_model_path.rstrip('/\\')):
         pt_metrics = run_eval_for_model(
             pretrained_model_path.rstrip('/\\'), '预训练模型', samples,
             max_length=ppl_max_length,
@@ -699,9 +721,14 @@ def evaluate_pretrained_model(
 
     metrics = {
         'num_samples': len(samples),
-        'base': {'ppl': base_metrics['ppl'], 'loss': base_metrics['loss'], 'bleu': base_metrics['bleu']},
+        'base': {
+            'ppl': base_metrics['ppl'],
+            'loss': base_metrics['loss'],
+            'bleu': base_metrics['bleu']
+        },
         'pt': (
-            {'ppl': pt_metrics['ppl'], 'loss': pt_metrics['loss'], 'bleu': pt_metrics['bleu']}
+            {'ppl': pt_metrics['ppl'], 'loss': pt_metrics['loss'],
+                'bleu': pt_metrics['bleu']}
             if pt_metrics else None
         ),
     }
@@ -718,13 +745,16 @@ def evaluate_pretrained_model(
                 'continuation_len': len(samples[i]['continuation']),
                 'base_ppl': base_metrics['ppl_per_sample'][i],
                 'base_loss': base_metrics['loss_per_sample'][i],
-                'base_pred': (base_metrics['gen_results'][i]['continuation_pred'] or '')[:200],
+                'base_pred': (
+                    base_metrics['gen_results'][i]['continuation_pred'] or ''
+                )[:200],
                 'base_bleu': base_metrics['gen_results'][i]['bleu'],
             }
             if pt_metrics:
                 rec['pt_ppl'] = pt_metrics['ppl_per_sample'][i]
                 rec['pt_loss'] = pt_metrics['loss_per_sample'][i]
-                rec['pt_pred'] = (pt_metrics['gen_results'][i]['continuation_pred'] or '')[:200]
+                rec['pt_pred'] = (pt_metrics['gen_results'][i]
+                                  ['continuation_pred'] or '')[:200]
                 rec['pt_bleu'] = pt_metrics['gen_results'][i]['bleu']
             f.write(json.dumps(rec, ensure_ascii=False) + '\n')
     LOG.info(f'  逐条结果: {results_path}')
@@ -732,9 +762,15 @@ def evaluate_pretrained_model(
     print('\n' + '=' * 60)
     print('预训练评测（prefix → continuation）')
     print('=' * 60)
-    print(f'基座模型   PPL={base_metrics["ppl"]:.4f}  loss={base_metrics["loss"]:.4f}  BLEU-2 F1={base_metrics["bleu"]:.4f}')
+    msg = f'基座模型   PPL={base_metrics["ppl"]:.4f}  '
+    msg += f'loss={base_metrics["loss"]:.4f}  '
+    msg += f'BLEU-2 F1={base_metrics["bleu"]:.4f}'
+    print(msg)
     if pt_metrics:
-        print(f'预训练模型 PPL={pt_metrics["ppl"]:.4f}  loss={pt_metrics["loss"]:.4f}  BLEU-2 F1={pt_metrics["bleu"]:.4f}')
+        msg = f'预训练模型 PPL={pt_metrics["ppl"]:.4f}  '
+        msg += f'loss={pt_metrics["loss"]:.4f}  '
+        msg += f'BLEU-2 F1={pt_metrics["bleu"]:.4f}'
+        print(msg)
     print('=' * 60 + '\n')
 
     return {
@@ -745,7 +781,6 @@ def evaluate_pretrained_model(
         'base_metrics': base_metrics,
         'pt_metrics': pt_metrics,
     }
-
 
 # ---------------------------------------------------------------------------
 
@@ -811,10 +846,10 @@ def run_pretrain(
     print('预训练完成！')
     return model
 
-
 # ---------------------------------------------------------------------------
 # 6. CLI
 # ---------------------------------------------------------------------------
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -822,71 +857,106 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  # 使用环境前可执行: source activate_lazy.sh
-  python medical_domain_pt_ppl.py --build_dataset --max_samples 1000   # 试跑
-  python medical_domain_pt_ppl.py --build_dataset --local_path /path/to/data.jsonl  # 本地数据
-  python medical_domain_pt_ppl.py  --train_flag        # 构建+预训练
-  python medical_domain_pt_ppl.py --eval_quality --max_samples 50     # 质量评估
-  python medical_domain_pt_ppl.py --eval_model
-  python medical_domain_pt_ppl.py --eval_model --pretrained_model /path/to/pretrained
+  python domain_pt_ppl.py --build_dataset --max_samples 1000
+  python domain_pt_ppl.py --build_dataset
+      --local_path /path/to/data.jsonl
+  python domain_pt_ppl.py --train_flag
+  python domain_pt_ppl.py --eval_quality --max_samples 50
+  python domain_pt_ppl.py --eval_model
+  python domain_pt_ppl.py --eval_model
+      --pretrained_model /path/to/pretrained
         """,
     )
 
     data = parser.add_argument_group('数据参数')
     data.add_argument('--build_dataset', action='store_true', help='构建预训练数据集')
-    data.add_argument('--dataset_name', type=str, default=FINANCE_DATASET_NAME, help='HuggingFace 数据集名称')
-    data.add_argument('--local_path', type=str, default=None, help='本地 JSONL 文件路径（优先使用）')
+    data.add_argument('--dataset_name', type=str,
+                      default=FINANCE_DATASET_NAME, help='HuggingFace 数据集名称')
+    data.add_argument('--local_path', type=str, default=None,
+                      help='本地 JSONL 文件路径（优先使用）')
     data.add_argument('--split', type=str, default='train')
-    data.add_argument('--max_samples', type=int, default=None, help='最多加载条数，None=全量')
-    data.add_argument('--content_key', type=str, default=FINANCE_CONTENT_KEY, help='文本字段 key')
-    data.add_argument('--output_dir', type=str, default='/home/mnt/zhangkejun/work/dataset/financial_pt')
+    data.add_argument('--max_samples', type=int,
+                      default=None, help='最多加载条数，None=全量')
+    data.add_argument('--content_key', type=str,
+                      default=FINANCE_CONTENT_KEY, help='文本字段 key')
+    data.add_argument('--output_dir', type=str,
+                      default='./dataset/financial_pt')
     data.add_argument('--domain', type=str, default='finance',
-                      help='领域：medical/finance/...，与预设关键词一致（finance+en 时用英文金融词表）')
-    data.add_argument('--language', type=str, default='en', choices=['zh', 'en'],
-                      help='语料与 Pipeline 语言（zh 中文 / en 英文）')
-    data.add_argument('--eval_seed', type=int, default=42, help='划分 eval 子集时的随机种子')
+                      help='领域：medical/finance/...，与预设关键词一致')
+    data.add_argument('--language', type=str, default='en',
+                      choices=['zh', 'en'], help='语料与 Pipeline 语言')
+    data.add_argument('--eval_seed', type=int,
+                      default=42, help='划分 eval 子集时的随机种子')
     data.add_argument('--eval_ratio', type=float, default=0.02,
-                      help='eval 占比（默认 0.02；上限会被限制到 0.05；<=0 表示不生成 eval）')
+                      help='eval 占比（默认 0.02；上限会被限制到 0.05；'
+                           '<=0 表示不生成 eval）')
     data.add_argument('--eval_from_train', action='store_true',
-                      help='将 eval 从训练集里抽样生成（与 train.json 重叠；更偏拟合/过拟合检查）')
+                      help='将 eval 从训练集里抽样生成（与 train.json 重叠；'
+                           '更偏拟合/过拟合检查）')
 
     ppl = parser.add_argument_group('Pipeline 参数')
-    ppl.add_argument('--enabled_features', type=str, nargs='+', help='启用的功能，可选: ' + ', '.join(DOMAIN_PRETRAIN_FEATURES))
-    ppl.add_argument('--domain_keywords', type=str, nargs='+', default=None, help='自定义领域关键词')
+    ppl.add_argument('--enabled_features', type=str, nargs='+',
+                     help='启用的功能，可选: ' + ', '.join(DOMAIN_PRETRAIN_FEATURES))
+    ppl.add_argument('--domain_keywords', type=str,
+                     nargs='+', default=None, help='自定义领域关键词')
 
     field_norm = parser.add_argument_group('字段归一化参数')
-    field_norm.add_argument('--field_mapping', type=str, nargs='+', default=None,
-                            help='显式字段映射，格式: src1=dst1 src2=dst2（如 article=content body=content）')
-    field_norm.add_argument('--concat_fields', type=str, nargs='+', default=None,
-                            help='需要拼接到 content_key 的字段列表（如 title body）')
+    field_norm.add_argument('--field_mapping', type=str, nargs='+',
+                            default=None,
+                            help='显式字段映射，格式: src1=dst1 src2=dst2')
+    field_norm.add_argument('--concat_fields', type=str, nargs='+',
+                            default=None,
+                            help='需要拼接到 content_key 的字段列表')
     field_norm.add_argument('--concat_separator', type=str, default='\n\n',
-                            help='多字段拼接分隔符（默认 \\n\\n）')
+                            help='多字段拼接分隔符')
 
     # 常用选项示例
-    ppl.add_argument('--enable_language_filter', action='store_true', help='启用语言过滤')
-    ppl.add_argument('--enable_domain_relevance', action='store_true', help='启用领域相关性评分')
-    ppl.add_argument('--min_relevance_score', type=float, default=0.1, help='领域相关性最低得分（与 enable_domain_relevance 配合）')
-    ppl.add_argument('--max_tokens', type=int, default=1024, help='分块最大 token 数')
-    ppl.add_argument('--min_tokens', type=int, default=200, help='分块最小 token 数')
-    ppl.add_argument('--ngram_n', type=int, default=20, help='NGramRepetitionFilter 中的 n（默认 20，更宽松）')
-    ppl.add_argument('--max_repetition_ratio', type=float, default=0.4, help='NGram 重复度最大比例，默认 0.6（更宽松）')
+    ppl.add_argument('--enable_language_filter',
+                     action='store_true', help='启用语言过滤')
+    ppl.add_argument('--enable_domain_relevance',
+                     action='store_true', help='启用领域相关性评分')
+    ppl.add_argument('--min_relevance_score', type=float, default=0.1,
+                     help='领域相关性最低得分')
+    ppl.add_argument('--max_tokens', type=int,
+                     default=1024, help='分块最大 token 数')
+    ppl.add_argument('--min_tokens', type=int,
+                     default=200, help='分块最小 token 数')
+    ppl.add_argument('--ngram_n', type=int, default=20,
+                     help='NGramRepetitionFilter 中的 n')
+    ppl.add_argument('--max_repetition_ratio', type=float,
+                     default=0.4, help='NGram 重复度最大比例')
 
     model = parser.add_argument_group('模型参数')
-    model.add_argument('--base_model', type=str, default='/home/mnt/zhangkejun/.lazyllm/model/Qwen2.5-0.5B-Instruct')
+    model.add_argument('--base_model', type=str,
+                       default='Qwen2.5-0.5B-Instruct')
     model.add_argument('--train_flag', action='store_true', help='执行预训练')
 
     eval_group = parser.add_argument_group('质量评估参数')
-    eval_group.add_argument('--eval_quality', action='store_true', help='分块数据质量统计')
+    eval_group.add_argument(
+        '--eval_quality', action='store_true', help='分块数据质量统计')
     eval_group.add_argument('--max_eval_samples', type=int, default=100)
 
     eval_model_group = parser.add_argument_group('预训练模型评估（困惑度+文本补全）')
-    eval_model_group.add_argument('--eval_model', action='store_true', help='对基座与预训练模型做 PPL+BLEU-2 F1 对比评估')
-    eval_model_group.add_argument('--pretrained_model', type=str, default=None, help='预训练模型目录，默认 output_dir/pretrained_model')
-    eval_model_group.add_argument('--eval_chunk_file', type=str, default=None, help='评测集 JSONL（prefix+continuation），默认 output_dir/eval.jsonl')
-    eval_model_group.add_argument('--eval_max_ppl_samples', type=int, default=500, help='评测最多样本数，0 表示不限制')
-    eval_model_group.add_argument('--eval_max_new_tokens', type=int, default=256, help='生成续写最大 token 数')
-    eval_model_group.add_argument('--ppl_mode', type=str, default='unconditional', choices=['conditional', 'unconditional'],
-                                  help='PPL 计算模式：conditional（条件PPL，仅continuation）或 unconditional（整个文本，推荐）')
+    eval_model_group.add_argument(
+        '--eval_model', action='store_true',
+        help='对基座与预训练模型做 PPL+BLEU-2 F1 对比评估')
+    eval_model_group.add_argument(
+        '--pretrained_model', type=str, default=None,
+        help='预训练模型目录，默认 output_dir/pretrained_model')
+    eval_model_group.add_argument(
+        '--eval_chunk_file', type=str, default=None,
+        help='评测集 JSONL（prefix+continuation），默认 output_dir/eval.jsonl')
+    eval_model_group.add_argument(
+        '--eval_max_ppl_samples', type=int, default=500,
+        help='评测最多样本数，0 表示不限制')
+    eval_model_group.add_argument(
+        '--eval_max_new_tokens', type=int, default=256, help='生成续写最大 token 数')
+    eval_model_group.add_argument(
+        '--ppl_mode', type=str, default='unconditional',
+        choices=['conditional', 'unconditional'],
+        help='PPL 计算模式：conditional（条件PPL，仅continuation） '
+             '或 unconditional（整个文本，推荐）'
+    )
 
     train = parser.add_argument_group('训练参数')
     train.add_argument('--num_epochs', type=int, default=10)
@@ -896,10 +966,11 @@ def parse_args() -> argparse.Namespace:
     train.add_argument('--cutoff_len', type=int, default=2048)
     train.add_argument('--warmup_ratio', type=float, default=0.05)
     train.add_argument('--ngpus', type=int, default=1)
-    train.add_argument('--train_target_path', type=str, default='./models/financial_pt',
-                       help='TrainableModule 输出子目录名（位于 train_target_root 下）')
-    train.add_argument('--train_launcher', type=str, default='sco', choices=['remote', 'sco'],
-                       help='remote：同步单卡远程/本地；sco：集群 SCO')
+    train.add_argument('--train_target_path', type=str,
+                       default='./models/financial_pt',
+                       help='TrainableModule 输出子目录名')
+    train.add_argument('--train_launcher', type=str, default='sco',
+                       choices=['remote', 'sco'], help='launcher 类型')
     train.add_argument('--sco_partition', type=str, default='a800')
     train.add_argument('--sco_resource', type=str, default='N3lS.1i.160.1')
     train.add_argument('--save_steps', type=int, default=100)
@@ -937,13 +1008,14 @@ def main(args: argparse.Namespace) -> None:
         options['concat_separator'] = args.concat_separator
 
     if args.enable_domain_relevance:
-        options['min_relevance_score'] = getattr(args, 'min_relevance_score', 0.1)
+        options['min_relevance_score'] = getattr(
+            args, 'min_relevance_score', 0.1)
     options['max_tokens'] = args.max_tokens
     options['min_tokens'] = args.min_tokens
     # 放宽 NGram 重复过滤条件：更大的 n、更高的允许重复比例
     options['ngram_n'] = getattr(args, 'ngram_n', 20)
-    options['max_repetition_ratio'] = getattr(args, 'max_repetition_ratio', 0.6)
-
+    options['max_repetition_ratio'] = getattr(
+        args, 'max_repetition_ratio', 0.6)
 
     # 默认启用垂直领域增强功能；通用 PT 功能由 build_text_pt_pipeline 自动处理
     if enabled is None:
@@ -969,7 +1041,7 @@ def main(args: argparse.Namespace) -> None:
             content_key=args.content_key,
             local_path=args.local_path,
         )
-        print(f'\n>>> 步骤 2：Pipeline 处理（规范化 → 过滤 → 去重 → 分块）')
+        print('\n>>> 步骤 2：Pipeline 处理（规范化 → 过滤 → 去重 → 分块）')
         print(f'    启用功能: {", ".join([k for k, v in enabled.items() if v])}')
 
         result = build_pretrain_dataset(
@@ -994,7 +1066,7 @@ def main(args: argparse.Namespace) -> None:
         if not os.path.exists(train_file):
             print(f'\n错误：分块文件不存在，请先运行 --build_dataset 生成 {train_file}')
             return
-        print(f'\n>>> 质量评估：分块数据统计')
+        print('\n>>> 质量评估：分块数据统计')
         evaluate_chunk_quality(
             chunk_file=train_file,
             max_samples=args.max_eval_samples,
@@ -1005,7 +1077,7 @@ def main(args: argparse.Namespace) -> None:
         if not os.path.exists(train_file):
             print(f'\n错误：预训练数据不存在，请先运行 --build_dataset 生成 {train_file}')
             return
-        print(f'\n>>> 步骤 3：执行 LLM 预训练')
+        print('\n>>> 步骤 3：执行 LLM 预训练')
         run_pretrain(
             pretrain_data_path=train_file,
             base_model=args.base_model,
@@ -1029,24 +1101,31 @@ def main(args: argparse.Namespace) -> None:
         eval_file = args.eval_chunk_file or eval_file_path
         pretrained_path = './models/financial_pt/lazyllm_merge'
         if not os.path.isfile(eval_file):
-            print(f'\n错误：评测集不存在: {eval_file}，请先运行 --build_dataset 或指定 --eval_chunk_file')
+            msg = f'\n错误：评测集不存在: {eval_file}，'
+            msg += '请先运行 --build_dataset 或指定 --eval_chunk_file'
+            print(msg)
             return
         evaluate_pretrained_model(
             base_model_path=args.base_model,
             pretrained_model_path=pretrained_path,
             eval_jsonl_path=eval_file,
             output_dir=args.output_dir,
-            max_eval_samples=args.eval_max_ppl_samples or MAX_EVAL_SAMPLES_DEFAULT,
+            max_eval_samples=(
+                args.eval_max_ppl_samples or MAX_EVAL_SAMPLES_DEFAULT
+            ),
             max_new_tokens=args.eval_max_new_tokens,
             ppl_max_length=EVAL_MAX_LENGTH,
             gen_batch_size=EVAL_GEN_BATCH_SIZE,
             ppl_mode=args.ppl_mode,
         )
 
-    if not args.build_dataset and not args.train_flag and not args.eval_quality and not args.eval_model:
-        print('请指定 --build_dataset / --train_flag / --eval_quality / --eval_model 至少其一')
+    if (not args.build_dataset and not args.train_flag
+            and not args.eval_quality and not args.eval_model):
+        print('请指定 --build_dataset / --train_flag / '
+              '--eval_quality / --eval_model 至少其一')
         print('示例：python domain_pt_ppl.py --build_dataset --max_samples 1000')
-        print('      python domain_pt_ppl.py --eval_model --pretrained_model /path/to/pretrained')
+        print('      python domain_pt_ppl.py --eval_model '
+              '--pretrained_model /path/to/pretrained')
 
 
 if __name__ == '__main__':

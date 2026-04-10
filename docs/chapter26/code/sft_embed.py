@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from datasets import load_dataset
-from typing import Tuple, List, Dict, Any
+from typing import Any
 
 import lazyllm
 from lazyllm import Document
@@ -26,7 +26,12 @@ def build_data_path(dir_name: str, file_name: str) -> str:
     return os.path.join(data_root, file_name)
 
 
-def build_dataset_corpus(instruction: str, neg_num: int = 10, test_size: float = 0.1, seed: int = 1314) -> tuple:
+def build_dataset_corpus(
+    instruction: str,
+    neg_num: int = 10,
+    test_size: float = 0.1,
+    seed: int = 1314,
+) -> tuple:
     """Process dataset and create training/evaluation files.
 
     Args:
@@ -36,12 +41,12 @@ def build_dataset_corpus(instruction: str, neg_num: int = 10, test_size: float =
         seed (int): Random seed for reproducibility
 
     Returns:
-        tuple: Paths to training data, evaluation data, and knowledge base directory
+        tuple: (train_path, eval_path, kb_dir)
     """
     # Load and preprocess dataset
-    ds = load_dataset("virattt/financial-qa-10K", split="train")
-    ds = ds.select_columns(column_names=["question", "context"])
-    ds = ds.rename_columns({"question": "query", "context": "pos"})
+    ds = load_dataset('virattt/financial-qa-10K', split='train')
+    ds = ds.select_columns(column_names=['question', 'context'])
+    ds = ds.rename_columns({'question': 'query', 'context': 'pos'})
 
     # Generate negative samples
     np.random.seed(seed)
@@ -50,31 +55,32 @@ def build_dataset_corpus(instruction: str, neg_num: int = 10, test_size: float =
         ids = np.random.randint(0, len(ds), size=neg_num)
         while i in ids:  # Ensure no self-match in negatives
             ids = np.random.randint(0, len(ds), size=neg_num)
-        neg = [ds[int(i)]["pos"] for i in ids]
+        neg = [ds[int(i)]['pos'] for i in ids]
         new_col.append(neg)
 
     # Create dataset splits
-    ds = ds.add_column("neg", new_col)
+    ds = ds.add_column('neg', new_col)
 
     def str_to_lst(data):
-        data["pos"] = [data["pos"]]
+        data['pos'] = [data['pos']]
         return data
-    ds = ds.map(str_to_lst)  # Convert pos to list format
-    ds = ds.add_column("prompt", [instruction] * len(ds))
+    ds = ds.map(str_to_lst)
+    ds = ds.add_column('prompt', [instruction] * len(ds))
     split = ds.train_test_split(test_size=test_size, shuffle=True, seed=seed)
 
     # Save training data
     train_data_path = build_data_path('dataset', 'train.json')
-    split["train"].to_json(train_data_path)
+    split['train'].to_json(train_data_path)
 
     # Process and save evaluation data
-    test = split["test"].select_columns(["query", "pos"]).rename_column("pos", "corpus")
+    test = split['test'].select_columns(
+        ['query', 'pos']).rename_column('pos', 'corpus')
     eval_data_path = build_data_path('dataset', 'eval.json')
     test.to_json(eval_data_path)
 
     # Create knowledge base
     kb_data_path = build_data_path('KB', 'knowledge_base.txt')
-    corpus = "\n".join([''.join(item) for item in test['corpus']])
+    corpus = '\n'.join([''.join(item) for item in test['corpus']])
     with open(kb_data_path, 'w', encoding='utf-8') as f:
         f.write(corpus)
 
@@ -118,10 +124,16 @@ def deploy_serve(
     # embed = lazyllm.TrainableModule(embed_path)
     # Create document processing pipeline
     docs = Document(kb_path, embed=embed, manager=False)
-    docs.create_node_group(name='split_sent', transform=lambda s: s.split('\n'))
+    docs.create_node_group(
+        name='split_sent',
+        transform=lambda s: s.split('\n'))
 
     # Configure retriever
-    retriever = lazyllm.Retriever(doc=docs, group_name="split_sent", similarity="cosine", topk=1)
+    retriever = lazyllm.Retriever(
+        doc=docs,
+        group_name='split_sent',
+        similarity='cosine',
+        topk=1)
     retriever.update() if train_flag else retriever.start()
 
     return retriever
@@ -167,27 +179,39 @@ def save_json(data: list, file_path: str) -> None:
     """
     with open(file_path, 'a', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-def save_results(score_recall: Any, score_relevance: Any, train_flag: bool, file_path: str) -> None:
+
+
+def save_results(score_recall: Any, score_relevance: Any,
+                 train_flag: bool, file_path: str) -> None:
     """保存数据到JSON文件
-    
+
     Args:
         data: 要保存的数据
         file_path: 目标文件路径
     """
     with open(file_path, 'a', encoding='utf-8') as f:
         if train_flag:
-            json.dump({'ft_score_recall': score_recall, 'ft_score_relevance': score_relevance}, f, ensure_ascii=False, indent=2)
+            json.dump({'ft_score_recall': score_recall,
+                       'ft_score_relevance': score_relevance},
+                      f,
+                      ensure_ascii=False,
+                      indent=2)
         else:
-            json.dump({'origin_score_recall': score_recall, 'origin_score_relevance': score_relevance}, f, ensure_ascii=False, indent=2)
-        
+            json.dump({'origin_score_recall': score_recall,
+                       'origin_score_relevance': score_relevance},
+                      f,
+                      ensure_ascii=False,
+                      indent=2)
+
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description='Document Retrieval SFT and Eval System')
+    parser = argparse.ArgumentParser(
+        description='Document Retrieval SFT and Eval System')
     parser.add_argument('--embed_path', type=str, default='bge-large-zh-v1.5',
                         help='Embedding model path/name')
     parser.add_argument('--instruction', type=str,
-                        default="Represent this sentence for searching relevant passages: ",
+                        default='Represent this sentence: ',
                         help='Prompt template for queries')
     parser.add_argument('--train_flag', action='store_true',
                         help='Perform model fine-tuning')
@@ -208,7 +232,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--ngpus', type=int, default=1,
                         help='Number of GPUs for training')
     parser.add_argument('--build_dataset', action='store_true',
-                        help='Build or Force rebuild the dataset even if it exists')
+                        help='Force rebuild the dataset')
+    parser.add_argument('--one_click', action='store_true',
+                        help='One-click run: rebuild dataset then continue')
     return parser.parse_args()
 
 
@@ -216,14 +242,18 @@ def main(args: argparse.Namespace) -> None:
     """Main execution pipeline."""
     # Prepare dataset
     if args.build_dataset:
-        print("Rebuilding dataset as requested...")
+        print('Rebuilding dataset...')
         train_data_path, eval_data_path, kb_path = build_dataset_corpus(
             instruction=args.instruction,
             neg_num=args.neg_num,
             test_size=args.test_size,
             seed=args.seed
         )
-        return
+        # Keep backward compatibility:
+        # --build_dataset only => rebuild then exit;
+        # --build_dataset --one_click => rebuild then continue running.
+        if not args.one_click:
+            return
     else:
         work_path = os.getcwd()
         train_path = os.path.join(work_path, 'dataset', 'train.json')
@@ -231,12 +261,12 @@ def main(args: argparse.Namespace) -> None:
         kb_file = os.path.join(work_path, 'KB', 'knowledge_base.txt')
 
         if all(os.path.exists(f) for f in [train_path, eval_path, kb_file]):
-            print("Using existing dataset files.")
+            print('Using existing dataset files.')
             train_data_path = train_path
             eval_data_path = eval_path
             kb_path = os.path.dirname(kb_file)
         else:
-            print("Warning: Existing processed dataset not found. Building dataset...")
+            print('Warning: Existing dataset not found. Building...')
             train_data_path, eval_data_path, kb_path = build_dataset_corpus(
                 instruction=args.instruction,
                 neg_num=args.neg_num,
@@ -258,9 +288,12 @@ def main(args: argparse.Namespace) -> None:
     # Run SFT or Evaluation
     results = []
     query_corpus = load_json(eval_data_path)
-    for item in tqdm(query_corpus, desc="Processing queries"):
+    for item in tqdm(query_corpus, desc='Processing queries'):
         query = item['query']
-        inputs = f"{args.instruction}{query}" if args.use_instruction or args.train_flag else query
+        if args.use_instruction or args.train_flag:
+            inputs = f'{args.instruction}{query}'
+        else:
+            inputs = query
         retrieved = retriever(inputs)
         results.append({
             'question': query,
@@ -273,7 +306,9 @@ def main(args: argparse.Namespace) -> None:
     recall_score, relevance_score = evaluate_results(results)
     result_path = 'embed_eval_results.jsonl'
     save_results(recall_score, relevance_score, args.train_flag, result_path)
-    print(f"Evaluation Complete!\nContext Recall: {recall_score}\nContext Relevance: {relevance_score}")
+    print('Evaluation Complete!')
+    print(f'Context Recall: {recall_score}')
+    print(f'Context Relevance: {relevance_score}')
 
 
 if __name__ == '__main__':
@@ -282,12 +317,16 @@ if __name__ == '__main__':
 """
 Usage Examples:
 
-    # Build dataset with custom parameters
+    # Build dataset
     python sft_embed.py --build_dataset --neg_num 10 --test_size 0.1
 
-    # Basic evaluation with default settings
+    # One-click run (rebuild + train/eval)
+    python sft_embed.py --build_dataset --one_click --train_flag --ngpus 1
+
+    # Basic evaluation
     python sft_embed.py --embed_path your_embed_path
 
-    # Enable fine-tuning with custom parameters
-    python sft_embed.py --train_flag --embed_path bge-large-zh-v1.5 --num_epochs 2 --ngpus 1
+    # Enable fine-tuning
+    python sft_embed.py --train_flag --embed_path bge-large-zh-v1.5
+    python sft_embed.py --train_flag --num_epochs 2 --ngpus 1
 """
