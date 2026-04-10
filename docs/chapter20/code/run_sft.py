@@ -16,7 +16,9 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-SFT_MODEL = '/path/to/sft/base/model'
+SFT_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
+
+
 TINY_CODES_DATASET_ENDPOINT = os.environ.get(
     'TINY_CODES_DATASET_ENDPOINT', HF_ENDPOINT
 )
@@ -220,7 +222,8 @@ def step2_sft_training():
 
     model = (
         lazyllm.TrainableModule(
-            CONFIG['sft_model'], target_path=str(checkpoint_dir)
+            CONFIG['sft_model'],
+            target_path=str(checkpoint_dir)
         )
         .mode('finetune')
         .trainset(str(train_file))
@@ -709,6 +712,11 @@ def main():
     LOG_FILE = config['log_dir'] / (
         'run_sft_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
     )
+
+    if not Path(config['sft_model']).exists():
+        log_error(f"SFT_MODEL 不存在: {config['sft_model']}")
+        log('请使用 --sft-model 参数指定正确路径')
+        safe_exit(1)
 
     log('==========================================')
     log('无 pipeline 的一键代码SFT训练脚本')

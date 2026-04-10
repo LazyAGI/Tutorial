@@ -12,9 +12,10 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-SFT_BASE_MODEL = '/path/to/sft/base/model'
-LAZYLLM_PATH = '/path/to/lazyllm'
-JUDGE_MODEL = '/path/to/judge/model'
+SFT_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
+LAZYLLM_PATH = None
+JUDGE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
+
 
 TRAIN_DATASET_REPO = 'glaiveai/glaive-function-calling-v2'
 TEST_DATASET_REPO = 'rirqing/tool_use'
@@ -78,6 +79,17 @@ LOG_FILE = LOG_DIR / (
 )
 CONFIG = {}
 
+
+def get_lazyllm_path():
+    '''自动检测 lazyllm 安装路径'''
+    import importlib.util
+
+    spec = importlib.util.find_spec('lazyllm')
+    if spec and spec.origin:
+        return str(Path(spec.origin).parent.parent)
+    return None
+
+
 SUPPORTED_TEST_DATA_SUFFIXES = (
     '.jsonl',
     '.json',
@@ -87,7 +99,7 @@ SUPPORTED_TEST_DATA_SUFFIXES = (
     '.jsonl.gz',
 )
 
-JUDGE_PROMPT = """You are a strict tool-use evaluation expert.
+JUDGE_PROMPT = '''You are a strict tool-use evaluation expert.
 Please evaluate whether the predicted answer correctly solves
 the user task compared with the reference answer.
 
@@ -119,7 +131,7 @@ Return JSON only:
   "reason": "Perfect"
 }}
 ```
-"""
+'''
 
 
 def log(msg: str):
@@ -637,7 +649,101 @@ class ToolUseJudge:
             }
 
 
-def step1_prepare_data(step_label='[1/4]'):
+def _prepare_train_data(train_path: Path) -> bool:
+    '''准备训练数据。'''
+    previous_endpoint = override_hf_endpoint(
+        CONFIG['train_dataset_endpoint']
+    )
+    try:
+        log(
+            f'  正在从 Hugging Face 下载训练集: '
+            f'{CONFIG["train_dataset_repo"]}'
+        )
+        if CONFIG['train_dataset_endpoint']:
+            log(f'  训练集下载端点: {CONFIG["train_dataset_endpoint"]}')
+        from datasets import load_dataset
+        dataset = load_dataset(CONFIG['train_dataset_repo'], split='train')
+    finally:
+        restore_hf_endpoint(previous_endpoint)
+
+    alpaca_data = []
+    log('  开始按给定逻辑转换 Glaive 训练集...')
+    for i, example in enumerate(dataset):
+        if not example.get('system') or not example.get('chat'):
+            continue
+        alpaca_item = convert_glaive_to_alpaca(example)
+        alpaca_data.append(alpaca_item)
+        if i > CONFIG['glaive_scan_limit']:
+            break
+
+    train_data = alpaca_data[: CONFIG['train_num_samples']]
+    if not train_data:
+        log_error('训练集转换失败，未得到有效样本')
+        return False
+
+    write_json_file(train_path, train_data)
+    log(f'  训练集保存: {train_path} ({len(train_data)} 条)')
+    return True
+
+
+def _prepare_test_data(test_path: Path) -> bool:  # noqa: C901
+    '''准备测试数据。'''
+    from huggingface_hub import hf_hub_download
+
+    previous_endpoint = override_hf_endpoint(
+        CONFIG['test_dataset_endpoint']
+    )
+    try:
+        log(f'  正在解析测试集仓库: {CONFIG["test_dataset_repo"]}')
+        if CONFIG['test_dataset_endpoint']:
+            log(f'  测试集下载端点: {CONFIG["test_dataset_endpoint"]}')
+        try:
+            test_data_file = resolve_test_dataset_file(
+                CONFIG['test_dataset_repo'], CONFIG['test_data_file']
+            )
+        except Exception as exc:
+            log_error(f'解析测试集文件失败: {exc}')
+            return False
+
+        log(f'  选中的测试集文件: {test_data_file}')
+        try:
+            local_test_file = hf_hub_download(
+                repo_id=CONFIG['test_dataset_repo'],
+                filename=test_data_file,
+                repo_type='dataset',
+            )
+        except Exception as exc:
+            log_error(f'下载测试集文件失败: {exc}')
+            return False
+    finally:
+        restore_hf_endpoint(previous_endpoint)
+
+    try:
+        raw_test_data = load_records_from_local_dataset_file(
+            Path(local_test_file)
+        )
+    except Exception as exc:
+        log_error(f'加载测试集文件失败: {exc}')
+        return False
+
+    normalized_test_data = []
+    for index, item in enumerate(raw_test_data):
+        normalized = normalize_test_record(item, index)
+        if normalized:
+            normalized_test_data.append(normalized)
+        if len(normalized_test_data) >= CONFIG['eval_num_samples']:
+            break
+
+    if not normalized_test_data:
+        log_error('测试集归一化失败，未得到有效样本')
+        return False
+
+    write_jsonl_file(test_path, normalized_test_data)
+    log(f'  测试集保存: {test_path} ({len(normalized_test_data)} 条)')
+    return True
+
+
+def step1_prepare_data(step_label='[1/4]'):  # noqa: C901
     log_step(f'{step_label} 下载并准备训练集和测试集...')
     ensure_local_site_packages()
 
@@ -656,96 +762,17 @@ def step1_prepare_data(step_label='[1/4]'):
         return True
 
     try:
-        from datasets import load_dataset
-        from huggingface_hub import hf_hub_download
+        from datasets import load_dataset  # noqa: F401
+        from huggingface_hub import hf_hub_download  # noqa: F401
     except ImportError as exc:
         log_error(f'缺少依赖，请先安装 datasets 和 huggingface_hub: {exc}')
         return False
 
-    if not train_ready:
-        previous_endpoint = override_hf_endpoint(
-            CONFIG['train_dataset_endpoint']
-        )
-        try:
-            log(
-                f'  正在从 Hugging Face 下载训练集: '
-                f'{CONFIG["train_dataset_repo"]}'
-            )
-            if CONFIG['train_dataset_endpoint']:
-                log(f'  训练集下载端点: {CONFIG["train_dataset_endpoint"]}')
-            dataset = load_dataset(CONFIG['train_dataset_repo'], split='train')
-        finally:
-            restore_hf_endpoint(previous_endpoint)
+    if not train_ready and not _prepare_train_data(train_path):
+        return False
 
-        alpaca_data = []
-        log('  开始按给定逻辑转换 Glaive 训练集...')
-        for i, example in enumerate(dataset):
-            if not example.get('system') or not example.get('chat'):
-                continue
-            alpaca_item = convert_glaive_to_alpaca(example)
-            alpaca_data.append(alpaca_item)
-            if i > CONFIG['glaive_scan_limit']:
-                break
-
-        train_data = alpaca_data[: CONFIG['train_num_samples']]
-        if not train_data:
-            log_error('训练集转换失败，未得到有效样本')
-            return False
-
-        write_json_file(train_path, train_data)
-        log(f'  训练集保存: {train_path} ({len(train_data)} 条)')
-
-    if not test_ready:
-        previous_endpoint = override_hf_endpoint(
-            CONFIG['test_dataset_endpoint']
-        )
-        try:
-            log(f'  正在解析测试集仓库: {CONFIG["test_dataset_repo"]}')
-            if CONFIG['test_dataset_endpoint']:
-                log(f'  测试集下载端点: {CONFIG["test_dataset_endpoint"]}')
-            try:
-                test_data_file = resolve_test_dataset_file(
-                    CONFIG['test_dataset_repo'], CONFIG['test_data_file']
-                )
-            except Exception as exc:
-                log_error(f'解析测试集文件失败: {exc}')
-                return False
-
-            log(f'  选中的测试集文件: {test_data_file}')
-            try:
-                local_test_file = hf_hub_download(
-                    repo_id=CONFIG['test_dataset_repo'],
-                    filename=test_data_file,
-                    repo_type='dataset',
-                )
-            except Exception as exc:
-                log_error(f'下载测试集文件失败: {exc}')
-                return False
-        finally:
-            restore_hf_endpoint(previous_endpoint)
-
-        try:
-            raw_test_data = load_records_from_local_dataset_file(
-                Path(local_test_file)
-            )
-        except Exception as exc:
-            log_error(f'加载测试集文件失败: {exc}')
-            return False
-
-        normalized_test_data = []
-        for index, item in enumerate(raw_test_data):
-            normalized = normalize_test_record(item, index)
-            if normalized:
-                normalized_test_data.append(normalized)
-            if len(normalized_test_data) >= CONFIG['eval_num_samples']:
-                break
-
-        if not normalized_test_data:
-            log_error('测试集归一化失败，未得到有效样本')
-            return False
-
-        write_jsonl_file(test_path, normalized_test_data)
-        log(f'  测试集保存: {test_path} ({len(normalized_test_data)} 条)')
+    if not test_ready and not _prepare_test_data(test_path):
+        return False
 
     return True
 
@@ -774,7 +801,8 @@ def step2_sft_training():
 
     model = (
         lazyllm.TrainableModule(
-            CONFIG['sft_base_model'], target_path=str(checkpoint_dir)
+            CONFIG['sft_base_model'],
+            target_path=str(checkpoint_dir)
         )
         .mode('finetune')
         .trainset(str(train_file))
@@ -1141,6 +1169,16 @@ def init_config(args):
     global LAZYLLM_PATH, SFT_BASE_MODEL, JUDGE_MODEL
     global DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR
 
+    # 自动检测 lazyllm 路径
+    lazyllm_path = args.lazyllm_path if args.lazyllm_path is not None else LAZYLLM_PATH
+    if lazyllm_path is None:
+        lazyllm_path = get_lazyllm_path()
+        if lazyllm_path is None:
+            raise RuntimeError(
+                '未找到 lazyllm 安装路径。请通过 pip install lazyllm 安装，'
+                '或使用 --lazyllm-path 参数指定路径。'
+            )
+
     train_num_samples = (
         args.train_num_samples
         if args.train_num_samples is not None
@@ -1153,9 +1191,7 @@ def init_config(args):
     )
 
     CONFIG = {
-        'lazyllm_path': args.lazyllm_path
-        if args.lazyllm_path is not None
-        else LAZYLLM_PATH,
+        'lazyllm_path': lazyllm_path,
         'sft_base_model': (
             args.sft_base_model
             if args.sft_base_model is not None
@@ -1271,10 +1307,16 @@ def main():
 
     os.chdir(BASE_DIR)
 
-    if not Path(config['lazyllm_path']).exists():
-        log_error(f'LAZYLLM_PATH 不存在: {config["lazyllm_path"]}')
-        log('请修改脚本中的 LAZYLLM_PATH 配置')
-        safe_exit(1)
+    # 检查模型路径是否存在（LAZYLLM_PATH 可以是 Python 包路径，不需要检查）
+    model_paths = [
+        ('SFT_BASE_MODEL', config['sft_base_model']),
+        ('JUDGE_MODEL', config['judge_model']),
+    ]
+    for name, path in model_paths:
+        if not Path(path).exists():
+            log_error(f'{name} 不存在: {path}')
+            log(f'请使用 --{name.lower().replace("_", "-")} 参数指定正确路径')
+            safe_exit(1)
 
     log('==========================================')
     log('一键 Tool Use SFT 训练脚本')
