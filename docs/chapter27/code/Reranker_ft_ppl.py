@@ -491,6 +491,8 @@ def parse_args() -> argparse.Namespace:
 示例:
   输入方式一 - 用户数据:
     python Reranker_ft_ppl.py --build_dataset --data_path /path/to/data.jsonl
+  一键启动（构建 + 微调/部署 + 评估）:
+    python Reranker_ft_ppl.py --one_click --train_flag --data_path /path/to/data.jsonl
   输入方式二 - HuggingFace:
     python Reranker_ft_ppl.py --build_dataset \
     --dataset_name virattt/financial-qa-10K
@@ -504,6 +506,11 @@ def parse_args() -> argparse.Namespace:
     )
 
     data_group = parser.add_argument_group('数据参数')
+    data_group.add_argument(
+        '--one_click',
+        action='store_true',
+        help='一键执行全流程：构建数据集 + 部署/微调 + 评估',
+    )
     data_group.add_argument(
         '--build_dataset', action='store_true', help='构建数据集'
     )
@@ -599,7 +606,8 @@ def main(args: argparse.Namespace) -> None:
     print(' ' * 20 + 'Reranker 微调系统（Pipeline 版）')
     print('=' * 80 + '\n')
 
-    if args.build_dataset:
+    need_build_dataset = args.build_dataset or args.one_click
+    if need_build_dataset:
         print(
             '\n>>> 步骤 1: 构建数据集（加载 + 提取 query/pos → '
             'Pipeline 划分/难负样本/格式化/保存）'
@@ -653,7 +661,10 @@ def main(args: argparse.Namespace) -> None:
                 output_subdir=args.output_subdir,
             )
         print('数据集构建完成。')
-        return
+        # 兼容旧行为：仅 --build_dataset 时构建后退出；
+        # --one_click 时继续后续部署与评估
+        if args.build_dataset and not args.one_click:
+            return
 
     # 使用已有数据集进行微调/评估
     train_path = os.path.join(args.output_subdir, 'rerank_train.jsonl')

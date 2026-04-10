@@ -443,6 +443,9 @@ def parse_args() -> argparse.Namespace:
  从FiQA数据集构建训练数据:
    python reranker_finetune.py --build_dataset --use_fiqa
 
+ 一键启动（构建 + 微调/部署 + 评估）:
+   python reranker_finetune.py --one_click --train_flag --use_fiqa
+
 使用基线模型评估:
    python reranker_finetune.py --rerank_path BAAI/bge-reranker-base
 
@@ -458,6 +461,8 @@ def parse_args() -> argparse.Namespace:
 
     # 数据相关参数
     data_group = parser.add_argument_group('数据参数')
+    data_group.add_argument('--one_click', action='store_true',
+                            help='一键执行全流程：构建数据集 + 部署/微调 + 评估')
     data_group.add_argument('--build_dataset', action='store_true',
                             help='构建或强制重建数据集')
     data_group.add_argument('--use_fiqa', action='store_true',
@@ -528,7 +533,8 @@ def main(args: argparse.Namespace) -> None:
     print('=' * 80 + '\n')
 
     # 1. 数据准备
-    if args.build_dataset:
+    need_build_dataset = args.build_dataset or args.one_click
+    if need_build_dataset:
         print('\n>>> 步骤 1: 构建数据集')
 
         if args.use_fiqa:
@@ -550,7 +556,10 @@ def main(args: argparse.Namespace) -> None:
             )
             train_data_path, eval_data_path, kb_path = trd, evd, kb
         print('数据集构建完成！')
-        return
+        # 兼容旧行为：仅 --build_dataset 时构建后退出；
+        # --one_click 时继续后续部署与评估
+        if args.build_dataset and not args.one_click:
+            return
 
     # 检查数据集是否存在
     work_path = os.getcwd()

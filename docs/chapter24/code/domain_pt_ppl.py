@@ -857,14 +857,13 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  # 使用环境前可执行: source activate_lazy.sh
-  python medical_domain_pt_ppl.py --build_dataset --max_samples 1000
-  python medical_domain_pt_ppl.py --build_dataset
+  python domain_pt_ppl.py --build_dataset --max_samples 1000
+  python domain_pt_ppl.py --build_dataset
       --local_path /path/to/data.jsonl
-  python medical_domain_pt_ppl.py --train_flag
-  python medical_domain_pt_ppl.py --eval_quality --max_samples 50
-  python medical_domain_pt_ppl.py --eval_model
-  python medical_domain_pt_ppl.py --eval_model
+  python domain_pt_ppl.py --train_flag
+  python domain_pt_ppl.py --eval_quality --max_samples 50
+  python domain_pt_ppl.py --eval_model
+  python domain_pt_ppl.py --eval_model
       --pretrained_model /path/to/pretrained
         """,
     )

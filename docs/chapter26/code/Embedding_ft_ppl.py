@@ -575,6 +575,9 @@ def parse_args() -> argparse.Namespace:
 输入方式一 - 用户数据文件:
    python Embedding_ft_ppl.py --build_dataset --data_path /path/to/your.jsonl
 
+ 一键启动（构建 + 微调/部署 + 评估）:
+   python Embedding_ft_ppl.py --one_click --train_flag --data_path /path/to/your.jsonl
+
  输入方式二:
    python Embedding_ft_ppl.py --build_dataset
     python Embedding_ft_ppl.py --build_dataset \\
@@ -590,6 +593,8 @@ def parse_args() -> argparse.Namespace:
 
     # 数据相关参数（两种输入：--data_path 用户数据文件 | --dataset_name HuggingFace 数据集名）
     data_group = parser.add_argument_group('数据参数')
+    data_group.add_argument('--one_click', action='store_true',
+                            help='一键执行全流程：构建数据集 + 部署/微调 + 评估')
     data_group.add_argument('--build_dataset', action='store_true',
                             help='构建或强制重建数据集')
     data_group.add_argument('--data_path', type=str, default=None,
@@ -700,13 +705,11 @@ def main(args: argparse.Namespace) -> None:
     print('=' * 80 + '\n')
     llm = lazyllm.TrainableModule(
         '/mnt/lustre/share_data/lazyllm/models/qwen2.5-14b-instruct')
-#     llm = lazyllm.TrainableModule('Qwen2.5-VL-32B-Instruct').deploy_method(
-#     lazyllm.deploy.vllm,
-#     url='http://10.119.21.233:25120/v1'
-# )
+
     embedding_serve = lazyllm.TrainableModule('BAAI/bge-large-en-v1.5')
     # ====== 1. 数据准备 ======
-    if args.build_dataset:
+    need_build_dataset = args.build_dataset or args.one_click
+    if need_build_dataset:
         print('\n>>> 步骤 1: 构建数据集（加载 + 提取 query/pos → Pipeline 划分/难负样本/格式化/保存）')
 
         # 仅负责加载与提取 query/pos，其余由 pipeline 完成
@@ -750,7 +753,10 @@ def main(args: argparse.Namespace) -> None:
             output_path=args.output_dir,
         )
         print('数据集构建完成！')
-        return
+        # 兼容旧行为：仅构建数据集时保持立即退出；
+        # --one_click 时继续执行后续部署/评估
+        if args.build_dataset and not args.one_click:
+            return
 
     train_path = os.path.join(args.output_dir, 'embed_train.json')
     eval_path = os.path.join(args.output_dir, 'embed_eval.json')
