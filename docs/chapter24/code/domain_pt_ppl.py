@@ -880,7 +880,7 @@ def parse_args() -> argparse.Namespace:
     data.add_argument('--content_key', type=str,
                       default=FINANCE_CONTENT_KEY, help='文本字段 key')
     data.add_argument('--output_dir', type=str,
-                      default='/home/mnt/zhangkejun/work/dataset/financial_pt')
+                      default='./dataset/financial_pt')
     data.add_argument('--domain', type=str, default='finance',
                       help='领域：medical/finance/...，与预设关键词一致')
     data.add_argument('--language', type=str, default='en',

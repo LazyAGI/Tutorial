@@ -551,7 +551,7 @@ def parse_args() -> argparse.Namespace:
     data.add_argument('--max_samples', type=int, default=None,
                       help='最多加载条数，None=全量')
     data.add_argument('--output_dir', type=str,
-                      default='/home/mnt/zhangkejun/work/dataset/huatuo_ft')
+                      default='./dataset/huatuo_ft')
 
     ppl = parser.add_argument_group('Pipeline 参数')
     ppl.add_argument('--output_format', type=str, default='alpaca',
@@ -563,7 +563,7 @@ def parse_args() -> argparse.Namespace:
     model = parser.add_argument_group('模型参数')
     model.add_argument(
         '--base_model', type=str,
-        default='/mnt/lustre/share_data/lazyllm/models/qwen2.5-14b-instruct'
+        default='Qwen/Qwen2.5-14B-Instruct'
     )
     model.add_argument('--train_flag', action='store_true',
                        help='执行微调')

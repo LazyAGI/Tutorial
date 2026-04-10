@@ -12,7 +12,6 @@
   HotpotQA（HuggingFace: hotpot_qa/fullwiki）
 
 使用示例：
-  cd /home/mnt/zhangkejun/work/ppl
   python agentic_rag_multihop_ft_ppl.py --run_experiment
   python agentic_rag_multihop_ft_ppl.py --max_train_samples 200
   python agentic_rag_multihop_ft_ppl.py --max_eval_samples 50
@@ -65,9 +64,9 @@ from lazyllm.tools.data.pipelines.rag_pipelines import (  # noqa: E402
 
 DEFAULT_DATASET_NAME = 'hotpot_qa'
 DEFAULT_DATASET_CONFIG = 'fullwiki'
-DEFAULT_OUTPUT_DIR = '/home/mnt/zhangkejun/work/dataset/agentic_rag_multihop'
+DEFAULT_OUTPUT_DIR = './dataset/agentic_rag_multihop'
 DEFAULT_BASE_MODEL = (
-    '/mnt/lustre/share_data/lazyllm/models/qwen2.5-14b-instruct'
+    'Qwen/Qwen2.5-14B-Instruct'
 )
 
 MULTIHOP_INSTRUCTION = (

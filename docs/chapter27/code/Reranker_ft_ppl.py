@@ -552,7 +552,7 @@ def parse_args() -> argparse.Namespace:
     data_group.add_argument(
         '--output_subdir',
         type=str,
-        default='/home/mnt/zhangkejun/work/dataset/reranker_ft',
+        default='./dataset/reranker_ft',
     )
 
     ppl_group = parser.add_argument_group('Pipeline 参数')
@@ -593,7 +593,7 @@ def parse_args() -> argparse.Namespace:
         '--output_path',
         type=str,
         default=(
-            '/home/mnt/zhangkejun/work/dataset/reranker_ft/'
+            './dataset/reranker_ft/'
             'rerank_eval_results.jsonl'
         ),
     )
@@ -669,9 +669,7 @@ def main(args: argparse.Namespace) -> None:
     # 使用已有数据集进行微调/评估
     train_path = os.path.join(args.output_subdir, 'rerank_train.jsonl')
     eval_path = os.path.join(args.output_subdir, 'rerank_eval.jsonl')
-    # train_path = '/home/mnt/zhangkejun/work/dataset/rerank_train.jsonl'
-    # eval_path = '/home/mnt/zhangkejun/work/dataset/embed_eval.json'
-    # kb_path = '/home/mnt/zhangkejun/work/KB/rerank_kb.txt'
+
 
     if not os.path.exists(train_path):
         print(

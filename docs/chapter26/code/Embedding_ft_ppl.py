@@ -655,7 +655,7 @@ def parse_args() -> argparse.Namespace:
                            help='BM25 挖掘语言')
     ppl_group.add_argument(
         '--output_dir', type=str,
-        default='/home/mnt/zhangkejun/work/dataset/embed_ft',
+        default='./dataset/embed_ft',
         help='输出目录')
     # 模型相关参数
     model_group = parser.add_argument_group('模型参数')
@@ -688,7 +688,7 @@ def parse_args() -> argparse.Namespace:
                             help='在查询前添加指令')
     eval_group.add_argument(
         '--output_path', type=str,
-        default='/home/mnt/zhangkejun/work/dataset/embed_ft/'
+        default='./dataset/embed_ft/'
                 'embed_eval_results.jsonl',
         help='评估结果保存路径')
 
