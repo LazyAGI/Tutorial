@@ -13,7 +13,7 @@ HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
 SFT_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
-LAZYLLM_PATH = '/LAZYLLM'
+LAZYLLM_PATH = None
 JUDGE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
 
 
@@ -78,6 +78,17 @@ LOG_FILE = LOG_DIR / (
     'run_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
 )
 CONFIG = {}
+
+
+def get_lazyllm_path():
+    '''自动检测 lazyllm 安装路径'''
+    import importlib.util
+
+    spec = importlib.util.find_spec('lazyllm')
+    if spec and spec.origin:
+        return str(Path(spec.origin).parent.parent)
+    return None
+
 
 SUPPORTED_TEST_DATA_SUFFIXES = (
     '.jsonl',
@@ -1158,6 +1169,16 @@ def init_config(args):
     global LAZYLLM_PATH, SFT_BASE_MODEL, JUDGE_MODEL
     global DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR
 
+    # 自动检测 lazyllm 路径
+    lazyllm_path = args.lazyllm_path if args.lazyllm_path is not None else LAZYLLM_PATH
+    if lazyllm_path is None:
+        lazyllm_path = get_lazyllm_path()
+        if lazyllm_path is None:
+            raise RuntimeError(
+                '未找到 lazyllm 安装路径。请通过 pip install lazyllm 安装，'
+                '或使用 --lazyllm-path 参数指定路径。'
+            )
+
     train_num_samples = (
         args.train_num_samples
         if args.train_num_samples is not None
@@ -1170,9 +1191,7 @@ def init_config(args):
     )
 
     CONFIG = {
-        'lazyllm_path': args.lazyllm_path
-        if args.lazyllm_path is not None
-        else LAZYLLM_PATH,
+        'lazyllm_path': lazyllm_path,
         'sft_base_model': (
             args.sft_base_model
             if args.sft_base_model is not None
@@ -1288,8 +1307,8 @@ def main():
 
     os.chdir(BASE_DIR)
 
+    # 检查模型路径是否存在（LAZYLLM_PATH 可以是 Python 包路径，不需要检查）
     model_paths = [
-        ('LAZYLLM_PATH', config['lazyllm_path']),
         ('SFT_BASE_MODEL', config['sft_base_model']),
         ('JUDGE_MODEL', config['judge_model']),
     ]

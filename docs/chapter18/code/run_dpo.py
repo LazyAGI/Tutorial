@@ -22,7 +22,7 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-LAZYLLM_PATH = '/LAZYLLM'
+LAZYLLM_PATH = None
 DPO_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
 JUDGE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
 PKU_SAFERLHF_DATASET_ENDPOINT = os.environ.get(
@@ -54,6 +54,16 @@ for d in [DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR]:
 LOG_FILE = (
     LOG_DIR / f'run_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
 )
+
+
+def get_lazyllm_path():
+    '''自动检测 lazyllm 安装路径'''
+    import importlib.util
+
+    spec = importlib.util.find_spec('lazyllm')
+    if spec and spec.origin:
+        return str(Path(spec.origin).parent.parent)
+    return None
 
 
 def log(msg: str):
@@ -502,7 +512,9 @@ class SafetyJudge:
 def step4_evaluation():
     log_step('[4/4] 运行安全性评估...')
 
-    sys.path.insert(0, LAZYLLM_PATH)
+    # 如果 LAZYLLM_PATH 存在（非 pip 安装场景），则添加到 sys.path
+    if LAZYLLM_PATH and Path(LAZYLLM_PATH).exists():
+        sys.path.insert(0, LAZYLLM_PATH)
 
     judge_max_model_len = int(os.environ.get('JUDGE_MAX_MODEL_LEN', '4096'))
     judge_gpu_memory_utilization = float(
@@ -678,8 +690,16 @@ def apply_cli_overrides(args):
     global PKU_SAFERLHF_DATASET_ENDPOINT
     global DATA_DIR, MODEL_DIR, OUTPUT_DIR
 
+    # 自动检测 lazyllm 路径
     if args.lazyllm_path:
         LAZYLLM_PATH = args.lazyllm_path
+    elif LAZYLLM_PATH is None:
+        LAZYLLM_PATH = get_lazyllm_path()
+        if LAZYLLM_PATH is None:
+            raise RuntimeError(
+                '未找到 lazyllm 安装路径。请通过 pip install lazyllm 安装，'
+                '或使用 --lazyllm-path 参数指定路径。'
+            )
     if args.dpo_base_model:
         DPO_BASE_MODEL = args.dpo_base_model
     if args.judge_model:
@@ -791,8 +811,8 @@ def main():
     apply_cli_overrides(args)
     setup_runtime_paths()
 
+    # 检查模型路径是否存在（LAZYLLM_PATH 可以是 Python 包路径，不需要检查）
     model_paths = [
-        ('LAZYLLM_PATH', LAZYLLM_PATH),
         ('DPO_BASE_MODEL', DPO_BASE_MODEL),
         ('JUDGE_MODEL', JUDGE_MODEL),
     ]

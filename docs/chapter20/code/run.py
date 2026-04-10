@@ -17,7 +17,7 @@ HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
 # 路径配置 - 如果路径不存在会提示用户配置
-LAZYLLM_PATH = '/LAZYLLM'
+LAZYLLM_PATH = None
 PIPELINE_MODEL = 'Qwen/Qwen3-30B-A3B-Instruct-2507'
 SFT_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
 
@@ -200,8 +200,13 @@ def step2_data_pipeline():
 
     pass
 
-    sys.path.insert(0, LAZYLLM_PATH)
-    sys.path.insert(0, str(Path(LAZYLLM_PATH).parent))
+    # 如果 LAZYLLM_PATH 存在（非 pip 安装场景），则添加到 sys.path
+    if LAZYLLM_PATH and Path(LAZYLLM_PATH).exists():
+        sys.path.insert(0, LAZYLLM_PATH)
+        sys.path.insert(0, str(Path(LAZYLLM_PATH).parent))
+        log(f'  使用本地 LazyLLM 路径: {LAZYLLM_PATH}')
+    else:
+        log('  使用已安装的 lazyllm 包')
 
     import lazyllm
     from lazyllm.tools.data.pipelines.codegen_pipelines import (
@@ -706,13 +711,34 @@ def parse_args():
 CONFIG = {}
 
 
+def get_lazyllm_path():
+    '''自动检测 lazyllm 安装路径'''
+    import importlib.util
+
+    spec = importlib.util.find_spec('lazyllm')
+    if spec and spec.origin:
+        return str(Path(spec.origin).parent.parent)
+    return None
+
+
 def init_config(args):
     global CONFIG
     global LAZYLLM_PATH, PIPELINE_MODEL, SFT_MODEL
     global DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR
     global TINY_CODES_DATASET_ENDPOINT
+
+    # 自动检测 lazyllm 路径
+    lazyllm_path = args.lazyllm_path if args.lazyllm_path is not None else LAZYLLM_PATH
+    if lazyllm_path is None:
+        lazyllm_path = get_lazyllm_path()
+        if lazyllm_path is None:
+            raise RuntimeError(
+                '未找到 lazyllm 安装路径。请通过 pip install lazyllm 安装，'
+                '或使用 --lazyllm-path 参数指定路径。'
+            )
+
     CONFIG = {
-        'lazyllm_path': args.lazyllm_path or LAZYLLM_PATH,
+        'lazyllm_path': lazyllm_path,
         'pipeline_model': args.pipeline_model or PIPELINE_MODEL,
         'sft_model': args.sft_model or SFT_MODEL,
         'data_dir': Path(args.data_dir) if args.data_dir else DATA_DIR,
@@ -767,8 +793,8 @@ def main():
         'run_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
     )
 
+    # 检查模型路径是否存在（LAZYLLM_PATH 可以是 Python 包路径，不需要检查）
     model_paths = [
-        ('LAZYLLM_PATH', config['lazyllm_path']),
         ('PIPELINE_MODEL', config['pipeline_model']),
         ('SFT_MODEL', config['sft_model']),
     ]
