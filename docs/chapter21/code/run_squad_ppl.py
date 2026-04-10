@@ -1,4 +1,4 @@
-"""
+'''
 SQuAD 2.0 长上下文微调：使用 build_long_context_pipeline 将短 context 扩写并重组为长上下文，
 再进行 SFT / LoRA 微调与评测。
 
@@ -20,7 +20,7 @@ pipeline 流程：
   - Token-F1 / ROUGE-L / Exact Match，对多答案取最优
 
 支持 --mode: prepare | infer | train | eval | full
-"""
+'''
 import os
 import re
 import json
@@ -50,10 +50,7 @@ EVAL_SAMPLES = 200
 SOURCE_LOAD_LIMIT = 4000
 TRAIN_CONTEXT_WINDOW = 8192
 
-BASE_MODEL_PATH = (
-    '/home/mnt/path/.lazyllm/model/modelscope/qwen/'
-    'Qwen2.5-7B-Instruct'
-)
+BASE_MODEL_PATH = 'Qwen2.5-7B-Instruct'
 PPL_MODEL = 'qwen2.5-32b-instruct'
 PPL_TARGET_WORDS = '700-1100'
 
@@ -175,12 +172,12 @@ def _norm_preds(raw: Any) -> List[str]:
 # ──────────────────────────────────────────────
 
 def _context_dedup_key(context: str) -> str:
-    """用于判断 context 是否重复：去首尾空白并压缩空白。"""
+    '''用于判断 context 是否重复：去首尾空白并压缩空白。'''
     return re.sub(r'\s+', ' ', context.strip())
 
 
-def _load_squad_raw(limit: int) -> List[Dict]:
-    """加载 SQuAD 2.0：有答案、三字段非空，且 context 不重复；最多 limit 条；落盘与 pipeline 输入一致。"""
+def _load_squad_raw(limit: int) -> List[Dict]:  # noqa: C901
+    '''加载 SQuAD 2.0：有答案、三字段非空，且 context 不重复；最多 limit 条；落盘与 pipeline 输入一致。'''
     if os.path.exists(RAW_JSONL_PATH):
         print(f'原始数据已存在，直接加载: {RAW_JSONL_PATH}')
         records = []
@@ -268,12 +265,12 @@ def _load_squad_raw(limit: int) -> List[Dict]:
 
 
 def _run_long_context_pipeline(records: List[Dict]) -> List[Dict]:
-    """
+    '''
     调用 build_long_context_pipeline：
       - ContextExpansion：32B LLM 将短 context 扩写为长文档
       - ContextReconstruction：将扩写文档与干扰段拼接成长上下文
     输出字段：{long_context, question, answer}
-    """
+    '''
     print('\n正在启动 32B LLM（vllm）用于 context 扩写...')
     llm = TrainableModule(PPL_MODEL).deploy_method(
         (deploy.vllm, {
@@ -557,7 +554,7 @@ def _gen_ckpt_dir() -> str:
     return out
 
 
-def main(
+def main(  # noqa: C901
     model_path: str,
     mode: str,
     eval_data_path: Optional[str] = None,

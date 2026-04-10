@@ -1,7 +1,7 @@
-"""
+'''
 Wikitext 预训练一体化脚本：数据准备、训练、评测一步到位。
 支持 --mode: prepare | train | eval | full
-"""
+'''
 import os
 import re
 import json
@@ -32,10 +32,7 @@ RAW_LOAD_SAMPLES = 10000
 PREFIX_RATIO = 0.6
 SENTENCE_END_CHARS = '.!?;\n'
 
-BASE_MODEL_PATH = (
-    '/home/mnt/chenzhe1/.lazyllm/model/modelscope/qwen/'
-    'Qwen2.5-0.5B-Instruct'
-)
+BASE_MODEL_PATH = 'Qwen2.5-0.5B-Instruct'
 MAX_EVAL_SAMPLES = None
 MAX_NEW_TOKENS = 256
 GEN_BATCH_SIZE = 32

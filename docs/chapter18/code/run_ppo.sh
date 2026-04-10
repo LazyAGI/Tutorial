@@ -1,9 +1,61 @@
-$ACTOR_MODEL_PATH = "/LLaMA-Factory/models/LLM-Research/Llama-3.2-1B-Instruct"
-$RM_MODEL_PATH = "/LLaMA-Factory/models/LLM-Research/Llama-3.2-1B-Instruct"
-    #奖励模型量化
-    #5060启用BF16    
-    #序列截断
-cd LLaMA-Factory
+#!/usr/bin/env bash
+set -euo pipefail
+
+HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+export HF_ENDPOINT
+
+LLAMAFACTORY_DIR="${LLAMAFACTORY_DIR:-LLaMA-Factory}"
+DATASET_INFO_PATH="${DATASET_INFO_PATH:-${LLAMAFACTORY_DIR}/data/dataset_info.json}"
+DATASET_NAME="${DATASET_NAME:-ultrafeedback_h4_ppo}"
+HF_DATASET_REPO="${HF_DATASET_REPO:-HuggingFaceH4/ultrafeedback_binarized}"
+HF_DATASET_SPLIT="${HF_DATASET_SPLIT:-train_gen}"
+
+# Llama 3.2 是 gated 模型。
+# 如果你遇到 401/403 或 access denied，需要先在 HF 页面同意许可证：
+# https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct
+ACTOR_MODEL_PATH="${ACTOR_MODEL_PATH:-meta-llama/Llama-3.2-1B-Instruct}"
+
+# 这里只是示例写法。实际 PPO 训练更推荐指向你已经训练好的奖励模型。
+RM_MODEL_PATH="${RM_MODEL_PATH:-meta-llama/Llama-3.2-1B-Instruct}"
+
+python - <<'PY'
+import json
+import os
+from pathlib import Path
+
+dataset_info_path = Path(os.environ["DATASET_INFO_PATH"])
+dataset_info_path.parent.mkdir(parents=True, exist_ok=True)
+
+if dataset_info_path.exists():
+    data = json.loads(dataset_info_path.read_text(encoding="utf-8"))
+else:
+    data = {}
+
+data[os.environ["DATASET_NAME"]] = {
+    "hf_hub_url": os.environ["HF_DATASET_REPO"],
+    "split": os.environ["HF_DATASET_SPLIT"],
+    "formatting": "sharegpt",
+    "columns": {
+        "messages": "messages"
+    },
+    "tags": {
+        "role_tag": "role",
+        "content_tag": "content",
+        "user_tag": "user",
+        "assistant_tag": "assistant",
+        "system_tag": "system"
+    }
+}
+
+dataset_info_path.write_text(
+    json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+    encoding="utf-8",
+)
+print(f"Registered dataset '{os.environ['DATASET_NAME']}' in {dataset_info_path}")
+PY
+
+cd "$LLAMAFACTORY_DIR"
+
 llamafactory-cli train \
     --stage ppo \
     --do_train \
@@ -12,7 +64,7 @@ llamafactory-cli train \
     --reward_model "$RM_MODEL_PATH" \
     --reward_model_type full \
     --reward_model_quantization_bit 4 \
-    --dataset ultrafeedback_ppo \
+    --dataset "$DATASET_NAME" \
     --overwrite_output_dir True \
     --max_samples 3000 \
     --template llama3 \

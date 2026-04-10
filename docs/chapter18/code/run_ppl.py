@@ -15,10 +15,10 @@ from pathlib import Path
 HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
 os.environ.setdefault('HF_ENDPOINT', HF_ENDPOINT)
 
-LAZYLLM_PATH = '/path/to/your/lazyllm'
-PIPELINE_MODEL = '/path/to/pipeline/model'
-DPO_BASE_MODEL = '/path/to/dpo/base/model'
-JUDGE_MODEL = '/path/to/judge/model'
+LAZYLLM_PATH = None
+PIPELINE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
+DPO_BASE_MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
+JUDGE_MODEL = 'Qwen/Qwen2.5-14B-Instruct'
 PKU_SAFERLHF_DATASET_ENDPOINT = os.environ.get(
     'PKU_SAFERLHF_DATASET_ENDPOINT', HF_ENDPOINT
 )
@@ -46,6 +46,17 @@ for d in [DATA_DIR, MODEL_DIR, OUTPUT_DIR, LOG_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 LOG_FILE = LOG_DIR / f'run_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+
+
+def get_lazyllm_path():
+    '''自动检测 lazyllm 安装路径'''
+    import importlib.util
+
+    spec = importlib.util.find_spec('lazyllm')
+    if spec and spec.origin:
+        return str(Path(spec.origin).parent.parent)
+    return None
+
 
 def log(msg: str):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -259,13 +270,13 @@ def step1_prepare_data():
 def step2_preference_pipeline():
     log_step('[2/5] 运行 Preference Pipeline...')
 
-    if not Path(LAZYLLM_PATH).exists():
-        log_error(f'LAZYLLM_PATH 不存在: {LAZYLLM_PATH}')
-        log('请修改脚本中的 LAZYLLM_PATH 配置')
-        return False
-
-    sys.path.insert(0, LAZYLLM_PATH)
-    sys.path.insert(0, str(Path(LAZYLLM_PATH).parent))
+    # 如果 LAZYLLM_PATH 存在（非 pip 安装场景），则添加到 sys.path
+    if LAZYLLM_PATH and Path(LAZYLLM_PATH).exists():
+        sys.path.insert(0, LAZYLLM_PATH)
+        sys.path.insert(0, str(Path(LAZYLLM_PATH).parent))
+        log(f'  使用本地 LazyLLM 路径: {LAZYLLM_PATH}')
+    else:
+        log('  使用已安装的 lazyllm 包')
 
     import lazyllm
     from lazyllm.tools.data.pipelines import build_preference_pipeline
@@ -518,7 +529,9 @@ class SafetyJudge:
 def step5_safety_evaluation():
     log_step('[5/5] 运行安全性评估...')
 
-    sys.path.insert(0, LAZYLLM_PATH)
+    # 如果 LAZYLLM_PATH 存在（非 pip 安装场景），则添加到 sys.path
+    if LAZYLLM_PATH and Path(LAZYLLM_PATH).exists():
+        sys.path.insert(0, LAZYLLM_PATH)
 
     JUDGE_MAX_MODEL_LEN = int(os.environ.get('JUDGE_MAX_MODEL_LEN', '4096'))
     JUDGE_GPU_MEMORY_UTILIZATION = float(os.environ.get('JUDGE_GPU_MEMORY_UTILIZATION', '0.9'))
@@ -669,8 +682,19 @@ CONFIG = {}
 def init_config(args):
     '''根据命令行参数初始化配置'''
     global CONFIG
+
+    # 自动检测 lazyllm 路径
+    lazyllm_path = args.lazyllm_path if args.lazyllm_path is not None else LAZYLLM_PATH
+    if lazyllm_path is None:
+        lazyllm_path = get_lazyllm_path()
+        if lazyllm_path is None:
+            raise RuntimeError(
+                '未找到 lazyllm 安装路径。请通过 pip install lazyllm 安装，'
+                '或使用 --lazyllm-path 参数指定路径。'
+            )
+
     CONFIG = {
-        'lazyllm_path': args.lazyllm_path or LAZYLLM_PATH,
+        'lazyllm_path': lazyllm_path,
         'pipeline_model': args.pipeline_model or PIPELINE_MODEL,
         'dpo_base_model': args.dpo_base_model or DPO_BASE_MODEL,
         'judge_model': args.judge_model or JUDGE_MODEL,
@@ -683,6 +707,21 @@ def init_config(args):
         d.mkdir(parents=True, exist_ok=True)
     return CONFIG
 def main():
+    args = parse_args()
+    init_config(args)
+
+    # 检查模型路径是否存在（LAZYLLM_PATH 可以是 Python 包路径，不需要检查）
+    model_paths = [
+        ('PIPELINE_MODEL', CONFIG['pipeline_model']),
+        ('DPO_BASE_MODEL', CONFIG['dpo_base_model']),
+        ('JUDGE_MODEL', CONFIG['judge_model']),
+    ]
+    for name, path in model_paths:
+        if not Path(path).exists():
+            log_error(f'{name} 不存在: {path}')
+            log(f'请使用 --{name.lower().replace("_", "-")} 参数指定正确路径')
+            safe_exit(1)
+
     log('==========================================')
     log('一键DPO安全对齐训练脚本')
     log('==========================================')
