@@ -92,6 +92,7 @@
     -   **数据蒸馏（Distillation）**：Self-Instruct 方法论，利用强模型（Teacher LLM）从种子指令出发自动生成大规模合成指令数据；基于 RAG 的文档驱动 QA 对生成。
     -   **Evol-Instruct（数据进化）**：In-breadth（多样性横向扩展）与 In-depth（复杂度逐步提升）两种进化策略，以 WizardLM 为范例。
     -   **SFT 数据质量评估**：IFD（Instruction Following Difficulty）指标计算方法与基于模型打分的难度加权采样策略。
+    -   **数据合成实战**: 基于数据流水线的SFT问答对合成。
 -   **第13课时：基于 LazyLLM 的微调全链路实战**
     -   **实验任务**：以"安全拒答"为主线，训练模型在面对暴力、网络攻击、隐私泄露等恶意指令时输出合规拒绝，同时保留正常问题的回答能力。
     -   **数据生成 Pipeline**：从 HuggingFace WildJailbreak 数据集流式下载 10000 条英文恶意提示，经 LazyLLM `Text2QA Pipeline`（TextToChunks → QA 生成 → QAScorer 评分 → 质量过滤 → Alpaca 格式转换）自动构建中文安全拒答训练数据。
@@ -126,8 +127,8 @@
 -   **第18课时：基于 LazyLLM 的对齐全链路实战**
     -   **奖励模型（RM）训练**：使用 `trl` 库的 `RewardTrainer` 实现 Pairwise Ranking Loss，将分类模型转化为标量打分器，基于 Anthropic HH-RLHF 偏好数据（prompt/chosen/rejected）训练。
     -   **PPO 强化学习训练**：以 CartPole 环境直观演示 RL 基本循环，延伸到 LLM 的四模型架构（策略/参考/奖励/价值模型），配置 PPOConfig 完成 RLHF 对齐。
-    -   **DPO 直接偏好优化**：`run_dpo.py` 完整流程，在偏好对上直接优化概率比，工程更简洁。
-    -   **GRPO 组级优化实战**：LazyLLM 的 `lazy_grpo.py`，以 GSM8K 答案正确性作为规则奖励信号，训练模型数学推理能力。
+    -   **DPO 直接偏好优化**：DPO 完整训练流程，在偏好对上直接优化概率比，无需奖励模型，工程更简洁。
+    -   **GRPO 组级优化实战**：以 GSM8K 答案正确性作为规则奖励信号，训练模型数学推理能力。
     -   **效果对比评测**：对比对齐前后模型在安全拒答、指令遵循、数学推理三个维度上的表现差异。
 
 
@@ -138,7 +139,8 @@
     -   **推理数据（CoT）构建**：Zero-shot CoT、Few-shot CoT、Auto-CoT 与 Self-Consistency（多路采样投票）的方法论；Magpie 风格从模型自生成 CoT 数据的大规模合成策略。
     -   **多跳推理数据构建**：多文档实体链构建，跨段落依赖关系设计，复杂逻辑推理路径的合成方法。
     -   **数学数据集构建**：Step-by-step 格式标准化、LaTeX 公式规范化；利用 SymPy/Z3 符号求解器自动验证数学步骤正确性；正确路径 vs 错误路径负样本对构建（过程监督数据）。
-    -   **数据合成与增强**：Evol-Instruct 在数学领域的应用（增加推理步骤/引入干扰条件/问题类型转换），synthesis.py 合成新数学题，去重与质量过滤流程。
+    -   **数据合成与增强**：Evol-Instruct 在数学领域的应用（增加推理步骤/引入干扰条件/问题类型转换），合成新数学题，去重与质量过滤流程。
+    -   **LazyLLM 实战**: 通过流水线数据生成与微调强化模型数学与推理能力。
 -   **第20课时：代码能力增强**
     -   **代码数据集构建**：GitHub 仓库筛选策略（Stars、License、活跃度），文件级过滤（排除自动生成代码、敏感信息），MinHash+LSH 近似去重。
     -   **依赖解析与拓扑排序**：代码文件间依赖图构建（import/require 解析），DFS 拓扑排序重组文件顺序，保持函数调用链与上下文的逻辑连贯性。
@@ -169,7 +171,7 @@
     -   **行业数据集准备**：垂直领域数据清洗（去噪、格式归一）；医疗病历与金融报表的 PII 脱敏策略；知识图谱融合（将 KG 三元组转化为文本训练对，注入结构化领域知识）。
     -   **继续预训练（CPT）策略**：学习率选择（比初始预训练低约 10 倍），通用语料与领域语料配比（通用:领域 = 3:7～5:5），混入通用数据缓解灾难性遗忘。
     -   **领域指令数据集构建**：医疗（病历问答/症状诊断/药物交互）、法律（合同审查/法规检索）、金融（财报分析/风险评估）场景的指令数据设计，基于领域文档自动生成 QA 对。
-    -   **LazyLLM 实战**：CPT（domain_pt_ppl.py）→ SFT（sft_llm.py）两阶段训练流水线，使用领域专属 PPL 和下游任务准确率量化领域注入效果。
+    -   **LazyLLM 实战**：CPT → SFT 两阶段训练流水线，使用领域专属 PPL 和下游任务准确率量化领域注入效果。
 
 
 ### 第七部分：检索增强生成 (RAG) 数据工程 (4课时)
@@ -180,24 +182,20 @@
     -   **RAG 三阶段全流程**：检索（BM25 稀疏检索+向量密集检索+混合检索）→ 增强（多源文档归一、语义分块策略、Metadata 增强）→ 生成（Prompt 模板组装+LLM 生成+答案后处理）。
     -   **文档智能处理**：PDF/Word/HTML 多源格式转换，固定大小/语义/递归分块策略对比，标题-来源-日期 Metadata 注入，LLM 驱动的 Agent 自动摘要与元数据增强入库。
     -   **多跳 QA 数据生成**：Atomic（单跳原子问答）、Depth（深度多跳推理）、Width（宽度多证据融合）三类合成模式，LLM 蒸馏精炼与质量过滤。
-    -   **LazyLLM 实战**：完整知识库构建流程（rag_kb_build.py）与 RAG 问答系统（rag_kb.py + rag.py），验证 Embedding/Reranker 微调的必要性。
+    -   **LazyLLM 实战**：完整知识库构建与 RAG 问答系统搭建，验证 Embedding/Reranker 微调的必要性。
 -   **第26课时：Embedding 模型微调与实战**
     -   **通用 Embedding 的语义错位**：医疗/法律/金融三类典型误召回案例，根因在于通用模型未学习领域特有语义边界。
     -   **Bi-encoder 架构与对比学习**：双塔独立编码（推理高效）vs Cross-encoder 联合编码（精度高但慢），InfoNCE 损失（$\mathcal{L} = -\log \frac{e^{q \cdot d^+/\tau}}{\sum e^{q \cdot d_i/\tau}}$），温度参数 $\tau$ 对分布锐度的影响。
     -   **难负样本（Hard Negatives）挖掘**：随机负样本的局限性，BM25 召回后用 Cross-encoder 重排挑选难负样本，AugSBERT/LLM 生成难负样本对的工程方法。
-    -   **LazyLLM 实战**：基于 sft_embed.py 微调 BGE/E5 等 Embedding 模型，在 MTEB（检索/聚类/分类子任务）上量化领域提升效果，并集成到 LazyLLM RAG 知识库进行端到端检索对比。
+    -   **LazyLLM 实战**：微调 BGE/E5 等 Embedding 模型，在 MTEB（检索/聚类/分类子任务）上量化领域提升效果，并集成到 LazyLLM RAG 知识库进行端到端检索对比。
 -   **第27课时：Reranker 模型微调与实战**
     -   **Reranker 精排原理**：初筛（Bi-encoder 召回）→ 精排（Reranker 重排）两阶段 RAG 架构，Cross-encoder 通过 Query-Document 拼接联合 Transformer 编码实现深度语义交互，对比 Bi-encoder 的精度优势。
     -   **Cross-encoder 打分机制**：`[CLS] query [SEP] document [SEP]` 输入格式，`[CLS]` 向量→分类头→相关性概率，以 MacBERT/BERT 为骨架的实现细节。
     -   **排序训练数据构建**：Pairwise 格式（query/positive/negative 三元组，Margin Ranking Loss）与 Listwise 格式（排序列表，Listwise Softmax Loss）对比；利用 LLM 对候选文档打分生成伪标签，蒸馏高质量排序数据。
-    -   **LazyLLM 实战**：使用 reranker_finetune.py 微调 BGE-Reranker，搭建"Bi-encoder 初筛 + Reranker 精排"完整 RAG 流水线，以召回率/MRR/NDCG 量化检索效果提升。
--   **第28课时：Agentic RAG 能力增强**
+    -   **LazyLLM 实战**：微调 BGE-Reranker，搭建"Bi-encoder 初筛 + Reranker 精排"完整 RAG 流水线，以召回率/MRR/NDCG 量化检索效果提升。
+-   **第28课时：Agentic RAG 与多跳数据增强**
     -   **RAG 代际演进**：朴素 RAG → 高级 RAG（查询改写+重排序）→ 模块化 RAG → Agentic RAG（LLM 作为规划控制器，主动决定何时检索、用何工具、如何根据中间结果调整策略）。
     -   **多跳 QA 挑战解析**：推理链长度 L>1 时单次检索的失效原因，噪声段落干扰与跨文档证据整合难题，HotpotQA 等基准的支持句标注机制。
     -   **三类数据合成策略**：Atomic（原子单跳，基础检索-回答对）；Depth（深度多跳，bridge question 推理链，逐跳答案验证）；Width（宽度多证据，parallel question，多文档融合回答）的构建流程与质量控制。
     -   **Grounding 约束与 Self-RAG**：有依据标签（答案必须来源于检索文档），检索意图识别（何时需要检索）、文档相关性反思（IsRel）、回复生成质量打分（IsSup）数据的构建思路。
     -   **LazyLLM 实战**：使用 `atomic_rag_pipeline` 生成多跳增强 JSONL，`TrainableModule + finetune.auto` 指令微调，在同一验证集上以 F1/EM 对比微调前后的多跳问答能力。
-
-
-### 课程总结
--   **构建企业级 LLM 数据飞轮 (Data Flywheel)** —— 数据闭环的重要性。
