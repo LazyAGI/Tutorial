@@ -9,7 +9,7 @@ from pathlib import Path
 from datasets import load_dataset
 
 import lazyllm
-from lazyllm import deploy, finetune
+from lazyllm import deploy, finetune, launchers
 
 random.seed(42)
 
@@ -44,6 +44,7 @@ SFT_ARGS = {
     'val_size': 0.1,
     'per_device_train_batch_size': 8,
     'num_train_epochs': 2.0,
+    'launcher': launchers.empty(ngpus=1),
 }
 
 DEPLOY_ARGS = {

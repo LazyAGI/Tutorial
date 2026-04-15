@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from datasets import load_dataset
 
 import lazyllm
-from lazyllm import finetune, deploy
+from lazyllm import finetune, deploy, launchers
 from lazyllm.components.formatter import JsonFormatter
 
 
@@ -221,6 +221,7 @@ def run_sft(model, train_path, test_path, output_path):
             'val_size': 0.1,
             'per_device_train_batch_size': 24,
             'num_train_epochs': 3.0,
+            'launcher': launchers.empty(ngpus=1),
         }))
         .prompt(dict(system='', drop_builtin_system=True))
         .deploy_method(deploy.Vllm)
@@ -321,14 +322,24 @@ def score(data_path, model, output_path):
 '''
 
         result = scorer(prompt)
-        score_value = int(result.get('score', 0))
+        try:
+            score_value = int(result.get('score', 0))
 
-        scored.append({
-            'instruction': instruction,
-            'output': answer,
-            'prediction': prediction,
-            'score': score_value
-        })
+            scored.append({
+                'instruction': instruction,
+                'output': answer,
+                'prediction': prediction,
+                'score': score_value
+            })
+        except:
+            score_value = 0
+
+            scored.append({
+                'instruction': instruction,
+                'output': answer,
+                'prediction': prediction,
+                'score': score_value
+            })
 
     # 保存结果
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -387,6 +398,7 @@ def main():
     # ======================
     download_dataset(raw_path)
     run_ppl(raw_path, ppl_path, model=large_model)
+    large_model.stop()
     split_data(ppl_path, raw_path, train_path, test_path)
 
     # ======================
@@ -394,7 +406,7 @@ def main():
     # ======================
     # infer + sft 使用小模型
     small_model = lazyllm.TrainableModule(
-        'qwen2.5-0.5B-instruct', target_path=base_dir
+        'qwen2.5-0.5b-instruct', target_path=base_dir
     )
     small_model.start()
     run_infer(small_model, test_path, infer_path)

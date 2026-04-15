@@ -1013,7 +1013,7 @@ def step3_sft_training():
                     'resume_from_checkpoint': None,
                     'save_strategy': 'steps',
                     'save_total_limit': 3,
-                    'launcher': launchers.sco(ngpus=1, partition='a800'),
+                    'launcher': launchers.empty(ngpus=1),
                 },
             )
         )

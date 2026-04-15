@@ -3,7 +3,7 @@ import re
 import ast
 from pathlib import Path
 import lazyllm
-from lazyllm import finetune, deploy
+from lazyllm import finetune, deploy, launchers
 from datasets import load_dataset
 
 base_dir = Path(__file__).parent
@@ -20,7 +20,7 @@ Follow these rules strictly:
 2. Do NOT include any extra text
 '''
 
-MODEL_NAME = 'qwen2.5-0.5B-instruct'
+MODEL_NAME = 'qwen2.5-0.5b-instruct'
 
 pattern = re.compile(r'\{.*\}', re.S)
 
@@ -119,6 +119,7 @@ def run_sft(model_path, train_path, eval_prompts, output_path):
             'val_size': 0.1,
             'per_device_train_batch_size': 24,
             'num_train_epochs': 3.0,
+            'launcher': launchers.empty(ngpus=1),
         }))
         .prompt(dict(system=SYS_PROMPT, drop_builtin_system=True))
         .deploy_method((deploy.Vllm, {'max_num_seqs': 128}))

@@ -799,7 +799,7 @@ def run_pretrain(
     save_steps: int = 100,
     logging_steps: int = 10,
     save_total_limit: int = 3,
-    train_launcher: str = 'remote',
+    train_launcher: str = 'empty',
     sco_partition: str = 'a800',
     sco_resource: str = 'N3lS.1i.160.1',
 ):
@@ -810,13 +810,6 @@ def run_pretrain(
     print(f'  训练数据: {pretrain_data_path}')
     print(f'  launcher: {train_launcher}')
     print(f'{"=" * 60}\n')
-
-    if train_launcher == 'sco':
-        launcher = launchers.sco(
-            ngpus=ngpus, partition=sco_partition, resource=sco_resource
-        )
-    else:
-        launcher = launchers.remote(ngpus=max(1, ngpus), sync=True)
 
     model = lazyllm.TrainableModule(base_model, target_path=train_target_path)
     model = model.mode('finetune')\
@@ -840,7 +833,7 @@ def run_pretrain(
             'resume_from_checkpoint': None,
             'save_strategy': 'steps',
             'save_total_limit': save_total_limit,
-            'launcher': launcher,
+            'launcher': launchers.empty(ngpus=ngpus),
         }))\
         .update()
     print('预训练完成！')

@@ -94,7 +94,7 @@ def deploy_serve(
     train_flag: bool = True,
     per_device_batch_size: int = 16,
     num_epochs: int = 2,
-    ngpus: int = 4
+    ngpus: int = 1
 ) -> lazyllm.Retriever:
     """Deploy the retrieval service with optional fine-tuning.
 
@@ -116,7 +116,7 @@ def deploy_serve(
         .finetune_method((
             lazyllm.finetune.flagembedding,
             {
-                'launcher': lazyllm.launchers.sco(ngpus=ngpus),
+                'launcher': lazyllm.launchers.empty(ngpus=ngpus),
                 'per_device_train_batch_size': per_device_batch_size,
                 'num_train_epochs': num_epochs,
             }

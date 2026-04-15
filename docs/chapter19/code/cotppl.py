@@ -8,7 +8,7 @@ from pathlib import Path
 from datasets import load_dataset
 
 import lazyllm
-from lazyllm import deploy, finetune
+from lazyllm import deploy, finetune, launchers
 from lazyllm.tools.data.pipelines.cot_pipelines import build_cot_pipeline
 
 random.seed(42)
@@ -168,6 +168,7 @@ def build_sft_model(model_path):
                     'val_size': 0.1,
                     'per_device_train_batch_size': 24,
                     'num_train_epochs': 3.0,
+                    'launcher': launchers.empty(ngpus=1),
                 },
             )
         )

@@ -222,7 +222,7 @@ def main(model_path, mode, eval_data_path, train_data_path, eval_res_path):
                 'val_size': 0.01,
                 'per_device_train_batch_size': 2,
                 'num_train_epochs': 2.0,
-                'launcher': launchers.sco(ngpus=1)
+                'launcher': launchers.empty(ngpus=1)
             }))
             .prompt(dict(system='You is a helpful assistant.',
                          drop_builtin_system=True))
