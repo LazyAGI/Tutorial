@@ -361,7 +361,7 @@ def step2_sft_training():
                     'stage': 'sft',
                     'save_steps': 100,
                     'save_total_limit': 2,
-                    'launcher': launchers.sco(ngpus=1, partition='a800'),
+                    'launcher': launchers.empty(ngpus=1),
                 },
             )
         )

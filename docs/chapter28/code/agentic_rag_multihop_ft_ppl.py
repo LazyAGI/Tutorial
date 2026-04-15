@@ -790,11 +790,7 @@ def run_finetune(
             (
                 finetune.auto,
                 {
-                    'launcher': launchers.remote(
-                        nnode=1,
-                        nproc=1,
-                        ngpus=ngpus,
-                    ),
+                    'launcher': launchers.empty(ngpus=ngpus),
                     'num_train_epochs': num_epochs,
                     'per_device_train_batch_size': per_device_batch_size,
                     'learning_rate': learning_rate,

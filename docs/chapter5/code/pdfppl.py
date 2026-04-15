@@ -7,7 +7,7 @@ from collections import Counter
 from huggingface_hub import snapshot_download  # NID002
 
 import lazyllm
-from lazyllm import finetune, deploy
+from lazyllm import finetune, deploy, launchers
 from lazyllm.components.formatter import JsonFormatter
 from lazyllm.tools.data.pipelines.pdf_pipelines import build_pdf2qa_pipeline
 
@@ -118,6 +118,7 @@ def build_sft_model(model_path, train_set_path):
                     'per_device_train_batch_size': 4,
                     'gradient_accumulation_steps': 4,
                     'num_train_epochs': 1.0,
+                    'launcher': launchers.empty(ngpus=1),
                 },
             )
         )

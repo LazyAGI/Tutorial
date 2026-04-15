@@ -50,9 +50,5 @@ m = lazyllm.TrainableModule(model_path, output_path)\
             'trainer.save_freq': 10,
             'trainer.save_checkpoint_path': output_path,
             'trainer.load_checkpoint_path': output_path + '/global_step_110',
-            'launcher': launchers.sco(
-                ngpus=1,
-                partition='a800',
-                resource='N3lS.Ii.I60.1',
-            ),
+            'launcher': launchers.empty(ngpus=1),
         }))

@@ -10,7 +10,7 @@ import regex
 from datasets import load_dataset
 
 import lazyllm
-from lazyllm import deploy, finetune
+from lazyllm import deploy, finetune, launchers
 
 random.seed(42)
 
@@ -49,6 +49,7 @@ LONG_COT_FINETUNE_ARGS = {
     'val_size': 0.1,
     'per_device_train_batch_size': 8,
     'num_train_epochs': 3.0,
+    'launcher': launchers.empty(ngpus=1),
 }
 
 LONG_COT_DEPLOY_ARGS = {

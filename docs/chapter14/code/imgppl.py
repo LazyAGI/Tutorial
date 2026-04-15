@@ -11,7 +11,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 import lazyllm
-from lazyllm import finetune
+from lazyllm import finetune, launchers
 from lazyllm.components.formatter import (
     JsonFormatter,
     encode_query_with_filepaths
@@ -143,6 +143,7 @@ def build_sft_model(model_path):
                     'num_train_epochs': 3.0,
                     'gradient_accumulation_steps': 10,
                     'overwrite_cache': False,
+                    'launcher': launchers.empty(ngpus=1),
                 }
             )
         )

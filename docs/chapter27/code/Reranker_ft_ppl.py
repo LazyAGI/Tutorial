@@ -399,7 +399,7 @@ def deploy_reranker_model(
             .finetune_method((
                 finetune.auto,
                 {
-                    'launcher': launchers.sco(ngpus=ngpus),
+                    'launcher': launchers.empty(ngpus=ngpus),
                     'per_device_train_batch_size': per_device_batch_size,
                     'num_train_epochs': num_epochs,
                     'learning_rate': learning_rate,
