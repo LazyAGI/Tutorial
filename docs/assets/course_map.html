@@ -6,62 +6,93 @@
     <title>LLM 课程架构图</title>
     <style>
         :root {
-            --bg-color: #f4f6f9;
+            --bg-color: #f0f4f8;
             --box-bg: #ffffff;
-            --box-border: #e1e4e8;
-            --text-color: #24292e;
-            --primary-color: #0366d6;
-            --arrow-color: #959da5;
-            
-             /* Tag Colors */
-            --tag-theory-bg: #dbedff;
-            --tag-theory-text: #0366d6;
-            --tag-data-bg: #dafbe1;
-            --tag-data-text: #1a7f37;
-            --tag-train-bg: #fff8c5;
-            --tag-train-text: #9a6700;
+            --box-border: #e2e8f0;
+            --text-color: #1a202c;
+            --text-secondary: #4a5568;
+            --primary-color: #4f6ef7;
+            --primary-light: #ebf0ff;
+            --arrow-color: #a0aec0;
+            --arrow-glow: rgba(79, 110, 247, 0.3);
 
-            /* New Variables for Items */
-            --item-bg: #fafbfc;
-            --item-hover-bg: #f1f8ff;
-            --item-hover-border: #c8e1ff;
+            --tag-theory-bg: #ebf4ff;
+            --tag-theory-text: #3182ce;
+            --tag-data-bg: #e6ffed;
+            --tag-data-text: #22863a;
+            --tag-train-bg: #fff5e6;
+            --tag-train-text: #d97706;
+
+            --item-bg: #f7fafc;
+            --item-hover-bg: #ebf4ff;
+            --item-hover-border: #90cdf4;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 14px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.04);
+
+            --color-pretrain: #f6ad55;
+            --color-sft: #f687b3;
+            --color-align: #68d391;
+            --color-domain: #b794f4;
+            --color-rag: #4fd1c5;
+            --color-foundation: #63b3ed;
+            --color-infra: #a78bfa;
         }
 
-        /* Dark Theme Support */
         [data-theme="dark"] {
-            --bg-color: #1e1e20;
-            --box-bg: #2e303e;
-            --box-border: #404040;
-            --text-color: #e6edf3;
-            --primary-color: #58a6ff;
-            --arrow-color: #8b949e;
+            --bg-color: #0f1117;
+            --box-bg: #1a1d2e;
+            --box-border: #2d3148;
+            --text-color: #e2e8f0;
+            --text-secondary: #a0aec0;
+            --primary-color: #6b8aff;
+            --primary-light: rgba(107, 138, 255, 0.1);
+            --arrow-color: #4a5568;
+            --arrow-glow: rgba(107, 138, 255, 0.25);
 
-            --tag-theory-bg: rgba(56, 139, 253, 0.15);
-            --tag-theory-text: #58a6ff;
-            --tag-data-bg: rgba(46, 160, 67, 0.15);
-            --tag-data-text: #3fb950;
-            --tag-train-bg: rgba(210, 153, 34, 0.15);
-            --tag-train-text: #d29922;
+            --tag-theory-bg: rgba(49, 130, 206, 0.15);
+            --tag-theory-text: #63b3ed;
+            --tag-data-bg: rgba(34, 134, 58, 0.15);
+            --tag-data-text: #68d391;
+            --tag-train-bg: rgba(217, 119, 6, 0.15);
+            --tag-train-text: #f6ad55;
 
-            --item-bg: #36384a;
-            --item-hover-bg: #414457;
-            --item-hover-border: #58a6ff;
+            --item-bg: #212438;
+            --item-hover-bg: rgba(107, 138, 255, 0.08);
+            --item-hover-border: #6b8aff;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 14px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+
+            --color-pretrain: #f6ad55;
+            --color-sft: #f687b3;
+            --color-align: #68d391;
+            --color-domain: #b794f4;
+            --color-rag: #4fd1c5;
+            --color-foundation: #63b3ed;
+            --color-infra: #a78bfa;
         }
 
-        /* Brighten SVG arrows in dark mode */
-        [data-theme="dark"] .connector-path {
-            opacity: 0.8; 
-            filter: brightness(1.2);
+        [data-theme="dark"] .connector-line {
+            opacity: 0.7;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
+
+        * {
             margin: 0;
-            padding: 40px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
             justify-content: center;
+            padding: 48px 24px;
+            min-height: 100vh;
         }
 
         .container {
@@ -72,378 +103,550 @@
             width: 100%;
         }
 
-        /* Titles */
-        .main-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 40px;
-            color: var(--text-color);
+        /* ========== Header ========== */
+        .page-header {
             text-align: center;
-        }
-
-        /* Grid Layout for the Diagram */
-        .stage-container {
-            display: grid;
-            gap: 40px;
-            width: 100%;
+            margin-bottom: 48px;
             position: relative;
         }
 
-        /* Shared Box Styles */
+        .main-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            line-height: 1.3;
+        }
+
+        .main-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        /* ========== Stage Container ========== */
+        .stage-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 0;
+        }
+
+        /* ========== Section Label ========== */
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            align-self: flex-start;
+        }
+
+        .section-label::before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--primary-color);
+            border-radius: 1px;
+        }
+
+        /* ========== Grid Layouts ========== */
+        .level-foundation {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .level-main-flow {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .level-extensions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+        }
+
+        /* ========== Cards ========== */
         .card {
             background: var(--box-bg);
             border: 1px solid var(--box-border);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-sm);
             position: relative;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 12px 12px 0 0;
         }
 
         .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: transparent;
         }
+
+        .card-accent-foundation::before { background: linear-gradient(90deg, #63b3ed, #4299e1); }
+        .card-accent-infra::before { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
+        .card-accent-pretrain::before { background: linear-gradient(90deg, #f6ad55, #ed8936); }
+        .card-accent-sft::before { background: linear-gradient(90deg, #f687b3, #ed64a6); }
+        .card-accent-align::before { background: linear-gradient(90deg, #68d391, #48bb78); }
+        .card-accent-domain::before { background: linear-gradient(90deg, #b794f4, #9f7aea); }
+        .card-accent-rag::before { background: linear-gradient(90deg, #4fd1c5, #38b2ac); }
 
         .card-header {
             font-weight: 700;
-            font-size: 18px;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--bg-color);
+            font-size: 16px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--box-border);
             color: var(--text-color);
             display: flex;
             align-items: center;
-        }
-        
-        .card-header::before {
-            content: '';
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            margin-right: 8px;
+            gap: 8px;
         }
 
+        .card-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .icon-foundation { background: rgba(99, 179, 237, 0.15); color: #3182ce; }
+        .icon-infra { background: rgba(167, 139, 250, 0.15); color: #8b5cf6; }
+        .icon-pretrain { background: rgba(246, 173, 85, 0.15); color: #dd6b20; }
+        .icon-sft { background: rgba(246, 135, 179, 0.15); color: #d53f8c; }
+        .icon-align { background: rgba(104, 211, 145, 0.15); color: #38a169; }
+        .icon-domain { background: rgba(183, 148, 244, 0.15); color: #805ad5; }
+        .icon-rag { background: rgba(79, 209, 197, 0.15); color: #319795; }
+
+        /* ========== Lesson Items ========== */
         .lesson-list {
             list-style: none;
-            padding: 0;
-            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .lesson-item {
-            margin-bottom: 8px;
-            padding: 6px 8px;
-            border-radius: 4px;
+            padding: 8px 10px;
+            border-radius: 8px;
             background: var(--item-bg);
             border: 1px solid transparent;
-            font-size: 14px;
+            font-size: 13px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            transition: all 0.2s ease;
+            line-height: 1.4;
         }
 
         .lesson-item:hover {
             background: var(--item-hover-bg);
             border-color: var(--item-hover-border);
+            transform: translateX(2px);
         }
 
+        .lesson-item span {
+            flex: 1;
+            margin-right: 8px;
+        }
+
+        /* ========== Tags ========== */
         .tags {
             display: flex;
             gap: 4px;
+            flex-shrink: 0;
         }
-        
+
         .tag {
             font-size: 10px;
-            padding: 2px 5px;
+            padding: 2px 7px;
             border-radius: 10px;
-            font-weight: 600;
+            font-weight: 700;
             white-space: nowrap;
+            letter-spacing: 0.3px;
         }
+
         .tag.theory { background: var(--tag-theory-bg); color: var(--tag-theory-text); }
         .tag.data { background: var(--tag-data-bg); color: var(--tag-data-text); }
         .tag.train { background: var(--tag-train-bg); color: var(--tag-train-text); }
 
-        /* Specific Layout Sections */
-        
-        /* Level 1: Foundation (2 Columns) */
-        .level-foundation {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-
-        /* Level 2: Main Flow (3 Columns: Pretrain -> SFT -> Alignment) */
-        .level-main-flow {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 40px;
+        /* ========== Connectors / Arrows ========== */
+        .connector-area {
             width: 100%;
-        }
-
-        /* Level 3: Extensions (2 Columns: Domain, RAG) */
-        .level-extensions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-
-        /* Connectors (SVG) */
-        .connector-container {
-            width: 100%;
-            height: 60px;
+            position: relative;
             display: flex;
             justify-content: center;
-            overflow: visible;
-            position: relative; /* For absolute positioning of arrow tips */
-        }
-
-        .connector-svg {
-            width: 100%;
-            height: 100%;
+            align-items: center;
             overflow: visible;
         }
 
-        .connector-path {
+        .connector-area svg {
+            display: block;
+            overflow: visible;
+        }
+
+        .connector-line {
             fill: none;
             stroke: var(--arrow-color);
-            stroke-width: 2px;
-            vector-effect: non-scaling-stroke; /* Keep line thickness constant on resize */
+            stroke-width: 2;
+            stroke-linecap: round;
         }
 
-        /* CSS Arrow Tips (prevents distortion from SVG scaling) */
-        .arrow-tip {
-            position: absolute;
-            bottom: 0px;
-            width: 0; 
-            height: 0; 
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 8px solid var(--arrow-color); /* Points down */
-            transform: translateX(-50%);
-            z-index: 1; /* Ensure on top of line end */
+        .connector-line.animated {
+            stroke-dasharray: 6 4;
+            animation: dashmove 1.5s linear infinite;
         }
 
-        /* Responsive */
-        @media (min-width: 701px) { /* Changed from 901px to keep layout on medium screens */
-             /* Add horizontal arrows between main flow cards */
-            .level-main-flow .card:not(:last-child)::after {
-                content: '';
-                position: absolute;
-                right: -42px; /* Increased reach */
-                top: 50%;
-                width: 38px; /* Fill grid gap */
-                height: 2px;
-                background: var(--arrow-color);
-                transform: translateY(-50%);
-                z-index: 10;
-            }
-            .level-main-flow .card:not(:last-child)::before {
-                content: '';
-                position: absolute;
-                right: -46px;
-                top: 50%;
-                border: 6px solid transparent;
-                border-left-color: var(--arrow-color);
-                transform: translateY(-50%);
-                z-index: 10;
-            }
+        @keyframes dashmove {
+            to { stroke-dashoffset: -20; }
         }
 
-        @media (max-width: 700px) { /* Lowered breakpoint from 900px */
-            .level-foundation, .level-main-flow, .level-extensions {
+        .arrow-head {
+            fill: var(--arrow-color);
+        }
+
+        /* Horizontal flow arrows between main-flow cards */
+        .flow-arrow-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .flow-arrow-svg {
+            overflow: visible;
+        }
+
+        /* ========== Legend ========== */
+        .legend {
+            margin-top: 48px;
+            display: flex;
+            gap: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 14px 24px;
+            background: var(--box-bg);
+            border: 1px solid var(--box-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-label {
+            font-weight: 500;
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 900px) {
+            .level-main-flow {
                 grid-template-columns: 1fr;
+                gap: 16px;
             }
-            .connector-container {
-                display: none; /* Hide complex arrows on mobile, just stack */
+            .level-foundation, .level-extensions {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
-            .stage-container {
-                gap: 20px;
+            .connector-area { display: none; }
+            .main-title { font-size: 24px; }
+            body { padding: 24px 12px; }
+            .level-main-flow .flow-arrow-wrapper { display: none; }
+        }
+
+        @media (min-width: 901px) {
+            .mobile-arrow { display: none !important; }
+        }
+
+        @media (max-width: 900px) {
+            .mobile-arrow {
+                display: flex;
+                justify-content: center;
+                padding: 8px 0;
             }
-            .card::after {
-                content: '↓';
-                display: block;
-                text-align: center;
-                margin-top: 10px;
-                color: var(--arrow-color);
-                font-weight: bold;
-                font-size: 20px;
+            .mobile-arrow svg {
+                overflow: visible;
             }
-            .card:last-child::after {
-                display: none;
-            }
-            .container {
-                padding: 10px;
-            }
+        }
+
+        /* ========== Scroll animation ========== */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
 
-<!-- SVG Defs removed as markers are replaced by CSS elements for better aspect ratio control -->
-
 <div class="container">
-    <div class="main-title">LLM 模型训练与数据工程课程架构图</div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="main-title">LLM 模型训练与数据工程</div>
+        <div class="main-subtitle">从基础理论到工程实战的完整学习路径</div>
+    </div>
 
     <div class="stage-container">
-        
-        <!-- Level 1: Foundation -->
-        <div class="level-foundation">
-            <div class="card">
-                <div class="card-header">Part 1: 大模型基础 (Foundation)</div>
+
+        <!-- ======== Level 1: Foundation ======== -->
+        <div class="section-label">Stage 1 · 基础知识</div>
+        <div class="level-foundation fade-in-up">
+            <div class="card card-accent-foundation">
+                <div class="card-header">
+                    <div class="card-icon icon-foundation">📐</div>
+                    Part 1: 大模型基础
+                </div>
                 <div class="lesson-list">
                     <a href="chapter1/1.md" class="lesson-item">
-                        <span>1. Transformer 核心与 Self-Attention</span>
+                        <span>1. Transformer 核心与 Self-Attention 深度剖析</span>
                         <div class="tags"><span class="tag theory">T</span></div>
                     </a>
                     <a href="chapter2/2.md" class="lesson-item">
-                        <span>2. 训练范式与数据工程</span>
+                        <span>2. LLM 训练范式与数据工程全景</span>
                         <div class="tags"><span class="tag theory">T</span></div>
                     </a>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-header">Part 2: 系统与工程 (Infrastructure)</div>
+            <div class="card card-accent-infra">
+                <div class="card-header">
+                    <div class="card-icon icon-infra">⚙️</div>
+                    Part 2: 系统与工程
+                </div>
                 <div class="lesson-list">
                     <a href="chapter3/3.md" class="lesson-item">
-                        <span>3. 分布式训练技术</span>
+                        <span>3. 分布式训练技术概览</span>
                         <div class="tags"><span class="tag theory">T</span></div>
                     </a>
                     <a href="chapter4/4.md" class="lesson-item">
-                        <span>4. 模型部署与推理</span>
+                        <span>4. 模型部署与推理加速</span>
                         <div class="tags"><span class="tag theory">T</span></div>
                     </a>
                     <a href="chapter5/5.md" class="lesson-item">
-                        <span>5. Agent 数据处理流水线</span>
+                        <span>5. 基于 Agent 的数据处理</span>
                         <div class="tags"><span class="tag data">D</span></div>
                     </a>
                     <a href="chapter6/6.md" class="lesson-item">
-                        <span>6. LazyLLM 全流程实战</span>
+                        <span>6. 基于 LazyLLM 的数据-训练-推理全流程实践</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Connector: Simple Down Arrow -->
-        <div class="connector-container">
-            <svg class="connector-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
-                <!-- Straight line down from center, shortened slightly to not poke through tip -->
-                <path class="connector-path" d="M50,0 L50,55" />
+        <!-- Connector: Level 1 -> Level 2 (vertical down arrow) -->
+        <div class="connector-area" style="height: 56px;">
+            <svg width="40" height="56" viewBox="0 0 40 56">
+                <defs>
+                    <linearGradient id="grad-down1" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--color-foundation)" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="var(--color-pretrain)" stop-opacity="0.9"/>
+                    </linearGradient>
+                </defs>
+                <line class="connector-line" x1="20" y1="0" x2="20" y2="42" stroke="url(#grad-down1)" stroke-width="2.5"/>
+                <polygon class="arrow-head" points="13,40 20,52 27,40" fill="url(#grad-down1)"/>
             </svg>
-            <!-- CSS Arrow Tip -->
-            <div class="arrow-tip" style="left: 50%;"></div>
         </div>
 
-        <!-- Level 2: Main Workflow (Pre-training -> SFT -> Alignment) -->
-        <div class="level-main-flow">
-            <!-- P3 -->
-            <div class="card" style="border-left: 4px solid #f9a825;">
-                <div class="card-header">Part 3: 预训练 (Pre-training)</div>
+        <!-- ======== Level 2: Main Workflow ======== -->
+        <div class="section-label">Stage 2 · 核心训练流程</div>
+
+        <!-- Main flow with inline horizontal arrows -->
+        <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; width: 100%; align-items: stretch;" class="main-flow-grid fade-in-up">
+            <!-- P3: Pre-training -->
+            <div class="card card-accent-pretrain">
+                <div class="card-header">
+                    <div class="card-icon icon-pretrain">🔥</div>
+                    Part 3: 预训练
+                </div>
                 <div class="lesson-list">
                     <a href="chapter7/7.md" class="lesson-item">
-                        <span>7. 预训练原理与评测</span>
+                        <span>7. 预训练原理、策略与评测</span>
                         <div class="tags"><span class="tag theory">T</span></div>
                     </a>
                     <a href="chapter8/8.md" class="lesson-item">
-                        <span>8. 文本/代码数据构建全流程</span>
+                        <span>8. 预训练数据构建全流程</span>
                         <div class="tags"><span class="tag data">D</span></div>
                     </a>
                     <a href="chapter9/9.md" class="lesson-item">
-                        <span>9. LazyLLM 预训练实战</span>
+                        <span>9. 基于 LazyLLM 的预训练全链路实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter10/10.md" class="lesson-item">
-                        <span>10. 多模态预训练</span>
+                        <span>10. 多模态 LLM 架构与预训练实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                 </div>
             </div>
-            
-            <!-- P4 -->
-            <div class="card" style="border-left: 4px solid #ea4aaa;">
-                <div class="card-header">Part 4: 指令微调 (SFT)</div>
+
+            <!-- Horizontal Arrow 1 -->
+            <div class="flow-arrow-wrapper">
+                <svg class="flow-arrow-svg" width="48" height="24" viewBox="0 0 48 24">
+                    <defs>
+                        <linearGradient id="grad-h1" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="var(--color-pretrain)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--color-sft)" stop-opacity="0.9"/>
+                        </linearGradient>
+                    </defs>
+                    <line x1="2" y1="12" x2="34" y2="12" stroke="url(#grad-h1)" stroke-width="2.5" stroke-linecap="round"/>
+                    <polygon points="32,6 44,12 32,18" fill="url(#grad-h1)"/>
+                </svg>
+            </div>
+
+            <!-- P4: SFT -->
+            <div class="card card-accent-sft">
+                <div class="card-header">
+                    <div class="card-icon icon-sft">🎯</div>
+                    Part 4: 指令微调
+                </div>
                 <div class="lesson-list">
                     <a href="chapter11/11.md" class="lesson-item">
-                        <span>11. 指令微调与 PEFT 原理</span>
+                        <span>11. 指令微调原理与策略</span>
                         <div class="tags"><span class="tag theory">T</span></div>
                     </a>
                     <a href="chapter12/12.md" class="lesson-item">
-                        <span>12. 指令数据构建与合成</span>
+                        <span>12. 通用指令数据构建、合成与蒸馏</span>
                         <div class="tags"><span class="tag data">D</span></div>
                     </a>
                     <a href="chapter13/13.md" class="lesson-item">
-                        <span>13. LazyLLM 微调实战</span>
+                        <span>13. 基于 LazyLLM 的微调全链路实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter14/14.md" class="lesson-item">
-                        <span>14. 多模态指令微调</span>
+                        <span>14. 多模态指令微调与实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                 </div>
             </div>
 
-            <!-- P6 -->
-            <div class="card" style="border-left: 4px solid #28a745;">
-                <div class="card-header">Part 5: 价值对齐 (Alignment)</div>
+            <!-- Horizontal Arrow 2 -->
+            <div class="flow-arrow-wrapper">
+                <svg class="flow-arrow-svg" width="48" height="24" viewBox="0 0 48 24">
+                    <defs>
+                        <linearGradient id="grad-h2" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="var(--color-sft)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--color-align)" stop-opacity="0.9"/>
+                        </linearGradient>
+                    </defs>
+                    <line x1="2" y1="12" x2="34" y2="12" stroke="url(#grad-h2)" stroke-width="2.5" stroke-linecap="round"/>
+                    <polygon points="32,6 44,12 32,18" fill="url(#grad-h2)"/>
+                </svg>
+            </div>
+
+            <!-- P5: Alignment -->
+            <div class="card card-accent-align">
+                <div class="card-header">
+                    <div class="card-icon icon-align">⚖️</div>
+                    Part 5: 价值对齐
+                </div>
                 <div class="lesson-list">
                     <a href="chapter15/15.md" class="lesson-item">
-                        <span>15. RLHF & GRPO 算法</span>
+                        <span>15. 对齐算法原理 (RLHF & GRPO)</span>
                         <div class="tags"><span class="tag theory">T</span></div>
                     </a>
                     <a href="chapter16/16.md" class="lesson-item">
-                        <span>16. 偏好数据 (Pairwise/List)</span>
+                        <span>16. 偏好数据构建</span>
                         <div class="tags"><span class="tag data">D</span></div>
                     </a>
                     <a href="chapter17/17.md" class="lesson-item">
-                        <span>17. 安全合规/红队测试</span>
+                        <span>17. 模型风险、合规与伦理</span>
                         <div class="tags"><span class="tag data">D</span></div>
                     </a>
                     <a href="chapter18/18.md" class="lesson-item">
-                        <span>18. LazyLLM 对齐实战</span>
+                        <span>18. 基于 LazyLLM 的对齐全链路实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Connector: Fork SFT (Center) -> Domain (Left) & RAG (Right) -->
-        <!-- Logic: Top Center (50%) -> Bottom 25% and Bottom 75% -->
-        <div class="connector-container" style="height: 80px;">
-            <svg class="connector-svg" viewBox="0 0 100 80" preserveAspectRatio="none">
-                <!-- Path to Left Child (Domain) -->
-                <!-- Bezier: Start(50,0) -> End(25,75) shortened -->
-                <path class="connector-path" d="M50,0 C50,50 25,30 25,75" />
-                
-                <!-- Path to Right Child (RAG) -->
-                <!-- Bezier: Start(50,0) -> End(75,75) shortened -->
-                <path class="connector-path" d="M50,0 C50,50 75,30 75,75" />
-            </svg>
-            <!-- CSS Arrow Tips -->
-            <div class="arrow-tip" style="left: 25%;"></div>
-            <div class="arrow-tip" style="left: 75%;"></div>
+        <!-- Mobile vertical arrows for main flow -->
+        <div class="mobile-arrow">
+            <svg width="24" height="32" viewBox="0 0 24 32"><line x1="12" y1="2" x2="12" y2="22" stroke="var(--arrow-color)" stroke-width="2" stroke-linecap="round"/><polygon points="6,20 12,30 18,20" fill="var(--arrow-color)"/></svg>
         </div>
 
-        <!-- Level 3: Applications & Specialization -->
-        <div class="level-extensions">
-            
-            <!-- Branch A: Domain -->
-            <div class="card" style="border-top: 4px solid #6f42c1;">
-                <div class="card-header">Part 6: 领域能力 (Domain)</div>
+        <!-- Connector: Level 2 -> Level 3 (fork arrow: center splits to left & right) -->
+        <div class="connector-area" style="height: 72px;" id="fork-connector">
+            <svg width="600" height="72" viewBox="0 0 600 72" style="max-width: 100%;">
+                <defs>
+                    <linearGradient id="grad-fork-left" x1="0.5" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--color-align)" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="var(--color-domain)" stop-opacity="0.9"/>
+                    </linearGradient>
+                    <linearGradient id="grad-fork-right" x1="0.5" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="var(--color-align)" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="var(--color-rag)" stop-opacity="0.9"/>
+                    </linearGradient>
+                </defs>
+                <!-- Left branch -->
+                <path d="M300,0 C300,30 150,30 150,58" fill="none" stroke="url(#grad-fork-left)" stroke-width="2.5" stroke-linecap="round"/>
+                <polygon points="143,54 150,68 157,54" fill="url(#grad-fork-left)"/>
+                <!-- Right branch -->
+                <path d="M300,0 C300,30 450,30 450,58" fill="none" stroke="url(#grad-fork-right)" stroke-width="2.5" stroke-linecap="round"/>
+                <polygon points="443,54 450,68 457,54" fill="url(#grad-fork-right)"/>
+            </svg>
+        </div>
+
+        <!-- ======== Level 3: Applications ======== -->
+        <div class="section-label">Stage 3 · 进阶能力</div>
+        <div class="level-extensions fade-in-up">
+            <div class="card card-accent-domain">
+                <div class="card-header">
+                    <div class="card-icon icon-domain">🧠</div>
+                    Part 6: 领域能力
+                </div>
                 <div class="lesson-list">
                     <a href="chapter19/19.md" class="lesson-item">
-                        <span>19. 推理/数学增强</span>
+                        <span>19. 推理与数学能力增强</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter20/20.md" class="lesson-item">
-                        <span>20. 代码增强</span>
+                        <span>20. 代码能力增强</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter21/21.md" class="lesson-item">
@@ -451,95 +654,120 @@
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter22/22.md" class="lesson-item">
-                        <span>22. 结构化输出/JSON</span>
+                        <span>22. 结构化输出与格式对齐</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter23/23.md" class="lesson-item">
-                        <span>23. Agent Tool/Planning</span>
+                        <span>23. Agent 能力增强 (Tools & Planning)</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter24/24.md" class="lesson-item">
-                        <span>24. 行业垂直模型实战</span>
+                        <span>24. 行业领域模型实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                 </div>
             </div>
-
-            <!-- Branch C: RAG -->
-            <div class="card" style="border-top: 4px solid #17a2b8;">
-                <div class="card-header">Part 7: 检索增强 (RAG)</div>
+            <div class="card card-accent-rag">
+                <div class="card-header">
+                    <div class="card-icon icon-rag">🔍</div>
+                    Part 7: 检索增强
+                </div>
                 <div class="lesson-list">
                     <a href="chapter25/25.md" class="lesson-item">
-                        <span>25. RAG 架构与数据流</span>
+                        <span>25. RAG 架构原理与数据处理</span>
                         <div class="tags"><span class="tag data">D</span></div>
                     </a>
                     <a href="chapter26/26.md" class="lesson-item">
-                        <span>26. Embedding 微调</span>
+                        <span>26. Embedding 模型微调与实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter27/27.md" class="lesson-item">
-                        <span>27. Reranker 微调</span>
+                        <span>27. Reranker 模型微调与实战</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                     <a href="chapter28/28.md" class="lesson-item">
-                        <span>28. Agentic RAG 能力增强</span>
+                        <span>28. Agentic RAG 与多跳数据增强</span>
                         <div class="tags"><span class="tag data">D</span><span class="tag train">P</span></div>
                     </a>
                 </div>
             </div>
-
         </div>
 
     </div>
 
     <!-- Legend -->
-    <div style="margin-top: 40px; display: flex; gap: 20px; font-size: 14px; color: #586069;">
-        <div style="display: flex; align-items: center;"><span class="tag theory" style="margin-right: 6px;">T</span> Theory (理论原理)</div>
-        <div style="display: flex; align-items: center;"><span class="tag data" style="margin-right: 6px;">D</span> Data (数据实战)</div>
-        <div style="display: flex; align-items: center;"><span class="tag train" style="margin-right: 6px;">P</span> Practice (训练实战)</div>
+    <div class="legend">
+        <div class="legend-item">
+            <span class="tag theory">T</span>
+            <span class="legend-label">Theory · 理论原理</span>
+        </div>
+        <div class="legend-item">
+            <span class="tag data">D</span>
+            <span class="legend-label">Data · 数据实战</span>
+        </div>
+        <div class="legend-item">
+            <span class="tag train">P</span>
+            <span class="legend-label">Practice · 训练实战</span>
+        </div>
     </div>
+
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const BASE_URL = window.location.origin;
 
-        // 1. Link Adjustment Logic
+        // Link adjustment
         document.querySelectorAll(".lesson-item").forEach(item => {
             let href = item.getAttribute("href");
             if (href) {
-                if (href.endsWith('.md')) { // MkDocs usually serves folders
+                if (href.endsWith('.md')) {
                     href = href.replace(/\.md$/, '/');
                 }
                 item.setAttribute("href", `${BASE_URL}/${href}`);
-                item.setAttribute("target", "_top"); // Escape iframe
+                item.setAttribute("target", "_top");
             }
         });
 
-        // 2. Theme Sync Logic (Listen to Parent MkDocs)
+        // Theme sync with MkDocs parent
         function syncTheme() {
             try {
-                // MkDocs Material toggles data-md-color-scheme on body ("default" or "slate")
                 const parentBody = window.parent.document.body;
                 const scheme = parentBody.getAttribute("data-md-color-scheme");
                 const theme = scheme === "slate" ? "dark" : "light";
                 document.documentElement.setAttribute("data-theme", theme);
             } catch (e) {
-                console.warn("Theme sync failed (cross-origin or unavailable):", e);
+                // Cross-origin or standalone - no action needed
             }
         }
 
-        // Initialize and Observe
         syncTheme();
-        
-        const observer = new MutationObserver(() => {
-            syncTheme();
-        });
-        
-        observer.observe(window.parent.document.body || document.body, { 
-            attributes: true, 
-            attributeFilter: ["data-md-color-scheme", "class"] 
-        });
+
+        try {
+            const observer = new MutationObserver(() => syncTheme());
+            observer.observe(window.parent.document.body || document.body, {
+                attributes: true,
+                attributeFilter: ["data-md-color-scheme", "class"]
+            });
+        } catch (e) {
+            // Standalone mode
+        }
+
+        // Scroll-triggered fade-in animation
+        const fadeEls = document.querySelectorAll('.fade-in-up');
+        if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+            fadeEls.forEach(el => io.observe(el));
+        } else {
+            fadeEls.forEach(el => el.classList.add('visible'));
+        }
     });
 </script>
 

@@ -360,7 +360,7 @@ def step3_dpo_training():
             'dpo_beta': 0.1,
             'save_steps': 100,
             'save_total_limit': 2,
-            'launcher': launchers.sco(ngpus=1, partition='a800'),
+            'launcher': launchers.empty(ngpus=1),
         }))
 
     model.update()

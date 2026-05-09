@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from datasets import load_dataset
 from lazyllm.components.formatter import JsonFormatter
 import lazyllm
-from lazyllm import finetune, deploy
+from lazyllm import finetune, deploy, launchers
 from lazyllm.tools.data.pipelines import build_text2qa_pipeline
 
 random.seed(42)
@@ -218,6 +218,7 @@ def run_sft(model_path, train_path, test_path, output_path):
             'val_size': 0.1,
             'per_device_train_batch_size': 24,
             'num_train_epochs': 3.0,
+            'launcher': launchers.empty(ngpus=1),
         }))
         .prompt(dict(system='你是助手', drop_builtin_system=True))
         .deploy_method(deploy.Vllm)
@@ -377,8 +378,8 @@ def main():
     run_ppl(raw_path, ppl_path)
     split_data(ppl_path, train_path, test_path)
 
-    run_infer('qwen2.5-0.5B-instruct', test_path, infer_path)
-    run_sft('qwen2.5-0.5B-instruct', train_path, test_path, sft_path)
+    run_infer('qwen2.5-0.5b-instruct', test_path, infer_path)
+    run_sft('qwen2.5-0.5b-instruct', train_path, test_path, sft_path)
 
     score(infer_path, 'qwen3-14b', infer_score_path)
     analyze(infer_score_path)
