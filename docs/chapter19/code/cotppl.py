@@ -68,41 +68,17 @@ def write_json(data, path):
 # Step 1: 下载 BBH
 # =========================
 def prepare_dataset():
-    tasks = [
-        'boolean_expressions',
-        'causal_judgement',
-        'date_understanding',
-        'disambiguation_qa',
-        'formal_fallacies',
-        'geometric_shapes',
-        'logical_deduction_five_objects',
-        'logical_deduction_three_objects',
-        'multistep_arithmetic_two',
-        'object_counting',
-        'reasoning_about_colored_objects',
-        'temporal_sequences',
-        'tracking_shuffled_objects_three_objects',
-        'web_of_lies',
-        'word_sorting',
-    ]
-    print('下载 lukaemon/bbh 数据集 ing...')
+    print('下载 rirqing/19ch-bbh 数据集 ing...')
+    dataset = load_dataset('rirqing/19ch-bbh', split='train')
 
     with open(BBH_JSONL, 'w', encoding='utf-8') as f:
-        for task in tasks:
-            dataset = load_dataset('lukaemon/bbh', task)
-            for item in dataset['test']:
-                if item['target'] in ['(A)',
-                                      '(B)',
-                                      '(C)',
-                                      '(D)',
-                                      '(E)',
-                                      '(F)']:
-                    row = {
-                        'task': task,
-                        'question': item['input'],
-                        'reference': item['target'][1],
-                    }
-                    f.write(json.dumps(row, ensure_ascii=False) + '\n')
+        for item in dataset:
+            row = {
+                'task': item['task'],
+                'question': item['question'],
+                'reference': item['reference'],
+            }
+            f.write(json.dumps(row, ensure_ascii=False) + '\n')
 
     print('BBH 下载成功！')
 
