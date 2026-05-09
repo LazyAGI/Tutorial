@@ -271,7 +271,7 @@ def _run_long_context_pipeline(records: List[Dict]) -> List[Dict]:
       - ContextReconstruction：将扩写文档与干扰段拼接成长上下文
     输出字段：{long_context, question, answer}
     '''
-    print('\n正在启动 32B LLM（vllm）用于 context 扩写...')
+    print('\n正在启动 LLM（vllm）用于 context 扩写...')
     llm = TrainableModule(PPL_MODEL).deploy_method(
         (deploy.vllm, {
             'tensor_parallel_size': 1,

@@ -704,7 +704,7 @@ def main(args: argparse.Namespace) -> None:
     print(' ' * 20 + 'Embedding模型微调系统（Pipeline 集成版）')
     print('=' * 80 + '\n')
     llm = lazyllm.TrainableModule(
-        '/mnt/lustre/share_data/lazyllm/models/qwen2.5-14b-instruct')
+        'Qwen/qwen2.5-14b-instruct')
 
     embedding_serve = lazyllm.TrainableModule('BAAI/bge-large-en-v1.5')
     # ====== 1. 数据准备 ======
