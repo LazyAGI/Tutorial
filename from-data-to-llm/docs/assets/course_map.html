@@ -715,7 +715,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-        const BASE_URL = window.location.origin;
+        const basePath = window.location.pathname.replace(/assets\/course_map\.html$/, '');
 
         // Link adjustment
         document.querySelectorAll(".lesson-item").forEach(item => {
@@ -724,7 +724,7 @@
                 if (href.endsWith('.md')) {
                     href = href.replace(/\.md$/, '/');
                 }
-                item.setAttribute("href", `${BASE_URL}/${href}`);
+                item.setAttribute("href", `${window.location.origin}${basePath}${href}`);
                 item.setAttribute("target", "_top");
             }
         });
