@@ -11,7 +11,7 @@
   HotpotQA（HuggingFace: hotpot_qa/fullwiki）
 
 使用示例：
-  cd /home/mnt/zhangkejun/work/ppl
+  cd /from-data-to-llm/docs/chapter28/code
   python agentic_rag_multihop_ft_ppl.py --run_experiment
       --max_train_samples 200 --max_eval_samples 50
   python agentic_rag_multihop_ft_ppl.py --build_dataset \
@@ -58,7 +58,7 @@ from lazyllm.tools.data.pipelines.rag_pipelines import (  # noqa: E402
 
 DEFAULT_DATASET_NAME = 'hotpot_qa'
 DEFAULT_DATASET_CONFIG = 'fullwiki'
-DEFAULT_OUTPUT_DIR = '/home/mnt/zhangkejun/work/dataset/agentic_rag_multihop'
+DEFAULT_OUTPUT_DIR = '/from-data-to-llm/docs/chapter28/dataset/agentic_rag_multihop'
 DEFAULT_BASE_MODEL = 'Qwen/qwen2.5-14b-instruct'
 
 MULTIHOP_INSTRUCTION = (
@@ -769,7 +769,8 @@ def run_finetune(
     warmup_ratio: float,
     ngpus: int,
 ):
-    print(f'\n{'=' * 72}')
+    sep = '=' * 72
+    print(f'\n{sep}')
     print('开始微调（Agentic RAG 多跳增强实验）')
     print(f'  基座模型: {base_model}')
     print(f'  训练数据: {train_data_path}')
@@ -780,7 +781,7 @@ def run_finetune(
         f'grad_accum={gradient_accumulation_steps}, '
         f'cutoff_len={cutoff_len}, warmup_ratio={warmup_ratio}'
     )
-    print(f'{'=' * 72}\n')
+    print(f'{sep}\n')
 
     model = (
         lazyllm.TrainableModule(base_model)
@@ -930,9 +931,10 @@ def main(args: argparse.Namespace) -> None:
     merged_train_path = os.path.join(args.output_dir, 'merged_train.jsonl')
     summary_path = os.path.join(args.output_dir, 'experiment_summary.json')
 
-    print(f'\n{'=' * 84}')
+    sep84 = '=' * 84
+    print(f'\n{sep84}')
     print(' ' * 12 + 'Agentic RAG 复杂多跳问题数据增强实验')
-    print(f'{'=' * 84}\n')
+    print(f'{sep84}\n')
 
     train_examples = []
     eval_examples = []

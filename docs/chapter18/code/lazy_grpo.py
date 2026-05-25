@@ -49,6 +49,6 @@ m = lazyllm.TrainableModule(model_path, output_path)\
             'worker.rollout.tensor_parallel_size': 1,
             'trainer.save_freq': 10,
             'trainer.save_checkpoint_path': output_path,
-            'trainer.load_checkpoint_path': output_path + '/global_step_110',
             'launcher': launchers.empty(ngpus=1),
         }))
+m.update()
