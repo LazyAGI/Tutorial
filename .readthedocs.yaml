@@ -1,0 +1,13 @@
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
+
+mkdocs:
+  configuration: from-data-to-llm/mkdocs.yml
+
+python:
+  install:
+    - requirements: from-data-to-llm/requirements-docs.txt
