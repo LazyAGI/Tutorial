@@ -1,0 +1,2859 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="End-to-end LLM training and data engineering course built on LazyLLM.">
+      
+      
+        <meta name="author" content="LazyLLM Community">
+      
+      
+      
+        <link rel="prev" href="../../chapter27/27/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://img.icons8.com/?size=100&id=121346&format=png&color=000000">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第28课时：Agentict RAG能力增强 - From Data to LLM</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="data:text/css,.md-grid{max-width:90%25!important}">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#28agentic-rag" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="From Data to LLM" class="md-header__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            From Data to LLM
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第28课时：Agentict RAG能力增强
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  课程简介
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../outline/" class="md-tabs__link">
+          
+  
+  
+  课程内容
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="From Data to LLM" class="md-nav__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    From Data to LLM
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程体系
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程内容
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程内容
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程大纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一部分：大模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第一部分：大模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter1/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1课时：Transformer 核心与 Self-Attention 深度剖析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter2/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2课时：LLM 训练范式与数据工程全景
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二部分：系统工程基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第二部分：系统工程基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter3/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3课时：分布式训练技术概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter4/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4课时：模型部署与推理加速
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter5/5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter6/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6课时：基于 LazyLLM 的全流程实践
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三部分：预训练数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第三部分：预训练数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter7/7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7课时：预训练原理、策略与评测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter8/8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8课时：预训练数据构建全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter9/9/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9课时：基于 LazyLLM 的预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter10/10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10课时：多模态 LLM 架构与预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四部分：微调数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第四部分：微调数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter11/11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter12/12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12课时：通用指令数据构建、合成与蒸馏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter13/13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13课时：基于 LazyLLM 的微调实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter14/14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五部分：对齐数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第五部分：对齐数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter15/15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter16/16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16课时：偏好数据构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter17/17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17课时：模型风险、合规与伦理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter18/18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18课时：基于 LazyLLM 的对齐实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六部分：特定能力数据
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第六部分：特定能力数据
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter19/19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19课时：推理与数学能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter20/20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20课时：代码能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter21/21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter22/22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22课时：结构化输出与格式对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter23/23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23课时：Agent 能力增强 (Tools & Planning)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter24/24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24课时：行业领域模型实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七部分：RAG 数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第七部分：RAG 数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter25/25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter26/26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26课时：Embedding 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter27/27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27课时：Reranker 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rag-agentic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        背景知识：从 RAG 到 Agentic 与自省式检索
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="背景知识：从 RAG 到 Agentic 与自省式检索">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RAG 在解决什么问题，瓶颈在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        多跳问答：为何是「硬骨头」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据合成：为何值得单独讲
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 核心直觉：数据侧如何体现「规划」与「把关」
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 核心直觉：数据侧如何体现「规划」与「把关」">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 三种合成形态与认知类比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 任务与数据：以多跳数据集为载体
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-lazyllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. LazyLLM三类数据合成：从原子事实到深与广
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. LazyLLM三类数据合成：从原子事实到深与广">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-atomic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Atomic：原子问答
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-depth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Depth：深度追问
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-width" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Width：宽度综合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 合并训练集
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 有依据答案：让标签站得住脚
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 训练与评测闭环
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 训练与评测闭环">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 微调：在合并语料上做指令微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-f1-exact-match" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 评测指标：F1 与 Exact Match
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-lazyllm-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. LazyLLM 实战：Pipeline 数据与多跳指令微调
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. LazyLLM 实战：Pipeline 数据与多跳指令微调">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 依赖与 Pipeline 入口
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-atomic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 最小示例：单文档上跑通 Atomic 合成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-trainablemodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 核心代码：用 TrainableModule 做指令微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 一键实验与效果对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-agentic-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 与更广义的 Agentic RAG 的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 业界常见组件与框架（参考）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-agentic-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 总结：Agentic RAG 数据增强的核心链条
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rag-agentic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        背景知识：从 RAG 到 Agentic 与自省式检索
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="背景知识：从 RAG 到 Agentic 与自省式检索">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RAG 在解决什么问题，瓶颈在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        多跳问答：为何是「硬骨头」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据合成：为何值得单独讲
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 核心直觉：数据侧如何体现「规划」与「把关」
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 核心直觉：数据侧如何体现「规划」与「把关」">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 三种合成形态与认知类比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 任务与数据：以多跳数据集为载体
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-lazyllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. LazyLLM三类数据合成：从原子事实到深与广
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. LazyLLM三类数据合成：从原子事实到深与广">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-atomic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Atomic：原子问答
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-depth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Depth：深度追问
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-width" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Width：宽度综合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 合并训练集
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 有依据答案：让标签站得住脚
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 训练与评测闭环
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 训练与评测闭环">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 微调：在合并语料上做指令微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-f1-exact-match" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 评测指标：F1 与 Exact Match
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-lazyllm-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. LazyLLM 实战：Pipeline 数据与多跳指令微调
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. LazyLLM 实战：Pipeline 数据与多跳指令微调">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 依赖与 Pipeline 入口
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-atomic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 最小示例：单文档上跑通 Atomic 合成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-trainablemodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 核心代码：用 TrainableModule 做指令微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 一键实验与效果对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-agentic-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 与更广义的 Agentic RAG 的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 业界常见组件与框架（参考）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-agentic-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 总结：Agentic RAG 数据增强的核心链条
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="28agentic-rag">第28课时：Agentic RAG 与多跳数据增强<a class="headerlink" href="#28agentic-rag" title="Permanent link">&para;</a></h1>
+<p>在 RAG（检索增强生成）系统里，用户常问需要<strong>跨多条证据</strong>才能回答的问题——例如先确认「某乐队的主唱是谁」，再根据该人物推断「其出生地所属国家」。<br />
+若只做<strong>一次检索、一次阅读</strong>，模型要么漏掉第二跳事实，要么把两段里各取一半拼成错误结论。</p>
+<blockquote>
+<p>✅ <strong>Agentic RAG</strong> 在工业与学术讨论中，通常指：让大模型在<strong>规划、调用工具、根据中间结果修正策略</strong>上扮演更主动的角色，而不只是被动接收检索片段。<br />
+另一条同样重要的路线是：<strong>在数据侧</strong>用多阶段、可校验的合成流程，造出「像多跳、像会检验」的监督样本，再与原始数据一起微调——本课将<strong>原理、背景、LazyLLM Pipeline 与可落地的微调流程</strong>串成一条链。</p>
+</blockquote>
+<p>本课将从<strong>零基础背景</strong>出发，系统讲解：</p>
+<ol>
+<li><strong>RAG 代际与多跳难点</strong>：朴素 RAG → 高级/模块化 RAG → Agentic RAG；多跳 QA 的信息结构；</li>
+<li><strong>数据合成三板斧</strong>：Atomic（原子）、Depth（深度）、Width（宽度）各自对应的推理形态与质量控制；</li>
+<li><strong>有依据标签与指令微调</strong>：Grounding 约束、常见训练超参与评测指标（F1、EM）；</li>
+<li><strong>LazyLLM 实战</strong>：用 <code>atomic_rag_pipeline</code> 等生成增强 JSONL，以 <code>TrainableModule</code> + <code>finetune.auto</code> 做指令微调，并在同一验证集上对比多跳表现。</li>
+</ol>
+<p>用<strong>通俗叙述 + 关键公式 + 表格对照 + 关键代码</strong>，帮助你在多跳场景下把「Agentic 思想」落到<strong>可训练、可对比</strong>的实验闭环里。</p>
+<hr />
+<h2 id="rag-agentic">背景知识：从 RAG 到 Agentic 与自省式检索<a class="headerlink" href="#rag-agentic" title="Permanent link">&para;</a></h2>
+<h3 id="rag">RAG 在解决什么问题，瓶颈在哪里<a class="headerlink" href="#rag" title="Permanent link">&para;</a></h3>
+<p><strong>检索增强生成（RAG）</strong>把外部知识以「检索到的片段 + 用户问题」的形式交给语言模型，缓解纯参数记忆的时效性不足与幻觉风险。</p>
+<table>
+<thead>
+<tr>
+<th>形态</th>
+<th>典型流程</th>
+<th>优势</th>
+<th>典型瓶颈</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>朴素 RAG</strong></td>
+<td>查询 → 检索 top-<span class="arithmatex">\(k\)</span> → 拼上下文 → 生成</td>
+<td>实现简单、易部署</td>
+<td>单次检索；噪声段落易误导生成</td>
+</tr>
+<tr>
+<td><strong>高级 RAG</strong></td>
+<td>+ 查询改写、混合检索、重排序（参见第27课）</td>
+<td>单次检索质量更高</td>
+<td>仍多为「一条流水线」，难应对多跳整合</td>
+</tr>
+<tr>
+<td><strong>模块化 RAG</strong></td>
+<td>路由、检索、重排、生成可替换</td>
+<td>易 A/B 与工程迭代</td>
+<td>需自行编排策略</td>
+</tr>
+<tr>
+<td><strong>Agentic RAG（常见含义）</strong></td>
+<td>LLM 决定何时检索、用何工具、是否改写查询</td>
+<td>可处理复杂任务与动态纠错</td>
+<td>延迟、成本、编排复杂度上升</td>
+</tr>
+</tbody>
+</table>
+<p>早期 <strong>朴素 RAG</strong> 多是固定流水线：查库 → 拼上下文 → 生成；一旦召回噪声大或问题需要多步整合，单次检索往往不够。<br />
+<strong>高级 RAG</strong> 在工程上引入查询改写、混合检索、重排序等；<strong>模块化 RAG</strong> 把组件拆开便于替换。到了 <strong>Agentic RAG</strong>，讨论重心常转向：<strong>谁在何时决定检索、用什么工具、如何根据中间结果调整策略</strong>——即把 LLM 当作能规划、能调用工具、能根据反馈修正路径的控制器。</p>
+<h3 id="_1">多跳问答：为何是「硬骨头」<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<p><strong>多跳 QA</strong> 指必须结合<strong>多个事实或段落</strong>才能回答的问题。可粗略理解为：答案依赖的推理链长度 <span class="arithmatex">\(L&gt;1\)</span>，每一步可能对应不同句子或文档。</p>
+<p>公开基准如 <strong>HotpotQA</strong> 常提供维基风格段落与<strong>支持句标注</strong>，评测除答案正确性外，也关注模型是否用到正确证据。对 RAG 而言，难点包括：</p>
+<ul>
+<li><strong>召回</strong>：需要覆盖多个相关片段（与第27课「高召回」目标一致）；</li>
+<li><strong>阅读</strong>：在长上下文中完成<strong>指代消解</strong>（「该公司」指谁）、<strong>数值与实体对齐</strong>；</li>
+<li><strong>推理</strong>：在片段之间建立<strong>桥接关系</strong>（实体—关系—实体），避免「单段幻觉」或张冠李戴。</li>
+</ul>
+<blockquote>
+<p>📌 <strong>直觉</strong>：多跳不是「把 top-<span class="arithmatex">\(k\)</span> 拼长一点」就能解决，而是要在训练分布中<strong>反复出现</strong>「需要整合多处证据」的题型；这正是数据增强要补上的缺口。</p>
+</blockquote>
+<h3 id="_2">数据合成：为何值得单独讲<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>高质量 RAG / 多跳训练数据往往稀缺、标注昂贵。<strong>自动合成 QA</strong> 若不经筛选，容易混入：</p>
+<ul>
+<li><strong>可召回问题</strong>：模型不查文档也能凭常识猜对，对「学检索边界」帮助有限；</li>
+<li><strong>上下文—答案不对齐</strong>：标签无法由给定文本严格推出，微调会强化幻觉。</li>
+</ul>
+<p>因此业界常强调：<strong>可验证性</strong>、<strong>难度分层</strong>（原子 / 链式 / 综合），以及 <strong>无文档试答、分解检查、分数过滤</strong> 等手段——与上文「自省」在精神上相通，只是落实为<strong>造数据时的质量控制</strong>。</p>
+<hr />
+<h2 id="1">1. 核心直觉：数据侧如何体现「规划」与「把关」<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>可以把复杂问答拆成两类能力：<strong>先想清楚要问什么、证据在哪</strong>（近似规划），以及<strong>答案是否真被材料支撑</strong>（近似反思与把关）。在<strong>数据增强范式</strong>里，这两类能力被<strong>迁移到合成流水线</strong>中：</p>
+<ul>
+<li><strong>规划感</strong>：先产出细粒度事实问答（Atomic），再向「更深的关系链」或「更宽的跨片段综合题」扩展（Depth / Width），使训练分布覆盖「单点—链式—综合」多种形态。</li>
+<li><strong>把关感</strong>：在关键步骤用模型做<strong>交叉检验</strong>（例如：不给文档时能否答对——若能，则可能不依赖材料，样本价值偏低），并对深度题、综合题再做<strong>可解性与一致性</strong>方面的检查，减少噪声进入训练集。</li>
+<li><strong>有依据作答</strong>：为需要长上下文的题目生成标准答案时，明确要求<strong>只根据给定材料</strong>回答；材料不足则宁可不答，避免凭空编造，保证标签与上下文对齐。</li>
+</ul>
+<p>这样训练出的模型，更习惯在<strong>给定段落</strong>上做整合与推理，与多跳评测设定一致。</p>
+<h3 id="11">1.1 三种合成形态与认知类比<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>形态</th>
+<th>直觉</th>
+<th>训练分布上的作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Atomic</strong></td>
+<td>单文档、单事实，一问一答</td>
+<td>夯实「读一句、答一点」的可验证性</td>
+</tr>
+<tr>
+<td><strong>Depth</strong></td>
+<td>沿 identifier / 关系链向外扩</td>
+<td>增加「多步推理链」类问题</td>
+</tr>
+<tr>
+<td><strong>Width</strong></td>
+<td>合并多条原子 QA 为综合题</td>
+<td>增加「跨片段整合」类问题，贴近多跳</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 任务与数据：以多跳数据集为载体<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>典型设置是使用 <strong>HotpotQA（fullwiki 配置）</strong> 多跳数据集：每条样本包含问题、短答案，以及若干维基段落作为上下文。！<a href="../assets/28.1.png">alt text</a></p>
+<p>监督学习采用常见的 <strong>指令 + 上下文与问题 + 短答案</strong> 格式。下面是一种与教学实验兼容的<strong>逻辑结构</strong>（字段名可随框架调整）：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;你是一个多跳问答助手。请严格依据给定上下文回答问题；若需跨句整合证据，请先综合相关事实再给出简洁答案。&quot;</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;上下文：\n……\n\n问题：……&quot;</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;短答案文本&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>增强样本常按来源打上类别标记（如原始、原子、深度、宽度），便于事后分析哪一类对指标贡献更大。</p>
+<hr />
+<h2 id="3-lazyllm">3. LazyLLM三类数据合成：从原子事实到深与广<a class="headerlink" href="#3-lazyllm" title="Permanent link">&para;</a></h2>
+<h3 id="31-atomic">3.1 Atomic：原子问答<a class="headerlink" href="#31-atomic" title="Permanent link">&para;</a></h3>
+<p>从单个文档出发，识别主题性标识与可验证的小结论，再生成<strong>针对性强、可检查</strong>的问题。流水线中通常包含：生成与清洗问题、用<strong>无文档试答</strong>筛掉「不查文档也能猜对」的条目，并基于原文整理<strong>金标答案</strong>。这一步产出的数据最适合打牢「读材料再说话」的基本功，也是后续 Width 阶段的「种子」来源之一。</p>
+<blockquote>
+<p>✅ <strong>无文档试答的直观含义</strong>：令模型在<strong>看不到文档</strong>的条件下回答问题；若仍答对，则该题可能过度依赖参数知识，作为「强依赖检索」的训练样本价值下降——与 IR 问题筛选的常见思路一致。</p>
+</blockquote>
+<h3 id="32-depth">3.2 Depth：深度追问<a class="headerlink" href="#32-depth" title="Permanent link">&para;</a></h3>
+<p>在标识符与关系上做<strong>多轮自顶向下扩展</strong>：先找到更泛的父级主题与关系，再生成需要<strong>沿关系链多想一步</strong>才能回答的问题。每一轮可配合<strong>子集/一致性检查</strong>与<strong>问题质量验证</strong>，避免生成空泛或无法落地的深度题。深度题的标签答案建议在<strong>同一文档上下文</strong>内用<strong>有依据提示</strong>生成，保证与可见证据一致。</p>
+<h3 id="33-width">3.3 Width：宽度综合<a class="headerlink" href="#33-width" title="Permanent link">&para;</a></h3>
+<p>把若干相邻或相关的原子问答<strong>合并</strong>成一道覆盖更广的综合题，再检验综合题能否<strong>合理分解</strong>回子问题、答案是否自洽。通过后再根据内部评分阈值过滤。综合题往往需要<strong>拼接多段文本</strong>作为上下文，并用有依据方式生成最终短答案（可辅以子答案作为提示），从而模拟「跨段整合」的多跳形态。</p>
+<h3 id="34">3.4 合并训练集<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<p>将上述增强结果与<strong>仅用原始支持段落构造的基线样本</strong>合并，并做去重，得到一份更丰富的微调语料。实践上建议<strong>保留基线样本</strong>，避免分布完全被合成数据带偏。</p>
+<hr />
+<h2 id="4">4. 有依据答案：让标签站得住脚<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<p>对 Depth、Width 等步骤中「模型新提出的问题」，需要自动生成与材料一致的参考答案。做法是使用明确的<strong>仅依据上下文</strong>的指令：若上下文不包含答案，则输出未知或空，并在后处理中丢弃无效条。这与 Atomic 阶段「从文档提炼金标」的目标一致，都是为了<strong>同一套可检验的 Grounding 标准</strong>。</p>
+<p>从目标看，这与 Self-RAG 中「生成是否被材料支持」的关切<strong>方向一致</strong>；在数据增强路径中，常见实现是<strong>提示约束 + 后处理过滤</strong>，而非单独训练一个支持度分类头——工程上更简单，也易于与现有指令微调流程对接。</p>
+<hr />
+<h2 id="5">5. 训练与评测闭环<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 微调：在合并语料上做指令微调<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<p>在合并后的语料上做指令微调时，下列超参在实践中影响较大（具体取值依显存与基座模型而定）。</p>
+<table>
+<thead>
+<tr>
+<th>参数维度</th>
+<th>常见取值范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>训练轮数</strong></td>
+<td>1～5</td>
+<td>数据量小易过拟合，可配合早停</td>
+</tr>
+<tr>
+<td><strong>学习率</strong></td>
+<td><span class="arithmatex">\(10^{-5}\)</span> 量级</td>
+<td>过大易破坏预训练知识</td>
+</tr>
+<tr>
+<td><strong>截断长度（cutoff）</strong></td>
+<td>如 1024～4096</td>
+<td>需覆盖「上下文 + 问题」总长</td>
+</tr>
+<tr>
+<td><strong>批次与梯度累积</strong></td>
+<td>依显存调整</td>
+<td>等效大 batch 稳定训练</td>
+</tr>
+</tbody>
+</table>
+<p>建议流程是：<strong>先在验证集上测基座 → 再训增强后的模型 → 同集复测</strong>，对比指标变化，并抽样阅读错误类型（事实遗漏、指代错误、过度推断等）。</p>
+<h3 id="52-f1-exact-match">5.2 评测指标：F1 与 Exact Match<a class="headerlink" href="#52-f1-exact-match" title="Permanent link">&para;</a></h3>
+<p>多跳问答公开工作常报告 <strong>Token-level F1</strong> 与 <strong>Exact Match（EM）</strong>，便于横向对比。</p>
+<p>设标准答案词序列与预测词序列经规范化后为 <span class="arithmatex">\(A = (a_1,\ldots,a_m)\)</span>、<span class="arithmatex">\(P = (p_1,\ldots,p_n)\)</span>，记公共词袋计数（ multiset 意义下）对应的 precision / recall，则 F1 为二者的调和平均。直观上，F1 对<strong>部分正确</strong>的答案比 EM 更宽容。</p>
+<p><strong>Exact Match</strong> 则在规范化字符串完全一致时记为命中：</p>
+<div class="arithmatex">\[
+\text{EM} = \frac{1}{N} \sum_{i=1}^{N} \mathbb{1}\big[\text{norm}(\hat{y}_i) = \text{norm}(y_i)\big]
+\]</div>
+<p>其中 <span class="arithmatex">\(y_i\)</span> 为第 <span class="arithmatex">\(i\)</span> 条标准答案，<span class="arithmatex">\(\hat{y}_i\)</span> 为模型预测，<span class="arithmatex">\(\text{norm}(\cdot)\)</span> 通常包含大小写、标点、冠词等规范化（具体与评测脚本一致）。</p>
+<blockquote>
+<p>📌 <strong>读指标</strong>：EM 更严，适合衡量「一字不差」类任务；F1 更平滑，适合看整体趋势。实验报告中建议<strong>两者同时给出</strong>。</p>
+</blockquote>
+<hr />
+<h2 id="6-lazyllm-pipeline">6. LazyLLM 实战：Pipeline 数据与多跳指令微调<a class="headerlink" href="#6-lazyllm-pipeline" title="Permanent link">&para;</a></h2>
+<p>下面我们具体说明 <strong>LazyLLM 如何串联「数据合成 → 合并 JSONL → 微调 → 评测」</strong>，从而在固定验证集上提升 <strong>F1 / EM</strong>，强化模型在<strong>长上下文内整合证据</strong>的能力。完整代码见(<a href="../code/agentic_rag_multihop_ft_ppl.py">agentic_rag</a>)</p>
+<h3 id="61-pipeline">6.1 依赖与 Pipeline 入口<a class="headerlink" href="#61-pipeline" title="Permanent link">&para;</a></h3>
+<p>脚本从 <code>lazyllm.tools.data.pipelines.rag_pipelines</code> 引入三类合成流水线及 QA 评测流水线，用于生成增强样本并在评测阶段计算 F1：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm</span><span class="w"> </span><span class="kn">import</span> <span class="n">finetune</span><span class="p">,</span> <span class="n">launchers</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools.data.pipelines.rag_pipelines</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">atomic_rag_pipeline</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">depth_qa_pipeline</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">qa_evaluation_pipeline</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">width_qa_pipeline</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>实验主流程会加载 HotpotQA、构造支持文档列表，再依次调用 <code>atomic_rag_pipeline</code>、<code>depth_qa_pipeline</code>、<code>width_qa_pipeline</code>（内部已封装标识符抽取、问题生成、验证与过滤等算子），将结果与原始训练样本合并为 <strong><code>merged_train.jsonl</code></strong>（字段为 <code>instruction</code> / <code>input</code> / <code>output</code> 的指令微调格式）。</p>
+<h3 id="62-atomic">6.2 最小示例：单文档上跑通 Atomic 合成<a class="headerlink" href="#62-atomic" title="Permanent link">&para;</a></h3>
+<p>在理解完整实验前，可先用<strong>单条文档</strong>走通 Atomic 流水线，确认环境与基座可读：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools.data.pipelines.rag_pipelines</span><span class="w"> </span><span class="kn">import</span> <span class="n">atomic_rag_pipeline</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="s2">&quot;Qwen/Qwen2.5-7B-Instruct&quot;</span><span class="p">)</span>  <span class="c1"># 或本地路径</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">ppl</span> <span class="o">=</span> <span class="n">atomic_rag_pipeline</span><span class="p">(</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">input_key</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">max_per_task</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">max_question</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">llm_verify_filter_threshold</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">source_docs</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="p">{</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;龙美术馆于 2025 年 4 月 28 日至 6 月 15 日举办当代艺术主题展览。&quot;</span><span class="p">,</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;龙美术馆&quot;</span><span class="p">,</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>        <span class="s2">&quot;source_doc_id&quot;</span><span class="p">:</span> <span class="s2">&quot;doc_0&quot;</span><span class="p">,</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="p">}</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="p">]</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="n">results</span> <span class="o">=</span> <span class="n">ppl</span><span class="p">(</span><span class="n">source_docs</span><span class="p">)</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="c1"># results 中通常含 question、answer/refined_answer、text 等字段，可再格式化为 JSONL 训练行</span>
+</span></code></pre></div>
+<p>将多条文档批量送入同一 <code>ppl</code>，即可得到一批<strong>原子级 QA</strong>；Depth / Width 则在更多文档与 Atomic 种子之上扩展深度题与综合题（完整逻辑见上述脚本中的 <code>build_augmented_training_data</code>）。</p>
+<h3 id="63-trainablemodule">6.3 核心代码：用 <code>TrainableModule</code> 做指令微调<a class="headerlink" href="#63-trainablemodule" title="Permanent link">&para;</a></h3>
+<p>合并后的 <code>merged_train.jsonl</code> 作为 <code>trainset</code>，通过 <strong><code>finetune.auto</code></strong> 交给 LazyLLM 统一微调入口。下面是与脚本一致的 <strong><code>run_finetune</code></strong> 核心实现（含学习率、截断长度、梯度累积与 warmup 等）：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_finetune</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">base_model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">train_data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">num_epochs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">per_device_batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">learning_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">gradient_accumulation_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">cutoff_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">warmup_ratio</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">ngpus</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">):</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{</span><span class="s2">&quot;=&quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">72</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;开始微调（Agentic RAG 多跳增强实验）&quot;</span><span class="p">)</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  基座模型: </span><span class="si">{</span><span class="n">base_model</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  训练数据: </span><span class="si">{</span><span class="n">train_data_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  输出目录: </span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="nb">print</span><span class="p">(</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>        <span class="sa">f</span><span class="s2">&quot;  epochs=</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">, lr=</span><span class="si">{</span><span class="n">learning_rate</span><span class="si">}</span><span class="s2">, batch=</span><span class="si">{</span><span class="n">per_device_batch_size</span><span class="si">}</span><span class="s2">, &quot;</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>        <span class="sa">f</span><span class="s2">&quot;grad_accum=</span><span class="si">{</span><span class="n">gradient_accumulation_steps</span><span class="si">}</span><span class="s2">, cutoff_len=</span><span class="si">{</span><span class="n">cutoff_len</span><span class="si">}</span><span class="s2">, warmup_ratio=</span><span class="si">{</span><span class="n">warmup_ratio</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="p">)</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;=&quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">72</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    <span class="n">model</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>        <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>        <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&quot;finetune&quot;</span><span class="p">)</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>        <span class="o">.</span><span class="n">trainset</span><span class="p">(</span><span class="n">train_data_path</span><span class="p">)</span>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>        <span class="o">.</span><span class="n">finetune_method</span><span class="p">(</span>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>            <span class="p">(</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>                <span class="n">finetune</span><span class="o">.</span><span class="n">auto</span><span class="p">,</span>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>                <span class="p">{</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>                    <span class="s2">&quot;launcher&quot;</span><span class="p">:</span> <span class="n">launchers</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">nnode</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ngpus</span><span class="o">=</span><span class="n">ngpus</span><span class="p">),</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>                    <span class="s2">&quot;num_train_epochs&quot;</span><span class="p">:</span> <span class="n">num_epochs</span><span class="p">,</span>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>                    <span class="s2">&quot;per_device_train_batch_size&quot;</span><span class="p">:</span> <span class="n">per_device_batch_size</span><span class="p">,</span>
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>                    <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="n">learning_rate</span><span class="p">,</span>
+</span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>                    <span class="s2">&quot;gradient_accumulation_steps&quot;</span><span class="p">:</span> <span class="n">gradient_accumulation_steps</span><span class="p">,</span>
+</span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>                    <span class="s2">&quot;cutoff_len&quot;</span><span class="p">:</span> <span class="n">cutoff_len</span><span class="p">,</span>
+</span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>                    <span class="s2">&quot;warmup_ratio&quot;</span><span class="p">:</span> <span class="n">warmup_ratio</span><span class="p">,</span>
+</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>                <span class="p">},</span>
+</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>            <span class="p">)</span>
+</span><span id="__span-3-41"><a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>        <span class="p">)</span>
+</span><span id="__span-3-42"><a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>    <span class="p">)</span>
+</span><span id="__span-3-43"><a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a>    <span class="n">model</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</span><span id="__span-3-44"><a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;微调完成！&quot;</span><span class="p">)</span>
+</span><span id="__span-3-45"><a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a>    <span class="k">return</span> <span class="n">model</span>
+</span></code></pre></div>
+<h3 id="64">6.4 一键实验与效果对比<a class="headerlink" href="#64" title="Permanent link">&para;</a></h3>
+<p>脚本支持<strong>先评测基座、再训练、再评测</strong>，从而在<strong>同一验证集</strong>上直接对比多跳指标（脚本内用 <code>qa_evaluation_pipeline</code> 计算平均 F1，并统计 EM）：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>agentic_rag_multihop_ft_ppl.py<span class="w"> </span>--run_experiment<span class="w"> </span>--max_train_samples<span class="w"> </span><span class="m">200</span><span class="w"> </span>--max_eval_samples<span class="w"> </span><span class="m">200</span>
+</span></code></pre></div>
+<p>典型产出包括：<code>merged_train.jsonl</code>（原始 + Atomic/Depth/Width 增强）、<code>finetuned_model/</code>（微调权重）、<code>eval_before.json</code> / <code>eval_after.json</code>（基线与微调后明细）、<code>experiment_summary.json</code>（汇总指标与路径）。</p>
+<p>下面是一次完整跑通后（验证集 <strong>50</strong> 条），基座(Qwen2.5-14b)与微调后同集对比：</p>
+<p><img alt="agentic.png" src="../assets/agentic_rag.png" /></p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>样本数</th>
+<th>平均 F1</th>
+<th>Exact Match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>基座模型</strong></td>
+<td>50</td>
+<td>0.077</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td><strong>微调后</strong></td>
+<td>50</td>
+<td>0.623</td>
+<td>0.52</td>
+</tr>
+</tbody>
+</table>
+<p>可见在同一验证集上，<strong>平均 F1 与 EM 均大幅提升</strong>：F1 从约 <strong>0.07</strong> 升至约 <strong>0.62</strong>，EM 从 <strong>0%</strong> 升至 <strong>52%</strong>，表明模型在给定上下文中做<strong>多跳式阅读与短答</strong>的能力明显增强。</p>
+<hr />
+<h2 id="7-agentic-rag">7. 与更广义的 Agentic RAG 的关系<a class="headerlink" href="#7-agentic-rag" title="Permanent link">&para;</a></h2>
+<p>许多系统还会在<strong>推理时</strong>接入搜索引擎、向量库等工具，并学习<strong>何时检索、如何改写查询</strong>；有的工作会构造带<strong>检索与反思标记</strong>的序列数据。本课聚焦<strong>数据增强 + 有依据标签 + 监督微调</strong>这一条主线，先把「多形态、可校验」的训练数据与评测闭环跑通。</p>
+<p>它与<strong>推理侧</strong>的 Agentic RAG（工具调用、多轮检索）互补：<strong>先</strong>让模型在静态上下文中练好整合与推理，<strong>再</strong>叠加检索策略与工具，往往是稳妥的迭代顺序。与第27课的 <strong>Reranker</strong> 结合时，典型系统形态是「召回 → 精排 → 将 top 文档拼上下文 → 多跳阅读生成」，数据侧增强负责让生成器更适应长证据推理。</p>
+<hr />
+<h2 id="8">8. 业界常见组件与框架（参考）<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>常见选项</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>编排与 Agent</strong></td>
+<td>LangGraph、LangChain Agent、LlamaIndex Agent</td>
+<td>适合实现多步检索与分支</td>
+</tr>
+<tr>
+<td><strong>数据与流水线</strong></td>
+<td>LazyLLM <code>atomic_rag_pipeline</code>、<code>depth_qa_pipeline</code>、<code>width_qa_pipeline</code> 等</td>
+<td>与「造数据 + 验证」衔接</td>
+</tr>
+<tr>
+<td><strong>评测基准</strong></td>
+<td>HotpotQA、2WikiMultiHopQA 等</td>
+<td>多跳难度与数据形态各异</td>
+</tr>
+<tr>
+<td><strong>生成模型</strong></td>
+<td>开源指令模型（如 Qwen、Llama 系等）</td>
+<td>微调需注意许可证与截断长度</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-agentic-rag">9. 总结：Agentic RAG 数据增强的核心链条<a class="headerlink" href="#9-agentic-rag" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>思路</th>
+<th>在本课范式中的落点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单次 RAG 难以覆盖多跳</td>
+<td>增加「链式 + 综合」题型分布</td>
+<td>Depth / Width</td>
+</tr>
+<tr>
+<td>合成数据噪声大、可召回</td>
+<td>过滤与验证</td>
+<td>无文档试答、分解/一致性检查、阈值过滤</td>
+</tr>
+<tr>
+<td>标签与材料不一致</td>
+<td>强约束 Grounding</td>
+<td>仅依据上下文的答案生成与丢弃规则</td>
+</tr>
+<tr>
+<td>效果可量化</td>
+<td>固定验证集与标准指标</td>
+<td>F1、EM；基座 vs 微调对比</td>
+</tr>
+</tbody>
+</table>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../chapter27/27/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第27课时：Reranker 模型微调与实战">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第27课时：Reranker 模型微调与实战
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/LazyAGI/LazyLLM" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "navigation.footer", "navigation.top", "search.highlight", "search.suggest", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

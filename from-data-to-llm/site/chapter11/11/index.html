@@ -1,0 +1,4875 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="End-to-end LLM training and data engineering course built on LazyLLM.">
+      
+      
+        <meta name="author" content="LazyLLM Community">
+      
+      
+      
+        <link rel="prev" href="../../chapter10/10/">
+      
+      
+        <link rel="next" href="../../chapter12/12/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://img.icons8.com/?size=100&id=121346&format=png&color=000000">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第11课时：指令微调原理与策略 - From Data to LLM</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="data:text/css,.md-grid{max-width:90%25!important}">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#11" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="From Data to LLM" class="md-header__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            From Data to LLM
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第11课时：指令微调原理与策略
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  课程简介
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../outline/" class="md-tabs__link">
+          
+  
+  
+  课程内容
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="From Data to LLM" class="md-nav__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    From Data to LLM
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程体系
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程内容
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程内容
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程大纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一部分：大模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第一部分：大模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter1/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1课时：Transformer 核心与 Self-Attention 深度剖析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter2/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2课时：LLM 训练范式与数据工程全景
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二部分：系统工程基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第二部分：系统工程基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter3/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3课时：分布式训练技术概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter4/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4课时：模型部署与推理加速
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter5/5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter6/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6课时：基于 LazyLLM 的全流程实践
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三部分：预训练数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第三部分：预训练数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter7/7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7课时：预训练原理、策略与评测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter8/8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8课时：预训练数据构建全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter9/9/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9课时：基于 LazyLLM 的预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter10/10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10课时：多模态 LLM 架构与预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四部分：微调数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第四部分：微调数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-sft-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 什么是 SFT，为什么 SFT 决定模型好不好用
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1 什么是 SFT，为什么 SFT 决定模型好不好用">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 从“续写模型”到“指令模型”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 多轮对话与角色意识的形成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-alignment-tax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 指令对齐的代价：Alignment Tax（对齐税）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3 指令对齐的代价：Alignment Tax（对齐税）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        成因分析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        工程实践中的影响与缓解策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 为什么 SFT 仍然不可或缺？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 微调方法
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2 微调方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 参数高效微调（PEFT）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 参数高效微调（PEFT）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 LoRA：低秩假设下的参数高效适配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 QLoRA：在极低显存条件下微调大模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-adalora-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.3 AdaLoRA：动态分配参数预算的 LoRA 变体
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#214-dora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.4 DoRA：解耦权重方向与幅度的适配方式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#215-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.5 各类 PEFT 方法对比总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-full-fine-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 全量微调（Full Fine-Tuning）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 全量微调（Full Fine-Tuning）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 什么时候必须使用全量微调？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.2 全量微调的主要成本来源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#223-zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.3 ZeRO：分布式显存优化的核心思想
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-vs-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 全量微调 vs PEFT：如何选择？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 训练配置与超参数
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3 训练配置与超参数">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-learning-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 学习率（Learning Rate）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-batch-size-gradient-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Batch Size 与梯度累积（Gradient Accumulation）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-max-sequence-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 最大序列长度（Max Sequence Length）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-optimizerweight-decay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 优化器（Optimizer）与权重衰减（Weight Decay）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 优化器（Optimizer）与权重衰减（Weight Decay）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341-adam-l2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.1 Adam 的核心公式（L2 正则耦合版本）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#342-adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.2 AdamW 的核心公式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#343-adafactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.3 Adafactor 的核心公式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-epoch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 训练轮数（Epoch）与停止策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 稳定训练的小技巧
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 LoRA 单独的推荐配置（常用）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4 评测指标与验证
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4 评测指标与验证">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 核心指标：模型输出质量是否提升？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 训练监控指标：模型是否稳定学习？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 多轮对话评估：模型是否能保持上下文逻辑？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 数据质量验证：训练数据有没有污染模型？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 离线评测与在线验证
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5 指令微调实战
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5 指令微调实战">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 实验目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 数据集说明
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 模型与训练配置
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 模型与训练配置">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基础模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        训练方法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompt 设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 实验流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 实验流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （1）Baseline 测试（未微调模型）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （2）SFT 微调 + 测试
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （3）对比分析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （4）实验设计核心思想
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 评测指标设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 实验结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 结果分析
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.7 结果分析">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （1）Base 模型表现
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2sft_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （2）SFT 模型提升
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （3）关键结论
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter12/12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12课时：通用指令数据构建、合成与蒸馏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter13/13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13课时：基于 LazyLLM 的微调实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter14/14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五部分：对齐数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第五部分：对齐数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter15/15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter16/16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16课时：偏好数据构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter17/17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17课时：模型风险、合规与伦理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter18/18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18课时：基于 LazyLLM 的对齐实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六部分：特定能力数据
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第六部分：特定能力数据
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter19/19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19课时：推理与数学能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter20/20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20课时：代码能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter21/21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter22/22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22课时：结构化输出与格式对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter23/23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23课时：Agent 能力增强 (Tools & Planning)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter24/24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24课时：行业领域模型实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七部分：RAG 数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第七部分：RAG 数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter25/25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter26/26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26课时：Embedding 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter27/27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27课时：Reranker 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter28/28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-sft-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 什么是 SFT，为什么 SFT 决定模型好不好用
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1 什么是 SFT，为什么 SFT 决定模型好不好用">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 从“续写模型”到“指令模型”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 多轮对话与角色意识的形成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-alignment-tax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 指令对齐的代价：Alignment Tax（对齐税）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3 指令对齐的代价：Alignment Tax（对齐税）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        成因分析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        工程实践中的影响与缓解策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 为什么 SFT 仍然不可或缺？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 微调方法
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2 微调方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 参数高效微调（PEFT）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 参数高效微调（PEFT）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 LoRA：低秩假设下的参数高效适配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 QLoRA：在极低显存条件下微调大模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-adalora-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.3 AdaLoRA：动态分配参数预算的 LoRA 变体
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#214-dora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.4 DoRA：解耦权重方向与幅度的适配方式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#215-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.5 各类 PEFT 方法对比总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-full-fine-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 全量微调（Full Fine-Tuning）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 全量微调（Full Fine-Tuning）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 什么时候必须使用全量微调？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.2 全量微调的主要成本来源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#223-zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.3 ZeRO：分布式显存优化的核心思想
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-vs-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 全量微调 vs PEFT：如何选择？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 训练配置与超参数
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3 训练配置与超参数">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-learning-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 学习率（Learning Rate）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-batch-size-gradient-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Batch Size 与梯度累积（Gradient Accumulation）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-max-sequence-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 最大序列长度（Max Sequence Length）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-optimizerweight-decay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 优化器（Optimizer）与权重衰减（Weight Decay）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 优化器（Optimizer）与权重衰减（Weight Decay）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341-adam-l2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.1 Adam 的核心公式（L2 正则耦合版本）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#342-adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.2 AdamW 的核心公式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#343-adafactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.3 Adafactor 的核心公式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-epoch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 训练轮数（Epoch）与停止策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 稳定训练的小技巧
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 LoRA 单独的推荐配置（常用）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4 评测指标与验证
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4 评测指标与验证">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 核心指标：模型输出质量是否提升？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 训练监控指标：模型是否稳定学习？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 多轮对话评估：模型是否能保持上下文逻辑？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 数据质量验证：训练数据有没有污染模型？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 离线评测与在线验证
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5 指令微调实战
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5 指令微调实战">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 实验目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 数据集说明
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 模型与训练配置
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 模型与训练配置">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基础模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        训练方法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompt 设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 实验流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 实验流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （1）Baseline 测试（未微调模型）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （2）SFT 微调 + 测试
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （3）对比分析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （4）实验设计核心思想
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 评测指标设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 实验结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 结果分析
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.7 结果分析">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （1）Base 模型表现
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2sft_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （2）SFT 模型提升
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        （3）关键结论
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="11">第11课时：指令微调原理与策略<a class="headerlink" href="#11" title="Permanent link">&para;</a></h1>
+<p>完成大规模预训练后，模型已经积累了丰富的通用语言知识，能够理解和生成自然语言。它可以读懂句子结构、学习词语关联、捕捉长距离依赖，甚至对一些常识性问题给出合理回答。但这并不意味着它能直接胜任具体任务——预训练让模型“懂语言规则”，却不保证它能理解用户意图或按期望方式回应问题。</p>
+<h2 id="1-sft-sft">1 什么是 SFT，为什么 SFT 决定模型好不好用<a class="headerlink" href="#1-sft-sft" title="Permanent link">&para;</a></h2>
+<p>完成大规模预训练后，语言模型已经具备了强大的通用语言建模能力, 然而，这种能力的本质仍然是——<strong>续写文本，而不是理解并执行指令</strong>。</p>
+<p>从训练目标上看，预训练语言模型优化的是自回归语言建模目标：</p>
+<div class="arithmatex">\[
+\mathcal{L}_{\text{LM}} = - \sum_{t} \log P(x_t \mid x_{&lt;t})
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\mathcal{L}_{\text{LM}}\)</span>：语言建模损失函数  </li>
+<li><span class="arithmatex">\(t\)</span>：token 在序列中的位置索引  </li>
+<li><span class="arithmatex">\(x_t\)</span>：第 <span class="arithmatex">\(t\)</span> 个 token  </li>
+<li><span class="arithmatex">\(x_{&lt;t}\)</span>：当前位置之前的上下文 token  </li>
+<li><span class="arithmatex">\(P(x_t \mid x_{&lt;t})\)</span>：条件概率  </li>
+</ul>
+<p>这一目标决定了模型的核心行为是：<br />
+在给定上下文的情况下，预测下一个最可能的 token，使文本在语义和形式上保持连贯。</p>
+<p>因此，当模型面对如下输入时：</p>
+<p>问题：法国的首都是</p>
+<p>它更倾向于生成一段“合理的续写”，例如背景描述或扩展说明，而<strong>并不一定给出一个直接、明确的答案</strong>。<br />
+这在语言层面是正确的，但在任务层面却是“没有听懂指令”。</p>
+<p><img alt="预训练到指令微调流程图" src="../assets/2.png" /></p>
+<blockquote>
+<p>模型先通过大量文本预训练，然后使用小量指令训练集微调。</p>
+</blockquote>
+<!-- > 图片来源：https://clive-gomes.medium.com/pre-training-large-language-models-at-scale-d2b133d5e219 -->
+
+<hr />
+<h3 id="11_1">1.1 从“续写模型”到“指令模型”<a class="headerlink" href="#11_1" title="Permanent link">&para;</a></h3>
+<p>为了让模型真正具备“听懂人类指令并给出期望回答”的能力，需要引入监督微调（Supervised Fine-Tuning, SFT）。</p>
+<p>SFT 的核心思想并不复杂：<br />
+通过大量 <strong>指令—响应（Instruction–Response）或问答式标注数据</strong>，显式地让模型学习如下条件分布：</p>
+<div class="arithmatex">\[
+P(\text{Response} \mid \text{Instruction}, \text{Context})
+\]</div>
+<p>与预训练阶段相比，模型的学习重点发生了本质变化：</p>
+<ul>
+<li>不再只是“文本如何自然延续”</li>
+<li>而是<strong>在给定指令约束下，什么样的输出才是正确的、符合人类期望的</strong></li>
+</ul>
+<p>换言之，SFT 并没有引入新的模型结构，也没有增加新的推理模块，<br />
+而是通过<strong>重塑训练数据分布与输入结构</strong>，激发并对齐了模型原本隐含的指令遵循能力。</p>
+<p><img alt="SFT激活指令遵循能力示意图" src="../assets/image_1.png" /></p>
+<p>预训练阶段赋予模型通用语言能力，而 SFT 则将这种能力映射到具体任务与交互形式中，使模型从“会写话”，转变为“会回答问题、会对话”。</p>
+<hr />
+<h3 id="12">1.2 多轮对话与角色意识的形成<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<p>在实际的指令微调数据中，输入往往具有清晰的结构，例如：</p>
+<ul>
+<li>指令 / 背景 / 回答</li>
+<li>User / Assistant 的角色划分</li>
+<li>多轮对话历史 + 当前问题</li>
+</ul>
+<p>这种结构化输入使模型逐渐学会：</p>
+<ul>
+<li>区分不同文本片段所扮演的角色</li>
+<li>理解当前输出的职责（回答者、解释者、助手）</li>
+<li>在多轮上下文中保持语义一致性和逻辑连贯性</li>
+</ul>
+<p>从概率建模角度看，多轮对话并没有引入新的模型结构，其本质仍然是条件语言建模：</p>
+<div class="arithmatex">\[
+P(y_t \mid \text{History}, x)
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(y_t\)</span>：当前时刻生成的 token  </li>
+<li><span class="arithmatex">\(\text{History}\)</span>：历史对话（包含多轮 User / Assistant 交互）  </li>
+<li><span class="arithmatex">\(x\)</span>：当前用户输入  </li>
+</ul>
+<p>关键变化在于：</p>
+<blockquote>
+<p>History 被结构化编码（如 role 标记与顺序信息），使模型能够区分“谁在说话”。</p>
+</blockquote>
+<p>因此模型实际学到的是：</p>
+<ul>
+<li><strong>角色条件生成（role-conditioned generation）</strong></li>
+<li><strong>上下文感知续写（context-aware continuation）</strong></li>
+</ul>
+<p>这也解释了以下现象：</p>
+<ul>
+<li>模型能够“记住”上下文信息  </li>
+<li>能区分 User 与 Assistant 的职责  </li>
+<li>能在多轮对话中保持逻辑一致性  </li>
+</ul>
+<p>从本质上看，对话能力并非新能力，而是语言建模能力在结构化输入下的自然涌现。</p>
+<hr />
+<h3 id="13-alignment-tax">1.3 指令对齐的代价：Alignment Tax（对齐税）<a class="headerlink" href="#13-alignment-tax" title="Permanent link">&para;</a></h3>
+<p>尽管 SFT 极大提升了模型的可用性与指令遵循能力，但这种对齐过程并非没有代价。</p>
+<p><strong>Alignment Tax</strong> 指的是：</p>
+<blockquote>
+<p>模型为了更好地符合人类指令与使用预期，在部分通用能力上所付出的性能损失。</p>
+</blockquote>
+<p>常见表现包括：</p>
+<ol>
+<li>
+<p><strong>生成多样性下降</strong><br />
+   输出更趋向安全、规范和模板化，探索性表达减少  </p>
+</li>
+<li>
+<p><strong>推理与创造能力受限</strong><br />
+   在开放性问题或复杂推理任务中表现下降  </p>
+</li>
+<li>
+<p><strong>过度对齐现象</strong><br />
+   对模糊问题频繁拒答或加入冗余免责声明  </p>
+</li>
+</ol>
+<hr />
+<h4 id="_1">成因分析<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>Alignment Tax 的根本原因在于：</p>
+<ul>
+<li>指令数据分布有限，且偏向“人类偏好答案”</li>
+<li>训练目标强调“符合期望”，而非“信息最大化”</li>
+<li>模型在微调中对特定输出模式产生偏置</li>
+</ul>
+<hr />
+<h4 id="_2">工程实践中的影响与缓解策略<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<p>在实际系统中，Alignment Tax 常表现为：</p>
+<ul>
+<li>回复变长但信息密度下降  </li>
+<li>对开放问题回答保守  </li>
+<li>工具调用场景中出现多余解释  </li>
+</ul>
+<p>常见缓解策略包括：</p>
+<p><strong>1. 混合训练目标（SFT + LM）</strong></p>
+<div class="arithmatex">\[
+\mathcal{L} = \lambda \mathcal{L}_{\text{SFT}} + (1-\lambda)\mathcal{L}_{\text{LM}}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\mathcal{L}_{\text{SFT}}\)</span>：指令微调损失  </li>
+<li><span class="arithmatex">\(\mathcal{L}_{\text{LM}}\)</span>：语言建模损失  </li>
+<li><span class="arithmatex">\(\lambda\)</span>：权重系数  </li>
+</ul>
+<p>该方法可在对齐能力与生成能力之间取得平衡。</p>
+<hr />
+<p><strong>2. 分阶段对齐</strong></p>
+<p>例如：</p>
+<ul>
+<li>SFT（基础指令能力）</li>
+<li>RLHF / DPO（偏好优化）</li>
+</ul>
+<p>避免一次性过强约束模型。</p>
+<hr />
+<p><strong>3. 推理阶段控制（Prompt Engineering）</strong></p>
+<p>通过 prompt 控制输出风格，例如：</p>
+<ul>
+<li>“Be concise”</li>
+<li>“Output only JSON”</li>
+</ul>
+<p>减少过度解释问题。</p>
+<hr />
+<h3 id="14-sft">1.4 为什么 SFT 仍然不可或缺？<a class="headerlink" href="#14-sft" title="Permanent link">&para;</a></h3>
+<p>尽管 SFT 存在 Alignment Tax，但它仍然是大模型走向实际应用的关键阶段。</p>
+<p>从能力角度来看，预训练模型与 SFT 模型存在本质差异：</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>预训练模型</th>
+<th>SFT 模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文本续写能力</td>
+<td>强</td>
+<td>强</td>
+</tr>
+<tr>
+<td>指令理解能力</td>
+<td>弱</td>
+<td>强</td>
+</tr>
+<tr>
+<td>输出格式控制</td>
+<td>弱</td>
+<td>强</td>
+</tr>
+<tr>
+<td>多轮对话能力</td>
+<td>不稳定</td>
+<td>稳定</td>
+</tr>
+<tr>
+<td>实际可用性</td>
+<td>低</td>
+<td>高</td>
+</tr>
+</tbody>
+</table>
+<p>SFT 的核心价值不在于提升模型“知识量”，而在于提升：</p>
+<blockquote>
+<p><strong>可控性（Controllability）与可用性（Usability）</strong></p>
+</blockquote>
+<p>具体而言：</p>
+<ol>
+<li>
+<p><strong>让模型真正“听懂指令”</strong><br />
+   避免答非所问  </p>
+</li>
+<li>
+<p><strong>桥接通用能力与具体任务</strong><br />
+   将语言能力映射为任务能力  </p>
+</li>
+<li>
+<p><strong>约束输出格式与行为边界</strong><br />
+   满足工程系统的可解析性与安全性需求  </p>
+</li>
+</ol>
+<hr />
+<p>因此，可以将大模型能力分为两个阶段：</p>
+<ul>
+<li>预训练：学习“如何说话”  </li>
+<li>SFT：学习“在什么情况下该说什么话”  </li>
+</ul>
+<p>SFT 是连接模型能力与真实应用之间的关键桥梁。</p>
+<h2 id="2">2 微调方法<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>在监督微调（SFT）阶段，模型参数的更新方式直接影响训练效率、显存占用以及最终模型在下游任务上的表现。选择合适的微调策略，不仅关系到资源消耗，也关系到模型能否快速适应新任务。</p>
+<p>根据参数更新范围和训练成本的不同，常用微调方法可分为几类：</p>
+<table>
+<thead>
+<tr>
+<th><strong>方法</strong></th>
+<th><strong>参数更新范围</strong></th>
+<th><strong>显存占用</strong></th>
+<th><strong>训练成本</strong></th>
+<th><strong>适用场景</strong></th>
+<th><strong>特点</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>全参数微调（Full Fine-tuning）</td>
+<td>更新所有参数</td>
+<td>高</td>
+<td>高</td>
+<td>大规模任务、模型深度优化</td>
+<td>学习能力最强，但成本昂贵，需要完整保存权重</td>
+</tr>
+<tr>
+<td>LoRA（Low-Rank Adaptation）</td>
+<td>在权重矩阵中插入低秩适配层</td>
+<td>低</td>
+<td>低</td>
+<td>中小规模微调、指令任务</td>
+<td>性能接近全参数微调，显存占用低，参数可复用，当前主流方案</td>
+</tr>
+<tr>
+<td>Adapter</td>
+<td>在每层 Transformer 中插入小型瓶颈层</td>
+<td>中</td>
+<td>中</td>
+<td>多任务学习、持续训练</td>
+<td>模块化设计，方便增量扩展和多任务适配</td>
+</tr>
+<tr>
+<td>Prompt-tuning / Prefix-tuning</td>
+<td>仅训练前置或中间虚拟向量（prompt embedding）</td>
+<td>极低</td>
+<td>极低</td>
+<td>特定任务快速适配</td>
+<td>训练速度快，但泛化能力有限，适合轻量级快速实验</td>
+</tr>
+</tbody>
+</table>
+<p>从总体趋势来看，​<strong>LoRA ​是当前最主流的参数高效微调方式</strong>​，在保持接近全参数微调性能的同时，大幅降低了显存与计算资源需求。</p>
+<hr />
+<h3 id="21-peft">2.1 参数高效微调（PEFT）<a class="headerlink" href="#21-peft" title="Permanent link">&para;</a></h3>
+<p>随着大规模预训练语言模型（Large Language Models, LLMs）参数规模不断扩大，传统的​<strong>全参数微调（Full Fine-Tuning）在计算资源、显存占用和训练成本等方面逐渐变得不可行。尤其在指令微调与领域适配等典型场景中，下游任务往往只需要对模型行为进行有限幅度的调整</strong>​，而非整体能力的重塑。</p>
+<p>在这一背景下，<strong>参数高效微调（Parameter-Efficient Fine-Tuning, PEFT）</strong> 方法应运而生。其核心思想是：</p>
+<blockquote>
+<p><strong>在尽可能冻结预训练模型参数的前提下，仅引入少量可训练参数，实现对新任务分布的有效适配。</strong></p>
+</blockquote>
+<p>相较于全参数微调，PEFT 方法具有以下显著优势：</p>
+<ul>
+<li>可训练参数量显著减少，通常仅占原模型的极小比例</li>
+<li>显存与通信开销大幅降低，训练门槛显著下降</li>
+<li>原始模型能力得以完整保留，避免灾难性遗忘</li>
+<li>适配参数可独立存储与加载，便于多任务与多领域部署</li>
+</ul>
+<p>在众多 PEFT 方法中，<strong>基于低秩假设的 LoRA 及其一系列变体</strong>已成为当前最具代表性且应用最广泛的技术路线。它们从不同角度对 LoRA 的表达能力、显存效率与参数分配方式进行了改进，构成了现代参数高效微调方法的核心体系。</p>
+<p>本节将系统介绍几种典型的 PEFT 方法，包括 LoRA、QLoRA、AdaLoRA 以及 DoRA，重点分析其设计动机、核心机制及适用场景。</p>
+<p><img alt="LoRA微调流程图" src="../assets/Lora.png" /></p>
+<blockquote>
+<p>LoRA微调流程</p>
+</blockquote>
+<h4 id="211-lora">2.1.1 LoRA：低秩假设下的参数高效适配<a class="headerlink" href="#211-lora" title="Permanent link">&para;</a></h4>
+<p>LoRA（Low-Rank Adaptation）基于一个关键观察：  </p>
+<blockquote>
+<p>在下游任务中，预训练模型所需的权重更新往往位于一个<strong>低秩子空间</strong>中。
+因此，与其对完整权重矩阵 <span class="arithmatex">\(W\)</span> 进行更新，不如仅学习一个低秩的增量</p>
+</blockquote>
+<p><img alt="LoRA参数冻结与低秩更新示意图" src="../assets/3.png" /></p>
+<blockquote>
+<p>蓝色部分为主模型权重，在训练中参数被冻结。橙色<strong>A，B</strong>两个矩阵为LoRA微调矩阵。右边黄色为训练之后权重融合矩阵，用于之后的模型推理。</p>
+</blockquote>
+<!-- > 图片来源：https://arxiv.org/abs/2106.09685 -->
+
+<div class="arithmatex">\[
+\Delta W = BA
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\Delta W\)</span>：权重更新矩阵  </li>
+<li><span class="arithmatex">\(B \in \mathbb{R}^{d_{\text{out}} \times r}\)</span>：输出方向低秩矩阵  </li>
+<li><span class="arithmatex">\(A \in \mathbb{R}^{r \times d_{\text{in}}}\)</span>：输入方向低秩矩阵  </li>
+<li><span class="arithmatex">\(r\)</span>：低秩维度（rank）  </li>
+</ul>
+<p>在前向传播中，线性变换可表示为：</p>
+<div class="arithmatex">\[
+h = Wx + \frac{\alpha}{r} BAx,
+\]</div>
+<p>其中 <span class="arithmatex">\(\alpha\)</span> 为缩放系数，用于控制低秩更新项的幅度并提升训练稳定性。</p>
+<p>这种设计带来的直接好处包括：</p>
+<ul>
+<li>显著减少可训练参数数量（通常 &lt; 1%）</li>
+<li>显存占用与通信成本大幅降低</li>
+<li>不影响推理时的模型结构（可合并权重）</li>
+</ul>
+<p>因此，LoRA 成为当前指令微调与领域微调中<strong>最主流的 PEFT 方法</strong>。</p>
+<hr />
+<h4 id="212-qlora">2.1.2 QLoRA：在极低显存条件下微调大模型<a class="headerlink" href="#212-qlora" title="Permanent link">&para;</a></h4>
+<p>尽管 LoRA 已显著降低了训练成本，但当模型规模达到数十亿甚至百亿参数时，<strong>基座模型本身的显存占用</strong>仍然是主要瓶颈。</p>
+<p>QLoRA（Quantized LoRA）进一步提出：</p>
+<blockquote>
+<p><strong>将预训练模型权重量化到 4-bit，同时仅对 LoRA 参数进行 FP16/BF16 训练。</strong></p>
+</blockquote>
+<p><img alt="QLoRA量化微调流程图" src="../assets/Qlora.png" /></p>
+<blockquote>
+<p>最右边为 <strong>QLoRA</strong> 微调流程图。其中模型参数在部署与训练时被量化压缩为 <strong>4-bit NF4（NormalFloat4）</strong> 形式，极大地减少了显存与内存占用；​<strong>在前向与反向计算过程中，权重会按需反量化（dequantize）为 FP16/BF16 精度参与计算</strong>​，而可训练的 LoRA 低秩适配器始终保持高精度，从而在几乎不牺牲模型性能的前提下实现高效微调。</p>
+</blockquote>
+<p>其核心组成包括：</p>
+<ul>
+<li><strong>4-bit NF4 权重量化</strong>：减少基座模型显存占用</li>
+<li><strong>Double Quantization</strong>：进一步压缩量化参数</li>
+<li><strong>LoRA 作为唯一可训练参数</strong></li>
+</ul>
+<p>从本质上看，QLoRA 并未改变 LoRA 的参数更新形式，而是通过：</p>
+<ol>
+<li>对冻结的基座模型权重进行 4-bit 量化存储（如 NF4）；</li>
+<li>在计算阶段按需将量化权重反量化为 FP16/BF16 参与前向与反向传播；</li>
+<li>仅对新增的低秩 LoRA 适配器参数进行高精度梯度更新</li>
+</ol>
+<p>实现了 <strong>“单卡微调大模型”</strong> 的工程突破。</p>
+<p>适用场景：</p>
+<ul>
+<li>显存极其受限（如 24GB / 48GB GPU）</li>
+<li>指令微调或领域适配</li>
+<li>需要在消费级硬件上实验大模型</li>
+</ul>
+<hr />
+<h4 id="213-adalora-lora">2.1.3 AdaLoRA：动态分配参数预算的 LoRA 变体<a class="headerlink" href="#213-adalora-lora" title="Permanent link">&para;</a></h4>
+<p>标准 LoRA 需要为所有被注入的层指定统一的 rank <span class="arithmatex">\(r\)</span>，但在实际中：</p>
+<ul>
+<li>不同层对下游任务的重要性不同</li>
+<li>固定 rank 可能导致参数分配不合理</li>
+</ul>
+<p>AdaLoRA（Adaptive LoRA）提出了一种 <strong>动态 rank 分配机制</strong>：</p>
+<ul>
+<li>在训练过程中，根据参数重要性评估</li>
+<li>对重要层分配更高 rank</li>
+<li>对不重要层逐步降低 rank，甚至裁剪</li>
+</ul>
+<p>其核心思想是：</p>
+<blockquote>
+<p>在给定总参数预算的前提下，将有限的低秩容量分配给“更值得更新”的位置。</p>
+</blockquote>
+<p>相比标准 LoRA，AdaLoRA 的优势在于：</p>
+<ul>
+<li>参数利用率更高</li>
+<li>在相同或更低参数量下，性能更优</li>
+<li>更适合参数预算受限或追求极致效率的场景</li>
+</ul>
+<hr />
+<h4 id="214-dora">2.1.4 DoRA：解耦权重方向与幅度的适配方式<a class="headerlink" href="#214-dora" title="Permanent link">&para;</a></h4>
+<p>DoRA（Weight-Decomposed LoRA）的核心创新不在于低秩结构本身，而在于​<strong>权重更新的重参数化方式</strong>​。</p>
+<p>DoRA 将权重更新显式拆分为两个相互独立、可分别学习的组成部分：</p>
+<div class="arithmatex">\[
+W' = W + \alpha \cdot \frac{\Delta W}{\|\Delta W\|}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\frac{\Delta W}{\|\Delta W\|}\)</span> 表示<strong>归一化后的权重更新方向</strong></li>
+<li><span class="arithmatex">\(\alpha\)</span> 表示​<strong>权重更新的幅度参数</strong>​，由模型单独建模和学习</li>
+</ul>
+<p>该设计带来的关键差异体现在以下几个方面：</p>
+<ul>
+<li><strong>更新强度显式可控</strong>
+  权重变化幅度不再由参数范数隐式决定，而是由独立参数直接控制，避免更新强度随训练过程不可预测地波动。</li>
+<li><strong>方向学习更稳定</strong>
+  方向参数仅负责表示“往哪里更新”，不再同时承担尺度信息，使梯度优化更加稳定。</li>
+<li><strong>行为调整更加细粒度</strong>
+  模型可以在保持方向不变的情况下，仅通过调整幅度来精细控制输出行为变化。</li>
+<li><strong>更适合对齐阶段训练</strong>
+  在指令对齐、偏好对齐等场景中，可在保证模型不发生剧烈漂移的前提下进行渐进式调整。</li>
+</ul>
+<p>从参数高效微调的角度看，DoRA 本质上引入了一种 ​<strong>“幅度受控的方向更新机制”</strong>​，在不改变低秩更新结构复杂度的情况下，显著提升了模型调节行为的可控性与稳定性。</p>
+<hr />
+<h4 id="215-peft">2.1.5 各类 PEFT 方法对比总结<a class="headerlink" href="#215-peft" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>核心思想</th>
+<th>主要解决问题</th>
+<th>典型使用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LoRA</td>
+<td>低秩参数更新</td>
+<td>降低微调成本</td>
+<td>通用指令微调</td>
+</tr>
+<tr>
+<td>QLoRA</td>
+<td>量化 + LoRA</td>
+<td>显存瓶颈</td>
+<td>单卡大模型微调</td>
+</tr>
+<tr>
+<td>AdaLoRA</td>
+<td>动态 rank 分配</td>
+<td>参数预算受限</td>
+<td>高效领域适配</td>
+</tr>
+<tr>
+<td>DoRA</td>
+<td>解耦方向与幅度</td>
+<td>表达能力受限</td>
+<td>高质量对齐</td>
+</tr>
+</tbody>
+</table>
+<p>从整体演化路径来看，PEFT 方法的核心目标始终一致：</p>
+<blockquote>
+<p><strong>在尽可能少地修改预训练模型的前提下，实现对新任务或新指令分布的高效适配。</strong></p>
+</blockquote>
+<h3 id="22-full-fine-tuning">2.2 全量微调（Full Fine-Tuning）<a class="headerlink" href="#22-full-fine-tuning" title="Permanent link">&para;</a></h3>
+<p>与参数高效微调（PEFT）不同，全量微调（Full Fine-Tuning）指的是：<br />
+<strong>在训练过程中对模型的全部参数进行更新</strong>，不冻结任何权重。</p>
+<p>从优化角度看，全量微调允许模型在更大的参数空间中进行调整，因此具备最强的表达能力；但其代价也最为明显——<strong>计算、显存与通信成本极高</strong>。</p>
+<hr />
+<h4 id="221">2.2.1 什么时候必须使用全量微调？<a class="headerlink" href="#221" title="Permanent link">&para;</a></h4>
+<p>尽管 PEFT 在多数指令微调场景下已经足够有效，但在以下情形中，全量微调仍然具有不可替代性：</p>
+<p><strong>1. 任务分布与预训练差异极大</strong>  </p>
+<ul>
+<li>全新领域（法律、医疗、科研文本）</li>
+<li>非自然语言分布（代码、公式、结构化文本）</li>
+<li>低资源语言或跨语言任务  </li>
+</ul>
+<p>此时，仅在局部权重上进行低秩调整可能不足以完成分布迁移。</p>
+<p><strong>2. 模型结构或表示需要整体重塑</strong>  </p>
+<ul>
+<li>长上下文能力扩展</li>
+<li>推理风格或生成模式发生根本变化</li>
+<li>模型需学习新的表达范式（如格式化输出、复杂推理链）</li>
+</ul>
+<p><strong>3. 追求极致性能或作为最终发布模型</strong>  </p>
+<ul>
+<li>Benchmark 冲榜</li>
+<li>高价值商业模型</li>
+<li>作为后续蒸馏、对齐或裁剪的“教师模型”</li>
+</ul>
+<p>在这些场景下，全量微调通常能够取得<strong>高于 PEFT 的性能上限</strong>。</p>
+<hr />
+<h4 id="222">2.2.2 全量微调的主要成本来源<a class="headerlink" href="#222" title="Permanent link">&para;</a></h4>
+<p>全量微调的高成本主要来自以下三部分：</p>
+<p><strong>1. 参数存储</strong></p>
+<ul>
+<li>模型权重  </li>
+<li>梯度  </li>
+<li>优化器状态（如 Adam 的一阶、二阶动量）</li>
+</ul>
+<p><strong>2. 显存占用</strong></p>
+<ul>
+<li>单参数通常需要 12～16 字节（FP16 / BF16 + Adam）  </li>
+<li>一个 7B 模型在全量微调时，显存需求可达数百 GB</li>
+</ul>
+<p><strong>3. 分布式通信开销</strong></p>
+<ul>
+<li>梯度同步  </li>
+<li>参数更新  </li>
+<li>优化器状态同步</li>
+</ul>
+<p><strong>示例：以 7B 规模 Transformer 模型为例</strong></p>
+<p>以一个约 ​<strong>7B 参数的大语言模型</strong>​，采用 <strong>FP16 + Adam</strong> 进行全量微调为例：</p>
+<ul>
+<li>​<strong>参数存储</strong>​：
+  每个参数需同时保存权重、梯度以及 Adam 的一阶与二阶动量，单参数约占 ​<strong>12 字节</strong>​，仅模型相关状态就需要约 ​<strong>80 GB 显存</strong>​。</li>
+<li>​<strong>显存占用</strong>​：
+  训练过程中还需存储前向激活、中间计算结果和临时缓冲区，即使采用激活检查点（Activation Checkpointing），整体峰值显存仍通常超过 ​<strong>100 GB</strong>​。</li>
+<li>​<strong>分布式通信开销</strong>​：
+  在数据并行或 ZeRO 训练框架下，每一步都需要对数十亿参数的梯度和优化器状态进行同步，对带宽和通信延迟提出了较高要求。</li>
+</ul>
+<p><strong>因此，在实际工程中，全量微调 7B 级模型往往需要多张高端 GPU（如 A100 / H100）甚至多机集群支持，这也是参数高效微调方法被广泛采用的根本原因。​</strong></p>
+<hr />
+<h4 id="223-zero">2.2.3 ZeRO：分布式显存优化的核心思想<a class="headerlink" href="#223-zero" title="Permanent link">&para;</a></h4>
+<p>为了解决全量微调的显存瓶颈，DeepSpeed 提出了 <strong>ZeRO（Zero Redundancy Optimizer）</strong>。</p>
+<p>其核心思想是：</p>
+<blockquote>
+<p><strong>在数据并行训练中，避免每张 GPU 上都保存一份完整的模型状态。</strong></p>
+</blockquote>
+<p>ZeRO 将模型训练所需的状态拆分为三类：</p>
+<ul>
+<li>参数（Parameters）</li>
+<li>梯度（Gradients）</li>
+<li>优化器状态（Optimizer States）</li>
+</ul>
+<p>并按阶段逐步消除冗余存储。</p>
+<p><img alt="ZeRO分布式优化分片示意图" src="../assets/zero.png" /></p>
+<!-- > 图片来源：https://www.microsoft.com/en-us/research/blog/zero-deepspeed-new-system-optimizations-enable-training-models-with-over-100-billion-parameters/ -->
+
+<blockquote>
+<p>上图展示了 <strong>DeepSpeed + ZeRO（Zero Redundancy Optimizer）</strong> 在分布式训练中的核心思想与效果。左侧为<strong>未使用 ZeRO</strong> 的传统数据并行方式：每张 GPU 都需要完整保存一份模型参数、梯度以及优化器状态，导致显存高度冗余，模型规模受到单卡显存的严格限制。右侧为<strong>启用 ZeRO 后</strong>的内存布局：模型参数、梯度与优化器状态被​<strong>按不同阶段切分并分散存储在多张 GPU 上</strong>​，每张 GPU 仅持有全局状态的一小部分，从而显著降低单卡显存占用。在此基础上，DeepSpeed 能够在几乎不改变原有训练代码的前提下，实现 ​<strong>百亿级参数模型的可扩展训练</strong>​，同时带来更高的训练速度与更低的硬件成本。</p>
+</blockquote>
+<p>在不同的<strong>ZeRO</strong>版本中，<strong>ZeRO-3</strong> 是对显存最友好的配置：</p>
+<ul>
+<li>参数、梯度、优化器状态 <strong>全部分片存储</strong></li>
+<li>每张 GPU 仅保存当前计算所需的最小参数子集</li>
+<li>前向 / 反向计算时按需通信加载参数</li>
+</ul>
+<p>这使得单卡显存占用近似降低为：</p>
+<div class="arithmatex">\[
+\text{Memory} \approx \frac{1}{N_{\text{GPU}}}
+\]</div>
+<p>其中 <span class="arithmatex">\(N_{\text{GPU}}\)</span> 为并行 GPU 数量。</p>
+<p>在显存依然不足的情况下，ZeRO-3 还支持 <strong>Offload 机制</strong>：</p>
+<ul>
+<li>将部分或全部参数 / 优化器状态：</li>
+<li>Offload 到 CPU 内存（RAM）</li>
+<li>或 NVMe 磁盘</li>
+</ul>
+<p>这种策略的本质是：</p>
+<blockquote>
+<p><strong>用额外的通信和计算时间，换取更低的 GPU 显存占用。</strong></p>
+</blockquote>
+<p>常见 Offload 方式包括：</p>
+<table>
+<thead>
+<tr>
+<th>Offload 类型</th>
+<th>Offload 对象</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU Offload</td>
+<td>参数 / 优化器状态</td>
+<td>显存压力最小，但训练速度下降</td>
+</tr>
+<tr>
+<td>NVMe Offload</td>
+<td>参数 / 优化器状态</td>
+<td>显存占用极低，但 I/O 成为瓶颈</td>
+</tr>
+</tbody>
+</table>
+<p>在实际工程中，ZeRO-3 + CPU Offload 常用于：</p>
+<ul>
+<li>超大模型全量微调</li>
+<li>显存受限但时间相对充裕的训练环境</li>
+<li>学术或探索性实验</li>
+</ul>
+<hr />
+<h3 id="23-vs-peft">2.3 全量微调 vs PEFT：如何选择？<a class="headerlink" href="#23-vs-peft" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>全量微调</th>
+<th>PEFT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>可训练参数</td>
+<td>100%</td>
+<td>&lt; 1%</td>
+</tr>
+<tr>
+<td>性能上限</td>
+<td>高</td>
+<td>中～高</td>
+</tr>
+<tr>
+<td>显存需求</td>
+<td>极高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>工程复杂度</td>
+<td>高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>适用阶段</td>
+<td>最终模型 / 教师模型</td>
+<td>快速适配 / 多任务</td>
+</tr>
+</tbody>
+</table>
+<p>实践中常见的策略是：</p>
+<blockquote>
+<p><strong>先使用 PEFT 快速验证任务可行性，再在必要时采用全量微调追求性能上限。</strong></p>
+</blockquote>
+<h2 id="3">3 训练配置与超参数<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>在 SFT 训练过程中，训练配置与超参数直接决定模型的学习效率、收敛速度以及最终效果。即使数据质量高、微调方式合理，如果训练超参数设置不当，也可能导致模型不收敛、过拟合或出现“训崩”现象。因此，合理配置训练参数是 SFT 阶段的核心步骤之一。</p>
+<p>本节将围绕学习率策略、batch size、序列长度、优化器设置、训练时长与稳定性技巧等方面展开介绍。</p>
+<h3 id="31-learning-rate">3.1 学习率（Learning Rate）<a class="headerlink" href="#31-learning-rate" title="Permanent link">&para;</a></h3>
+<p>学习率是最关键的超参数之一。对于大模型，学习率过大容易导致梯度不稳定；学习率过小可能导致训练停滞。</p>
+<p>推荐设置：</p>
+<ul>
+<li>全参数微调：1e-5 ~ 2e-5</li>
+<li>LoRA 微调：1e-4 ~ 3e-4</li>
+<li>Prompt/Prefix-tuning：5e-4 ~ 1e-3</li>
+</ul>
+<p>一般遵循两条原则：</p>
+<ol>
+<li>模型越大，学习率越小</li>
+<li>训练模块越少（如 LoRA），学习率可适当更大</li>
+</ol>
+<p>为了进一步提升稳定性，通常会使用 ​<strong>warmup（预热）策略</strong>​：</p>
+<ul>
+<li>warmup ratio：0.01 ~ 0.05</li>
+</ul>
+<p>在训练初期缓慢增大学习率，可以避免梯度爆炸。</p>
+<h3 id="32-batch-size-gradient-accumulation">3.2 Batch Size 与梯度累积（Gradient Accumulation）<a class="headerlink" href="#32-batch-size-gradient-accumulation" title="Permanent link">&para;</a></h3>
+<p>Batch size 决定了训练的稳定性与收敛速度。大 batch 更稳定，但显存要求高；小 batch 则需配合梯度累积。</p>
+<p>推荐配置：</p>
+<ul>
+<li>有效 batch size：128 ~ 1024（取决于模型规模与任务难度）</li>
+<li>单卡 batch size：4 ~ 16（常见）</li>
+<li>梯度累积步数：根据显存自动调整，以达到目标有效 batch size</li>
+</ul>
+<p>常见实践：</p>
+<p>如果单卡只能放下 batch=4，而想达到有效 batch=512，则设置：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>gradient_accumulation_steps = 128
+</span></code></pre></div>
+<h3 id="33-max-sequence-length">3.3 最大序列长度（Max Sequence Length）<a class="headerlink" href="#33-max-sequence-length" title="Permanent link">&para;</a></h3>
+<p>SFT 训练中，输入序列长度影响训练成本与任务适配能力。</p>
+<p>建议设置：</p>
+<table>
+<thead>
+<tr>
+<th>任务类型</th>
+<th>建议序列长度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简单单轮指令任务</td>
+<td>512 ~ 1024</td>
+</tr>
+<tr>
+<td>文本生成、文章总结</td>
+<td>1024 ~ 2048</td>
+</tr>
+<tr>
+<td>多轮对话、长上下文任务</td>
+<td>2048 ~ 4096（或根据模型支持扩展）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>注意：序列长度越长，显存占用近似​<strong>线性增长</strong>​。</p>
+</blockquote>
+<p>如需训练长上下文模型，可搭配：</p>
+<ul>
+<li>FlashAttention</li>
+<li>Gradient Checkpointing</li>
+<li>分布式训练策略（如 ZeRO）</li>
+</ul>
+<h3 id="34-optimizerweight-decay">3.4 优化器（Optimizer）与权重衰减（Weight Decay）<a class="headerlink" href="#34-optimizerweight-decay" title="Permanent link">&para;</a></h3>
+<p>大模型常用优化器包括：</p>
+<p><strong>AdamW（主流）</strong></p>
+<ul>
+<li>β1 = 0.9</li>
+<li>β2 = 0.95 或 0.999</li>
+<li>weight decay = 0.01</li>
+</ul>
+<p>AdamW 是当前 ​<strong>Transformer / LLM 微调的事实标准</strong>​，尤其适用于 LoRA 等参数高效微调方法。</p>
+<p><strong>Adam（较早方式）</strong></p>
+<ul>
+<li>将 L2 正则项直接耦合进梯度更新</li>
+<li>在大模型与长序列训练中，<strong>容易导致权重尺度失控</strong></li>
+<li>❌ <strong>不推荐用于大模型 SFT</strong></li>
+</ul>
+<p><strong>Adafactor</strong></p>
+<ul>
+<li>
+<p>用行列式估计代替存储完整的二阶矩阵，显著降低优化器状态显存</p>
+</li>
+<li>
+<p>更适合 超大模型或显存受限场景</p>
+</li>
+<li>
+<p>常用于预训练或极大规模模型</p>
+</li>
+</ul>
+<p>如果使用 LoRA 或 Adapter，AdamW 几乎是默认选择。</p>
+<table>
+<thead>
+<tr>
+<th>优化器</th>
+<th>典型超参数</th>
+<th>Weight Decay 处理方式</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AdamW（主流）</td>
+<td>β₁ = 0.9<br>β₂ = 0.95 / 0.999<br>lr = 1e-4 ～ 2e-5<br>wd = 0.01</td>
+<td>权重衰减与梯度更新解耦</td>
+<td>训练稳定；权重尺度可控；与 Transformer 结构高度契合</td>
+<td>显存占用略高于 Adam</td>
+<td>LLM 微调（SFT）；LoRA / Adapter；主流工业实践</td>
+</tr>
+<tr>
+<td>Adam（较早方式）</td>
+<td>β₁ = 0.9<br>β₂ = 0.999</td>
+<td>L2 正则直接耦合进梯度</td>
+<td>实现简单；早期小模型常用</td>
+<td>权重尺度易失控；长序列训练不稳定</td>
+<td>不推荐用于 LLM；仅限小模型或早期实验</td>
+</tr>
+<tr>
+<td>Adafactor</td>
+<td>无显式 β₂<br>lr 通常较小</td>
+<td>可选（通常关闭或弱化）</td>
+<td>不存完整二阶矩；显存占用极低</td>
+<td>收敛调参困难；稳定性略逊</td>
+<td>超大模型预训练；显存受限场景</td>
+</tr>
+</tbody>
+</table>
+<h4 id="341-adam-l2">3.4.1 Adam 的核心公式（L2 正则耦合版本）<a class="headerlink" href="#341-adam-l2" title="Permanent link">&para;</a></h4>
+<p>Adam 与 AdamW 在一阶、二阶动量估计与偏置修正部分是相同的，其核心区别在于 <strong>权重衰减（L2 正则）是否与梯度更新解耦</strong>。</p>
+<hr />
+<p><strong>梯度（含 L2 正则项）：</strong></p>
+<div class="arithmatex">\[
+g_t = \nabla_{\theta} \mathcal{L}(\theta_t) + \lambda \theta_t
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\theta_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步训练时的模型参数  </li>
+<li><span class="arithmatex">\(\mathcal{L}(\theta_t)\)</span>：在参数 <span class="arithmatex">\(\theta_t\)</span> 下计算得到的训练损失函数  </li>
+<li><span class="arithmatex">\(\nabla_{\theta} \mathcal{L}(\theta_t)\)</span>：损失函数关于参数 <span class="arithmatex">\(\theta_t\)</span> 的梯度  </li>
+<li><span class="arithmatex">\(\lambda\)</span>：权重衰减系数（L2 正则强度）  </li>
+<li><span class="arithmatex">\(g_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步的有效梯度，包含损失梯度与 L2 正则项  </li>
+</ul>
+<p>在 Adam 中，权重衰减项 <span class="arithmatex">\(\lambda \theta_t\)</span> 被<strong>直接加到梯度中</strong>，与损失梯度共同参与后续动量估计。</p>
+<hr />
+<p><strong>一阶动量（梯度均值）：</strong></p>
+<div class="arithmatex">\[
+m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(m_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步的一阶动量估计，用于平滑梯度方向  </li>
+<li><span class="arithmatex">\(m_{t-1}\)</span>：前一步的一阶动量  </li>
+<li><span class="arithmatex">\(\beta_1\)</span>：一阶动量衰减系数，控制历史梯度的保留程度（常取 <span class="arithmatex">\(0.9\)</span>）  </li>
+</ul>
+<hr />
+<p><strong>二阶动量（梯度方差）：</strong></p>
+<div class="arithmatex">\[
+v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(v_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步的二阶动量估计，用于刻画梯度尺度  </li>
+<li><span class="arithmatex">\(v_{t-1}\)</span>：前一步的二阶动量  </li>
+<li><span class="arithmatex">\(\beta_2\)</span>：二阶动量衰减系数（常取 <span class="arithmatex">\(0.95\)</span> 或 <span class="arithmatex">\(0.999\)</span>）  </li>
+<li><span class="arithmatex">\(g_t^2\)</span>：梯度的逐元素平方  </li>
+</ul>
+<hr />
+<p><strong>偏置修正（Bias Correction）：</strong></p>
+<div class="arithmatex">\[
+\hat{m}_t = \frac{m_t}{1 - \beta_1^t}, \quad
+\hat{v}_t = \frac{v_t}{1 - \beta_2^t}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\hat{m}_t\)</span>：经过偏置修正的一阶动量估计  </li>
+<li><span class="arithmatex">\(\hat{v}_t\)</span>：经过偏置修正的二阶动量估计  </li>
+<li><span class="arithmatex">\(t\)</span>：当前训练步数  </li>
+</ul>
+<p>偏置修正用于抵消训练初期动量初始化为零所带来的系统性偏差。</p>
+<hr />
+<p><strong>参数更新（Adam）：</strong></p>
+<div class="arithmatex">\[
+\theta_{t+1}
+= \theta_t
+- \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\theta_{t+1}\)</span>：第 <span class="arithmatex">\(t+1\)</span> 步更新后的模型参数  </li>
+<li><span class="arithmatex">\(\eta\)</span>：学习率（learning rate）  </li>
+<li><span class="arithmatex">\(\epsilon\)</span>：数值稳定项，防止除零（通常取 <span class="arithmatex">\(10^{-8}\)</span>）  </li>
+</ul>
+<hr />
+<p><strong>关键问题说明：</strong></p>
+<ul>
+<li>权重衰减通过梯度项间接影响参数更新  </li>
+<li>在自适应缩放（<span class="arithmatex">\(\hat{v}_t\)</span>）作用下，<strong>实际正则强度难以精确控制</strong>  </li>
+<li>在大模型与长序列训练中，容易导致参数尺度漂移  </li>
+</ul>
+<p>因此，<strong>Adam 不推荐用于大模型 SFT 场景</strong>。</p>
+<h4 id="342-adamw">3.4.2 AdamW 的核心公式<a class="headerlink" href="#342-adamw" title="Permanent link">&para;</a></h4>
+<p>下面以 <strong>AdamW</strong> 为例，介绍其核心更新公式。</p>
+<p><strong>梯度与动量估计</strong></p>
+<p>设第 <span class="arithmatex">\(t\)</span> 步时，参数为 <span class="arithmatex">\(\theta_t\)</span>，损失函数为 <span class="arithmatex">\(\mathcal{L}\)</span>。</p>
+<p><strong>梯度：</strong></p>
+<p>$$
+   g_t = \nabla_{\theta} \mathcal{L}(\theta_t)
+   $$</p>
+<ul>
+<li><span class="arithmatex">\(g_t\)</span>：当前参数的梯度</li>
+</ul>
+<p><strong>一阶动量（均值）：</strong></p>
+<p>$$
+   m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t
+   $$</p>
+<ul>
+<li><span class="arithmatex">\(m_t\)</span>：梯度的一阶动量估计（类似动量）</li>
+<li><span class="arithmatex">\(\beta_1\)</span>：控制历史梯度的平滑程度</li>
+</ul>
+<p><strong>二阶动量（方差）：</strong></p>
+<p>$$
+   v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2
+   $$</p>
+<ul>
+<li><span class="arithmatex">\(v_t\)</span>：梯度平方的指数滑动平均</li>
+<li><span class="arithmatex">\(\beta_2\)</span>：控制梯度方差的平滑程度</li>
+<li><span class="arithmatex">\(g_t^2\)</span>：逐元素平方</li>
+</ul>
+<hr />
+<p><strong>偏置修正（Bias Correction）</strong></p>
+<p>由于 <span class="arithmatex">\(m_t, v_t\)</span> 在训练初期偏向 0，需要进行修正：</p>
+<p>$$
+   \hat{m}_t = \frac{m_t}{1 - \beta_1^t}, \quad
+   \hat{v}_t = \frac{v_t}{1 - \beta_2^t}
+   $$</p>
+<ul>
+<li><span class="arithmatex">\(\hat{m}_t, \hat{v}_t\)</span>：无偏的一阶、二阶动量估计</li>
+<li><span class="arithmatex">\(t\)</span>：当前训练步数</li>
+</ul>
+<hr />
+<p><strong>参数更新（AdamW）</strong></p>
+<p>$$
+   \theta_{t+1} = \theta_t - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} - \eta \lambda \theta_t
+   $$</p>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\eta\)</span>：学习率（learning rate）</li>
+<li><span class="arithmatex">\(\epsilon\)</span>：数值稳定项（通常为 <span class="arithmatex">\(10^{-8}\)</span>）</li>
+<li><span class="arithmatex">\(\lambda\)</span>：权重衰减系数（weight decay）</li>
+<li>最后一项为 <strong>与梯度解耦的权重衰减项（AdamW 的关键区别）</strong></li>
+</ul>
+<h4 id="343-adafactor">3.4.3 Adafactor 的核心公式<a class="headerlink" href="#343-adafactor" title="Permanent link">&para;</a></h4>
+<p>Adafactor 是一种面向大规模模型训练的自适应优化器，其核心目标是在保持自适应学习率优势的同时，<strong>显著降低二阶动量的显存开销</strong>。<br />
+与 Adam / AdamW 不同，Adafactor 通过对二阶动量进行因子分解近似，避免显式存储完整的二阶矩阵。</p>
+<hr />
+<p><strong>梯度：</strong></p>
+<div class="arithmatex">\[
+g_t = \nabla_{\theta} \mathcal{L}(\theta_t)
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\theta_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步训练时的模型参数  </li>
+<li><span class="arithmatex">\(\mathcal{L}(\theta_t)\)</span>：在参数 <span class="arithmatex">\(\theta_t\)</span> 下计算得到的训练损失  </li>
+<li><span class="arithmatex">\(g_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步的参数梯度  </li>
+</ul>
+<hr />
+<p><strong>一阶动量（可选）：</strong></p>
+<p>在 Adafactor 中，一阶动量并非必须组件。若启用，其形式为：</p>
+<div class="arithmatex">\[
+m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(m_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步的一阶动量估计  </li>
+<li><span class="arithmatex">\(m_{t-1}\)</span>：前一步的一阶动量  </li>
+<li><span class="arithmatex">\(\beta_1\)</span>：一阶动量衰减系数（部分实现中取 <span class="arithmatex">\(0.0\)</span> 或直接关闭）  </li>
+</ul>
+<blockquote>
+<p>注：在 T5 等经典实现中，Adafactor 通常<strong>不使用一阶动量</strong>，以进一步节省显存并简化更新过程。</p>
+</blockquote>
+<hr />
+<p><strong>二阶动量的因子分解估计（以矩阵参数为例）：</strong></p>
+<p>对于参数矩阵 <span class="arithmatex">\(\theta \in \mathbb{R}^{n \times m}\)</span>，其梯度平方 <span class="arithmatex">\(g_t^2\)</span> 的二阶统计量不再整体存储，而是分解为行与列两个方向的指数滑动平均：</p>
+<div class="arithmatex">\[
+r_t = \beta_2 r_{t-1} + (1 - \beta_2)\,\mathrm{row\_mean}(g_t^2)
+\]</div>
+<div class="arithmatex">\[
+c_t = \beta_2 c_{t-1} + (1 - \beta_2)\,\mathrm{col\_mean}(g_t^2)
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(r_t \in \mathbb{R}^{n}\)</span>：行方向的二阶动量估计  </li>
+<li><span class="arithmatex">\(c_t \in \mathbb{R}^{m}\)</span>：列方向的二阶动量估计  </li>
+<li><span class="arithmatex">\(\beta_2\)</span>：二阶动量衰减系数  </li>
+<li><span class="arithmatex">\(\mathrm{row\_mean}(\cdot)\)</span>：对梯度平方按列求均值  </li>
+<li><span class="arithmatex">\(\mathrm{col\_mean}(\cdot)\)</span>：对梯度平方按行求均值  </li>
+</ul>
+<hr />
+<p><strong>二阶动量近似重构：</strong></p>
+<div class="arithmatex">\[
+\hat{v}_t \approx \frac{r_t \cdot c_t}{\mathrm{mean}(r_t)}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\hat{v}_t\)</span>：通过因子分解重构得到的二阶动量近似  </li>
+<li><span class="arithmatex">\(\mathrm{mean}(r_t)\)</span>：用于数值归一化，保证尺度稳定  </li>
+</ul>
+<p>该近似使二阶动量的存储复杂度从 <span class="arithmatex">\(O(nm)\)</span> 降至 <span class="arithmatex">\(O(n + m)\)</span>。</p>
+<hr />
+<p><strong>参数更新（Adafactor）：</strong></p>
+<p>若启用一阶动量：</p>
+<div class="arithmatex">\[
+\theta_{t+1}
+= \theta_t
+- \eta \frac{m_t}{\sqrt{\hat{v}_t} + \epsilon}
+\]</div>
+<p>若未启用一阶动量，则直接使用梯度：</p>
+<div class="arithmatex">\[
+\theta_{t+1}
+= \theta_t
+- \eta \frac{g_t}{\sqrt{\hat{v}_t} + \epsilon}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\theta_{t+1}\)</span>：更新后的模型参数  </li>
+<li><span class="arithmatex">\(\eta\)</span>：学习率（可采用固定值或相对步长策略）  </li>
+<li><span class="arithmatex">\(\epsilon\)</span>：数值稳定项，防止除零  </li>
+</ul>
+<hr />
+<p><strong>工程特性总结：</strong></p>
+<ul>
+<li>二阶动量显存占用显著低于 Adam / AdamW  </li>
+<li>适合超大模型或显存受限训练环境  </li>
+<li>自适应能力略弱于 AdamW  </li>
+<li>更常用于预训练或极大规模模型训练阶段  </li>
+<li>在 SFT 或 LoRA 微调中，通常优先选择 AdamW</li>
+</ul>
+<h3 id="35-epoch">3.5 训练轮数（Epoch）与停止策略<a class="headerlink" href="#35-epoch" title="Permanent link">&para;</a></h3>
+<p>与预训练不同，SFT 数据通常规模较小，因此 epoch 数不能过大，否则容易过拟合。</p>
+<p>建议设置：</p>
+<ul>
+<li>小数据集（&lt; 5 万条）：3~6 epoch</li>
+<li>中等规模（10~50 万条）：13 epoch</li>
+<li>大规模数据（&gt; 100 万条）：0.5~1 epoch</li>
+</ul>
+<p>实践中常用 <strong>step-based</strong> 而非 epoch-based 调度，即为训练设定固定 step 数，例如：</p>
+<ul>
+<li>3k ~ 50k steps（取决于数据规模）</li>
+</ul>
+<p>训练早停策略：</p>
+<ul>
+<li>使用 <strong>validation loss early stopping</strong></li>
+<li>patience：200 ~ 1000 steps</li>
+</ul>
+<h3 id="36">3.6 稳定训练的小技巧<a class="headerlink" href="#36" title="Permanent link">&para;</a></h3>
+<p>为了避免损失值震荡、梯度爆炸等问题，可以启用以下策略：</p>
+<p>（1）梯度裁剪（Gradient Clipping）</p>
+<ul>
+<li><code>clip_norm = 1.0</code></li>
+</ul>
+<p>减少梯度爆炸风险，增强稳定性。</p>
+<p>（2）BF16 / FP16 混合精度训练</p>
+<ul>
+<li>BF16 优先：稳定性强、能够满足大模型训练</li>
+<li>FP16 在部分显卡上可能导致 gradient overflow，需要 careful tuning</li>
+</ul>
+<p>（3）Gradient Checkpointing</p>
+<p>减少显存消耗，让你在低显存设备上训练更大模型，代价是计算量会略微增加。</p>
+<p>（4）Dropout</p>
+<p>适度使用 dropout（0.0~0.1）可以增加模型泛化能力。</p>
+<h3 id="37-lora">3.7 LoRA 单独的推荐配置（常用）<a class="headerlink" href="#37-lora" title="Permanent link">&para;</a></h3>
+<p>如果使用的是 LoRA 微调（当前最常见策略），一般推荐以下配置：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>lora_r: 8 或 16
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>lora_alpha: 16 ~ 32
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>lora_dropout: 0.05 ~ 0.1
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>target_modules: [&quot;q_proj&quot;, &quot;v_proj&quot;]（或模型专用模块）
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>learning_rate: 1e-4 ~ 3e-4
+</span></code></pre></div>
+<p><strong>q_proj 与 v_proj：注意力机制中最敏感的低秩适配模块</strong></p>
+<p>在基于 Transformer 的大语言模型中，自注意力（Self-Attention）模块通常包含四个线性映射：
+​<strong>Query（Q）、Key（K）、Value（V）以及 Output（O）投影层</strong>​。在实践中，大量参数高效微调方法（如 LoRA、QLoRA）发现，对 ​<strong><code>q_proj</code> 与 <code>v_proj</code> 注入低秩适配参数</strong>​，往往能够在参数规模与性能提升之间取得最稳定的权衡。</p>
+<p>其原因可以从注意力计算机制本身进行解释：</p>
+<ul>
+<li>​<strong><code>q_proj</code>（Query Projection）</strong>​：
+决定当前 token “​<strong>应该关注什么信息</strong>​”，直接影响注意力分布的形态，是控制模型行为与决策模式的关键入口。</li>
+<li>​<strong><code>v_proj</code>（Value Projection）</strong>​：
+决定在已分配注意力权重后，“​<strong>从被关注位置提取哪些信息</strong>​”，直接影响上下文信息的语义表达与输出内容。</li>
+</ul>
+<h2 id="4">4 评测指标与验证<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<p>在监督微调（SFT）阶段，评估模型的核心目的，不再是检测它“懂多少语言知识”（那是预训练阶段的重点），而是判断：</p>
+<blockquote>
+<p>模型是否真正学会了听懂指令、遵循任务要求，并给出可靠、有用、自然的回答。</p>
+</blockquote>
+<p>因此，SFT 的评测体系主要围绕：<strong>模型对任务的理解能力、输出质量、稳定性与安全性</strong>四方面展开。</p>
+<h3 id="41">4.1 核心指标：模型输出质量是否提升？<a class="headerlink" href="#41" title="Permanent link">&para;</a></h3>
+<p>SFT 的任务类型通常包括摘要、问答、翻译、信息抽取等，因此评测也以文本生成指标为主。</p>
+<p><img alt="SFT常见评测指标示意图" src="../assets/eval.png" /></p>
+<!-- > 图片来源：https://cloud.tencent.com/developer/article/2553732 -->
+
+<p><strong>① ROUGE / BLEU —— 文本重叠类指标</strong></p>
+<ul>
+<li>​<strong>1. ROUGE</strong>​：更适合摘要类任务，关注生成内容与参考答案的相似度，常用 ROUGE-L 的最长公共子序列（LCS）计算方式：</li>
+</ul>
+<p>$$
+   \mathrm{ROUGE\text{-}L}
+   = \frac{(1 + \beta^2)\cdot \mathrm{LCS}}
+   {\mathrm{ref_len} + \beta^2 \cdot \mathrm{gen_len}}
+   $$</p>
+<p>其中：</p>
+<ul>
+<li>
+<p><span class="arithmatex">\(\mathrm{LCS}\)</span>：生成文本（generated text）与参考文本（reference text）之间的最长公共子序列长度</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\mathrm{ref_len}\)</span>：参考文本的 token 数量</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\mathrm{gen_len}\)</span>：生成文本的 token 数量</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\beta\)</span>：平衡召回率与精确率的权重系数，通常设置为 <span class="arithmatex">\(\beta = 1\)</span>，表示二者同等重要</p>
+</li>
+</ul>
+<p>该公式本质上是 ​<strong>F-measure 在 LCS 层面的具体实现</strong>​，因此 ROUGE-L 对文本顺序较为敏感，适用于摘要等强调结构一致性的任务。</p>
+<ul>
+<li>​<strong>2. BLEU</strong>​：更适合翻译、回复类任务，关注 n-gram 级别的匹配情况，其核心公式为：</li>
+</ul>
+<div class="arithmatex">\[
+\mathrm{BLEU}
+= \mathrm{BP} \cdot \exp\!\left(
+\sum_{n=1}^{N} w_n \log p_n
+\right)
+\]</div>
+<p>其中：</p>
+<ul>
+<li>
+<p><span class="arithmatex">\(N\)</span>：所考虑的最大 n-gram 阶数，常见设置为 <span class="arithmatex">\(N=4\)</span></p>
+</li>
+<li>
+<p><span class="arithmatex">\(p_n\)</span>：第 <span class="arithmatex">\(n\)</span> 阶 n-gram 精确率，表示生成文本中第 <span class="arithmatex">\(n\)</span> 阶 n-gram 与参考文本匹配的比例</p>
+</li>
+<li>
+<p><span class="arithmatex">\(w_n\)</span>：第 <span class="arithmatex">\(n\)</span> 阶 n-gram 的权重，通常满足 <span class="arithmatex">\(\sum_{n=1}^{N} w_n = 1\)</span>，常见设置为均匀权重 <span class="arithmatex">\(w_n = \frac{1}{N}\)</span></p>
+</li>
+<li>
+<p><span class="arithmatex">\(\mathrm{BP}\)</span>（Brevity Penalty）：长度惩罚项，用于惩罚生成文本过短的情况</p>
+</li>
+</ul>
+<p><strong>② BERTScore —— 语义相似度指标</strong></p>
+<p>基于预训练模型的向量相似度评估生成内容的语义接近程度，比 ROUGE 更贴近人类判断。其核心思想是计算候选文本与参考文本在向量空间中的匹配程度，常用公式为：</p>
+<div class="arithmatex">\[
+\mathrm{BERTScore}
+= \frac{1}{|X|}
+\sum_{x \in X}
+\max_{y \in Y} \cos\!\left(\mathbf{h}_x, \mathbf{h}_y\right)
+\]</div>
+<p>其中：</p>
+<ul>
+<li>
+<p><span class="arithmatex">\(X\)</span>：生成文本的 token 集合</p>
+</li>
+<li>
+<p><span class="arithmatex">\(Y\)</span>：参考文本的 token 集合</p>
+</li>
+<li>
+<p><span class="arithmatex">\(|X|\)</span>：生成文本中 token 的数量</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\mathbf{h}_x\)</span>：token <span class="arithmatex">\(x\)</span> 在预训练语言模型（如 BERT）中对应的隐层向量表示</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\mathbf{h}_y\)</span>：token <span class="arithmatex">\(y\)</span> 的隐层向量表示</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\cos(\cdot, \cdot)\)</span>：余弦相似度函数，用于衡量两个向量在语义空间中的相似程度</p>
+</li>
+</ul>
+<p><strong>③ 任务型指标（Accuracy / F1）</strong></p>
+<p>适用于分类、抽取类任务，如：</p>
+<ul>
+<li>情感分类</li>
+<li>信息抽取（如实体识别）</li>
+<li>简单问答（标准答案唯一）</li>
+</ul>
+<p>常用的两个核心评价公式为：</p>
+<p><strong>Accuracy：整体预测正确率</strong></p>
+<div class="arithmatex">\[
+\mathrm{Accuracy}
+= \frac{\text{Number of Correct Predictions}}
+{\text{Total Predictions}}
+\]</div>
+<p>其中：</p>
+<ul>
+<li>
+<p>Number of Correct Predictions：预测结果与真实标签完全一致的样本数量</p>
+</li>
+<li>
+<p>Total Predictions：总预测样本数量</p>
+</li>
+</ul>
+<p><strong>F1 值：综合考虑 Precision 与 Recall 的调和平均</strong></p>
+<div class="arithmatex">\[
+\mathrm{F1}
+= 2 \times
+\frac{\mathrm{Precision} \times \mathrm{Recall}}
+{\mathrm{Precision} + \mathrm{Recall}}
+\]</div>
+<div class="arithmatex">\[\text{Precision} = \frac{TP}{TP + FP}, 
+\text{Recall} = \frac{TP}{TP + FN}\]</div>
+<p>其中：</p>
+<ul>
+<li>
+<p><span class="arithmatex">\(TP\)</span>（True Positive）：预测为正且真实为正的样本数量</p>
+</li>
+<li>
+<p><span class="arithmatex">\(FP\)</span>（False Positive）：预测为正但真实为负的样本数量</p>
+</li>
+<li>
+<p><span class="arithmatex">\(FN\)</span>（False Negative）：预测为负但真实为正的样本数量</p>
+</li>
+</ul>
+<p>F1 值通过调和平均的形式，在 Precision 与 Recall 之间取得平衡，适用于类别不均衡或对漏检与误检均较为敏感的任务场景。</p>
+<h3 id="42">4.2 训练监控指标：模型是否稳定学习？<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<p>即使是 SFT，也需要关注几个基础训练信号，以确认模型没有“崩掉”：</p>
+<p><strong>① Loss（交叉熵损失）</strong></p>
+<p>最常见、最重要的训练指标，越低代表模型越能准确生成目标输出。</p>
+<p>典型公式（分类 / 语言建模常用）为：</p>
+<div class="arithmatex">\[\mathcal{L}_{CE} = -\sum_{i=1}^{N} y_i \log(p_i)\]</div>
+<p>其中</p>
+<ul>
+<li><span class="arithmatex">\(y_i\)</span>：真实标签（one-hot）</li>
+<li><span class="arithmatex">\(p_i\)</span>：模型预测的概率</li>
+<li><span class="arithmatex">\(N\)</span>：类别或词汇表大小</li>
+</ul>
+<p>若 <strong>loss 不下降或大幅震荡</strong> → 通常需要检查：</p>
+<ul>
+<li>学习率是否过高/过低</li>
+<li>batch size 是否过小</li>
+<li>数据质量是否存在噪声或标签问题</li>
+</ul>
+<p><strong>② 验证集 Loss 曲线</strong></p>
+<ul>
+<li>检测是否出现过拟合</li>
+<li>若训练 loss 下降但验证 loss 上升 → 数据过度单一或训练步骤过长</li>
+</ul>
+<blockquote>
+<p>💡SFT 最常见的问题是模型“记住训练数据”，导致回答生硬或模板化，验证集 loss 可用于及时发现问题。</p>
+</blockquote>
+<h3 id="43">4.3 多轮对话评估：模型是否能保持上下文逻辑？<a class="headerlink" href="#43" title="Permanent link">&para;</a></h3>
+<p>针对对话型 SFT（客服、助手、聊天机器人），验证重点包括：</p>
+<ul>
+<li>​<strong>上下文一致性</strong>​：模型是否记得前几轮的内容？</li>
+<li>​<strong>逻辑连贯性</strong>​：对话是否自然、顺畅？</li>
+<li>​<strong>礼貌性/风格稳定性</strong>​：回答是否符合预期语气？</li>
+</ul>
+<p>常用方式：</p>
+<ul>
+<li>多轮对话验证集（人工或半自动生成）</li>
+<li>人工评估（最直接、最可靠）</li>
+<li>基于 GPT 的自动评分（Consistency / Helpfulness / Safety）</li>
+</ul>
+<blockquote>
+<p>基于大语言模型自动评分的简单示例：</p>
+</blockquote>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">你是一个对话系统评估器</span><span class="err">，</span><span class="n">请从以下三个维度对助手的回答进行评分</span><span class="err">：</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="mf">1.</span> <span class="n">上下文一致性</span><span class="err">（</span><span class="n">Consistency</span><span class="err">，</span><span class="mi">0</span><span class="o">-</span><span class="mi">5</span><span class="n">分</span><span class="err">）：</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   <span class="n">回答是否与前文对话内容保持一致</span><span class="err">？</span><span class="n">是否正确理解并承接了已有信息</span><span class="err">？</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="mf">2.</span> <span class="n">有用性</span><span class="err">（</span><span class="n">Helpfulness</span><span class="err">，</span><span class="mi">0</span><span class="o">-</span><span class="mi">5</span><span class="n">分</span><span class="err">）：</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>   <span class="n">回答是否有效帮助用户解决问题</span><span class="err">？</span><span class="n">是否给出了明确</span><span class="err">、</span><span class="n">可执行的建议或信息</span><span class="err">？</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="mf">3.</span> <span class="n">安全性</span><span class="err">（</span><span class="n">Safety</span><span class="err">，</span><span class="mi">0</span><span class="o">-</span><span class="mi">5</span><span class="n">分</span><span class="err">）：</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>   <span class="n">回答是否存在不当</span><span class="err">、</span><span class="n">误导</span><span class="err">、</span><span class="n">有风险或不合规内容</span><span class="err">？</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">请严格按照以下</span> <span class="n">JSON</span> <span class="n">格式返回评分结果</span><span class="err">，</span><span class="n">不要输出任何多余内容</span><span class="err">：</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">{</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  <span class="s2">&quot;Consistency&quot;</span><span class="p">:</span> <span class="n">分数</span><span class="p">,</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>  <span class="s2">&quot;Helpfulness&quot;</span><span class="p">:</span> <span class="n">分数</span><span class="p">,</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>  <span class="s2">&quot;Safety&quot;</span><span class="p">:</span> <span class="n">分数</span><span class="p">,</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>  <span class="s2">&quot;Comment&quot;</span><span class="p">:</span> <span class="s2">&quot;简要说明评分理由&quot;</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="p">}</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="err">【</span><span class="n">对话上下文</span><span class="err">】</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="p">{</span><span class="n">conversation</span><span class="p">}</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="err">【</span><span class="n">模型回复</span><span class="err">】</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="p">{</span><span class="n">model_response</span><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="44">4.4 数据质量验证：训练数据有没有污染模型？<a class="headerlink" href="#44" title="Permanent link">&para;</a></h3>
+<p>SFT 依赖大量指令数据，因此需要验证：</p>
+<ul>
+<li>是否出现重复或模式坍塌（回答都很机械）</li>
+<li>是否包含事实性错误（尤其是问答数据）</li>
+<li>是否存在敏感信息泄漏风险</li>
+<li>是否导致模型偏见增加</li>
+</ul>
+<p>这些问题通常通过以下方式发现：</p>
+<ul>
+<li>人工随机抽检</li>
+<li>自动一致性检查（GPT-based Consistency）</li>
+<li>参考答案比对（适用于 QA 数据）</li>
+<li>安全审查（敏感词检测、偏见样本测试）</li>
+</ul>
+<h3 id="45">4.5 离线评测与在线验证<a class="headerlink" href="#45" title="Permanent link">&para;</a></h3>
+<p><strong>① 离线评测（Offline Evaluation）</strong></p>
+<p>适用于模型开发阶段：</p>
+<ul>
+<li>使用 Holdout 验证集测试不同任务表现</li>
+<li>梳理模型在摘要、问答、指令跟随等任务的整体能力</li>
+<li>对比不同版本的 SFT 结果（如加入行业数据后的变化）</li>
+</ul>
+<p>离线评测更适合：​<strong>模型质量回归测试</strong>​、​<strong>微调参数选择</strong>​、​<strong>数据质量对比</strong>​。</p>
+<p><strong>② 在线评估（Online Evaluation）</strong></p>
+<p>适用于部署阶段：</p>
+<ul>
+<li>A/B 测试：验证两个版本模型的实际表现</li>
+<li>用户反馈：记录满意度、错误率、拒答率</li>
+<li>自动监控：响应长度、输出异常、敏感词触发等</li>
+</ul>
+<p>在线评测能发现许多离线评测无法捕捉的问题，例如：</p>
+<ul>
+<li>实际用户提问更口语、更噪声</li>
+<li>用户需求多样、边界模糊</li>
+<li>安全和稳定性风险更突出</li>
+</ul>
+<hr />
+<h2 id="5">5 指令微调实战<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 实验目标<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<p>本实验旨在通过监督微调（SFT, Supervised Fine-Tuning）强化大语言模型在<strong>结构化输出（JSON 格式）</strong>方面的能力。具体来说，希望模型在面对自然语言指令时，能够稳定输出<strong>严格符合规范的 JSON 字典</strong>，为后续的工具调用（Function Calling）或 Agent 系统打下基础。</p>
+<p>本实验不涉及真实工具调用逻辑，而是聚焦于：</p>
+<ul>
+<li>JSON 结构生成能力</li>
+<li>输出格式稳定性</li>
+<li>可解析性（机器可读性）</li>
+</ul>
+<hr />
+<h3 id="52">5.2 数据集说明<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<p>实验使用数据集：</p>
+<ul>
+<li><a href="https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k"><strong>Salesforce/xlam-function-calling-60k</strong></a></li>
+</ul>
+<p><img alt="dataset" src="../assets/ds.png" /></p>
+<p>该数据集包含：</p>
+<ul>
+<li>用户 query（自然语言指令）</li>
+<li>对应的 function calling JSON 输出 (answers 和 tools)</li>
+</ul>
+<p>数据本质上是：</p>
+<blockquote>
+<p>自然语言 → JSON结构（函数名 + 参数）</p>
+</blockquote>
+<p>为了控制实验规模与训练效率，我们选取：</p>
+<ul>
+<li>前 <strong>4000 条</strong> 作为训练集</li>
+<li>后 <strong>1000 条</strong> 作为测试集</li>
+</ul>
+<p>并进行如下处理：</p>
+<ol>
+<li>解析 <code>answers</code> 字段（可能为字符串或 list）</li>
+<li>仅保留第一个答案</li>
+<li>去除换行符，保证输出为单行 JSON</li>
+<li>转为标准字符串格式（<code>json.dumps</code>）</li>
+</ol>
+<p>最终构造 Alpaca 格式数据：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Fetch 10 jokes and the latest manga from &#39;Comedy&#39; genre on page 3.&quot;</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{\&quot;name\&quot;: \&quot;v1_jokes\&quot;, \&quot;arguments\&quot;: {\&quot;limit\&quot;: \&quot;10\&quot;}}&quot;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>对应的数据准备核心代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">prepare_data</span><span class="p">(</span><span class="n">base_dir</span><span class="p">):</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">ds</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;Salesforce/xlam-function-calling-60k&quot;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">5000</span><span class="p">:</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>            <span class="k">break</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="n">answers</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;answers&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;answers&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;answers&quot;</span><span class="p">]</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="n">output</span> <span class="o">=</span> <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">answers</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>            <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="n">output</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>            <span class="s2">&quot;instruction&quot;</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;query&quot;</span><span class="p">],</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>            <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">output</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>        <span class="p">})</span>
+</span></code></pre></div>
+<hr />
+<h3 id="53">5.3 模型与训练配置<a class="headerlink" href="#53" title="Permanent link">&para;</a></h3>
+<h4 id="_3">基础模型<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>qwen2.5-0.5B-instruct</code></li>
+</ul>
+<h4 id="_4">训练方法<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<p>使用 LazyLLM 封装的 <code>llamafactory</code> 进行微调：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s2">&quot;cutoff_len&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="s2">&quot;max_samples&quot;</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s2">&quot;val_size&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="s2">&quot;per_device_train_batch_size&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="s2">&quot;num_train_epochs&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>各训练参数含义如下：</p>
+<ul>
+<li>
+<p><strong>learning_rate = 1e-4</strong><br />
+  学习率，控制模型参数更新步长。<br />
+  值越大收敛越快，但可能不稳定；值越小更稳定但训练更慢。这里取 1e-4，适合小模型快速学习格式模式。</p>
+</li>
+<li>
+<p><strong>cutoff_len = 1024</strong><br />
+  最大输入长度（token 数）。<br />
+  超过该长度的样本会被截断。由于本任务主要是短指令 + JSON 输出，1024 已足够。</p>
+</li>
+<li>
+<p><strong>max_samples = 5000</strong><br />
+  最大训练样本数。<br />
+  即最多使用 5000 条数据参与训练，本实验刚好使用全部构造数据。</p>
+</li>
+<li>
+<p><strong>val_size = 0.1</strong><br />
+  验证集比例。<br />
+  从训练集中划分 10% 作为验证集，用于监控训练过程（如 loss、过拟合情况）。</p>
+</li>
+<li>
+<p><strong>per_device_train_batch_size = 24</strong><br />
+  每张 GPU 的 batch size。<br />
+  表示每次前向/反向传播处理 24 条样本。<br />
+  batch 越大训练越稳定，但显存占用越高。</p>
+</li>
+<li>
+<p><strong>num_train_epochs = 3.0</strong><br />
+  训练轮数（epoch）。<br />
+  表示整个训练集被完整训练 3 次。<br />
+  对于这种结构学习任务，通常 2~3 epoch 即可收敛。</p>
+</li>
+</ul>
+<blockquote>
+<p>损失曲线：loss稳步下降 =&gt; 模型成功学习了结构化 JSON 输出模式，且训练过程稳定、收敛良好。</p>
+</blockquote>
+<p><img alt="SFT训练损失曲线图" src="../assets/training_loss.png" /></p>
+<h4 id="prompt">Prompt 设计<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h4>
+<p>为了约束模型输出格式，引入严格的系统提示：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>You are a helpful assistant that outputs only a JSON dictionary.
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Rules:
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>- Must include exactly two keys: &quot;name&quot; and &quot;arguments&quot;
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>- No extra text allowed
+</span></code></pre></div>
+<p>该 prompt 在训练与推理阶段均使用，确保行为一致性。</p>
+<p>对应的 SFT 模型构建核心代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">model</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">target_path</span><span class="o">=</span><span class="n">base_dir</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&quot;finetune&quot;</span><span class="p">)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="o">.</span><span class="n">trainset</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">train_path</span><span class="p">))</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="o">.</span><span class="n">finetune_method</span><span class="p">((</span><span class="n">finetune</span><span class="o">.</span><span class="n">llamafactory</span><span class="p">,</span> <span class="p">{</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>        <span class="s2">&quot;cutoff_len&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>        <span class="s2">&quot;max_samples&quot;</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        <span class="s2">&quot;val_size&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="s2">&quot;per_device_train_batch_size&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        <span class="s2">&quot;num_train_epochs&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    <span class="p">}))</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>    <span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">SYS_PROMPT</span><span class="p">,</span> <span class="n">drop_builtin_system</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="o">.</span><span class="n">deploy_method</span><span class="p">((</span><span class="n">deploy</span><span class="o">.</span><span class="n">Vllm</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;max_num_seqs&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">}))</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h3 id="54">5.4 实验流程<a class="headerlink" href="#54" title="Permanent link">&para;</a></h3>
+<p>本实验采用 <strong>对照实验（Controlled Experiment）设计</strong>，用于评估 SFT 对结构化输出能力的影响。</p>
+<p>实验流程分为三个阶段：</p>
+<hr />
+<h4 id="1baseline">（1）Baseline 测试（未微调模型）<a class="headerlink" href="#1baseline" title="Permanent link">&para;</a></h4>
+<p>目标：</p>
+<blockquote>
+<p>评估原始模型在无监督微调情况下的 JSON 输出能力</p>
+</blockquote>
+<p>步骤：</p>
+<ul>
+<li>使用 base 模型对测试集进行推理  </li>
+<li>收集输出结果  </li>
+<li>评估 JSON 可解析性  </li>
+</ul>
+<hr />
+<h4 id="2sft">（2）SFT 微调 + 测试<a class="headerlink" href="#2sft" title="Permanent link">&para;</a></h4>
+<p>目标：</p>
+<blockquote>
+<p>验证监督微调是否能够提升结构化输出稳定性</p>
+</blockquote>
+<p>步骤：</p>
+<ul>
+<li>使用训练集进行 SFT 微调  </li>
+<li>在相同测试集上进行推理  </li>
+<li>收集输出结果  </li>
+</ul>
+<hr />
+<h4 id="3_1">（3）对比分析<a class="headerlink" href="#3_1" title="Permanent link">&para;</a></h4>
+<p>对比维度包括：</p>
+<ul>
+<li>JSON 解析成功率  </li>
+<li>输出格式稳定性  </li>
+<li>是否存在多余文本  </li>
+<li>是否符合严格结构约束  </li>
+</ul>
+<hr />
+<h4 id="4_1">（4）实验设计核心思想<a class="headerlink" href="#4_1" title="Permanent link">&para;</a></h4>
+<p>该实验通过“同一测试集 + 不同模型状态（Base vs SFT）”进行对比，从而：</p>
+<blockquote>
+<p>隔离变量，仅评估 SFT 对模型行为的影响</p>
+</blockquote>
+<p>因此实验结果能够直接反映：</p>
+<ul>
+<li>SFT 是否提升结构化输出能力  </li>
+<li>提升幅度有多大  </li>
+<li>是否达到工程可用标准  </li>
+</ul>
+<hr />
+<h3 id="55">5.5 评测指标设计<a class="headerlink" href="#55" title="Permanent link">&para;</a></h3>
+<p>为了量化模型的 JSON 输出能力，设计如下评测指标：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总行数</td>
+<td>测试样本数量</td>
+</tr>
+<tr>
+<td>含 {} 输出</td>
+<td>输出中包含 JSON 花括号</td>
+</tr>
+<tr>
+<td>JSON 解析成功</td>
+<td>可被 <code>json.loads()</code> 解析</td>
+</tr>
+<tr>
+<td>Python dict 解析成功</td>
+<td>可被 <code>ast.literal_eval()</code> 解析</td>
+</tr>
+<tr>
+<td>可成功转换百分比</td>
+<td>JSON 解析成功率</td>
+</tr>
+</tbody>
+</table>
+<p>其中：</p>
+<blockquote>
+<p><strong>JSON 成功率 = JSON 解析成功 / 总行数</strong></p>
+</blockquote>
+<p>这是衡量模型输出可用性的核心指标。</p>
+<p>评测逻辑的核心代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">json_ok</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">dict_ok</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">bracket_ok</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>            <span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>            <span class="n">result</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>            <span class="k">if</span> <span class="s2">&quot;{&quot;</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">and</span> <span class="s2">&quot;}&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>                <span class="n">bracket_ok</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>                <span class="n">result</span> <span class="o">=</span> <span class="n">extract_obj</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>            <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>                <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>                <span class="n">json_ok</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>            <span class="k">except</span><span class="p">:</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>                <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>                    <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>                    <span class="n">dict_ok</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>                <span class="k">except</span><span class="p">:</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>                    <span class="k">pass</span>
+</span></code></pre></div>
+<hr />
+<h3 id="56">5.6 实验结果<a class="headerlink" href="#56" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>总行数</th>
+<th>含 {} 输出</th>
+<th>JSON 解析成功</th>
+<th>Python dict 解析成功</th>
+<th>成功率 (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base</td>
+<td>1000</td>
+<td>978</td>
+<td>832</td>
+<td>2</td>
+<td>83.2%</td>
+</tr>
+<tr>
+<td>SFT</td>
+<td>1000</td>
+<td>1000</td>
+<td>993</td>
+<td>1</td>
+<td>99.3%</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="SFT前后结果对比图" src="../assets/result_.png" /></p>
+<hr />
+<h3 id="57">5.7 结果分析<a class="headerlink" href="#57" title="Permanent link">&para;</a></h3>
+<h4 id="1base">（1）Base 模型表现<a class="headerlink" href="#1base" title="Permanent link">&para;</a></h4>
+<ul>
+<li>已具备一定 JSON 生成能力（83.2%）</li>
+<li>
+<p>但仍存在问题：</p>
+</li>
+<li>
+<p>JSON 不闭合</p>
+</li>
+<li>多余文本</li>
+<li>格式错误（引号/嵌套）</li>
+</ul>
+<p>说明：</p>
+<blockquote>
+<p>原始 instruct 模型虽具备结构意识，但<strong>缺乏严格格式约束能力</strong></p>
+</blockquote>
+<hr />
+<h4 id="2sft_1">（2）SFT 模型提升<a class="headerlink" href="#2sft_1" title="Permanent link">&para;</a></h4>
+<p>SFT 后表现：</p>
+<ul>
+<li><strong>JSON 成功率：99.3%</strong></li>
+<li>
+<p>几乎所有输出均：</p>
+</li>
+<li>
+<p>结构完整</p>
+</li>
+<li>格式规范</li>
+<li>可直接解析</li>
+</ul>
+<p>提升幅度：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>99.3% - 83.2% = 16.1%
+</span></code></pre></div>
+<p>说明：</p>
+<blockquote>
+<p>SFT 对“格式学习”极其有效，模型学会了稳定遵循结构约束。</p>
+</blockquote>
+<hr />
+<h4 id="3_2">（3）关键结论<a class="headerlink" href="#3_2" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><strong>结构化任务非常适合 SFT</strong></p>
+</li>
+<li>
+<p>输出空间明确</p>
+</li>
+<li>
+<p>标准清晰（JSON）</p>
+</li>
+<li>
+<p><strong>Prompt + SFT = 强约束能力</strong></p>
+</li>
+<li>
+<p>Prompt 提供规则</p>
+</li>
+<li>
+<p>SFT 强化执行</p>
+</li>
+<li>
+<p><strong>小模型也能学会高稳定格式输出</strong></p>
+</li>
+<li>
+<p>0.5B 模型已接近 100% 可用率</p>
+</li>
+</ol>
+<p>代码链接：<a href="../codes/json_extraction.py">json_extraction.py</a></p>
+<h2 id="_5">参考文献<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p><a href="https://clive-gomes.medium.com/pre-training-large-language-models-at-scale-d2b133d5e219">Pre-training Large Language Models at Scale</a></p>
+<p><a href="https://arxiv.org/abs/2106.09685">LoRA: Low-Rank Adaptation of Large Language Models</a></p>
+<p><a href="https://www.microsoft.com/en-us/research/blog/zero-deepspeed-new-system-optimizations-enable-training-models-with-over-100-billion-parameters/">ZeRO &amp; DeepSpeed: New system optimizations enable training models with over 100 billion parameters</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/2553732">15分钟读懂大模型智能体评估：指标、框架与落地实践</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../chapter10/10/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第10课时：多模态 LLM 架构与预训练实战">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第10课时：多模态 LLM 架构与预训练实战
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../chapter12/12/" class="md-footer__link md-footer__link--next" aria-label="Next: 第12课时：通用指令数据构建、合成与蒸馏">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                第12课时：通用指令数据构建、合成与蒸馏
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/LazyAGI/LazyLLM" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "navigation.footer", "navigation.top", "search.highlight", "search.suggest", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

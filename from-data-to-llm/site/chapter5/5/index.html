@@ -1,0 +1,3558 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="End-to-end LLM training and data engineering course built on LazyLLM.">
+      
+      
+        <meta name="author" content="LazyLLM Community">
+      
+      
+      
+        <link rel="prev" href="../../chapter4/4/">
+      
+      
+        <link rel="next" href="../../chapter6/6/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://img.icons8.com/?size=100&id=121346&format=png&color=000000">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第5课时：基于Agent的数据处理 - From Data to LLM</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="data:text/css,.md-grid{max-width:90%25!important}">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#5agent" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="From Data to LLM" class="md-header__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            From Data to LLM
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第5课时：基于Agent的数据处理
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  课程简介
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../outline/" class="md-tabs__link">
+          
+  
+  
+  课程内容
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="From Data to LLM" class="md-nav__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    From Data to LLM
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程体系
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程内容
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程内容
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程大纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一部分：大模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第一部分：大模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter1/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1课时：Transformer 核心与 Self-Attention 深度剖析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter2/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2课时：LLM 训练范式与数据工程全景
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二部分：系统工程基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第二部分：系统工程基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter3/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3课时：分布式训练技术概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter4/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4课时：模型部署与推理加速
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Agent 概述
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Agent 概述">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 基本概念
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 基本组件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Agent 策略
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Agent 策略">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-function-call-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Function Call Agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-react" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 ReAct
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-planandsolve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 PlanAndSolve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-rewoo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 ReWOO
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 简化Agent工作流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.5 简化Agent工作流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#251-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.1 MCP协议的基本概念
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#252-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.2 MCP的技术架构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#253-lazyllmmcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.3 实践：在LazyLLM中使用MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Agent 数据处理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Agent 数据处理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 核心思想
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 为什么需要 Agent 来做数据处理？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-multi-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Multi-Agent 数据处理架构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-cleaning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 数据清洗（Cleaning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-annotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 数据标注（Annotation）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-review-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 数据审查（Review / Audit）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 Agent 数据处理的优势总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-pdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 多智能体协作流水线 (PDF 数据处理流水线)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 多智能体协作流水线 (PDF 数据处理流水线)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 总体流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 数据处理步骤
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 数据处理步骤">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pdf2qapdfprocessorpdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1️⃣ Pdf2Qa.PdfProcessor（PDF解析 + 分块 + 图片处理）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-pdf2qaimagetovqaqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2️⃣ Pdf2Qa.ImageToVQA（QA生成）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-pdf2qapdfqascorerqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3️⃣ Pdf2Qa.PdfQAScorer（QA质量评分）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-qaqa_score_filter-multi_features_filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4️⃣ QA过滤（qa_score_filter / multi_features_filter）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5️⃣ 格式转换（SFT / 多模态）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✔ 单模态（文本 SFT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vqa-chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✔ 多模态（VQA / Chat 格式）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Pipeline 特点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 输出结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-ppl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 PPL运行代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-pdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 PDF处理流水线与微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter6/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6课时：基于 LazyLLM 的全流程实践
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三部分：预训练数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第三部分：预训练数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter7/7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7课时：预训练原理、策略与评测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter8/8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8课时：预训练数据构建全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter9/9/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9课时：基于 LazyLLM 的预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter10/10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10课时：多模态 LLM 架构与预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四部分：微调数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第四部分：微调数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter11/11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter12/12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12课时：通用指令数据构建、合成与蒸馏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter13/13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13课时：基于 LazyLLM 的微调实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter14/14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五部分：对齐数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第五部分：对齐数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter15/15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter16/16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16课时：偏好数据构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter17/17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17课时：模型风险、合规与伦理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter18/18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18课时：基于 LazyLLM 的对齐实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六部分：特定能力数据
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第六部分：特定能力数据
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter19/19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19课时：推理与数学能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter20/20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20课时：代码能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter21/21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter22/22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22课时：结构化输出与格式对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter23/23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23课时：Agent 能力增强 (Tools & Planning)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter24/24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24课时：行业领域模型实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七部分：RAG 数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第七部分：RAG 数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter25/25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter26/26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26课时：Embedding 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter27/27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27课时：Reranker 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter28/28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Agent 概述
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Agent 概述">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 基本概念
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 基本组件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Agent 策略
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Agent 策略">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-function-call-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Function Call Agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-react" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 ReAct
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-planandsolve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 PlanAndSolve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-rewoo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 ReWOO
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 简化Agent工作流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.5 简化Agent工作流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#251-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.1 MCP协议的基本概念
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#252-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.2 MCP的技术架构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#253-lazyllmmcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.3 实践：在LazyLLM中使用MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Agent 数据处理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Agent 数据处理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 核心思想
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 为什么需要 Agent 来做数据处理？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-multi-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Multi-Agent 数据处理架构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-cleaning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 数据清洗（Cleaning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-annotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 数据标注（Annotation）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-review-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 数据审查（Review / Audit）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 Agent 数据处理的优势总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-pdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 多智能体协作流水线 (PDF 数据处理流水线)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 多智能体协作流水线 (PDF 数据处理流水线)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 总体流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 数据处理步骤
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 数据处理步骤">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pdf2qapdfprocessorpdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1️⃣ Pdf2Qa.PdfProcessor（PDF解析 + 分块 + 图片处理）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-pdf2qaimagetovqaqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2️⃣ Pdf2Qa.ImageToVQA（QA生成）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-pdf2qapdfqascorerqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3️⃣ Pdf2Qa.PdfQAScorer（QA质量评分）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-qaqa_score_filter-multi_features_filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4️⃣ QA过滤（qa_score_filter / multi_features_filter）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5️⃣ 格式转换（SFT / 多模态）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✔ 单模态（文本 SFT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vqa-chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✔ 多模态（VQA / Chat 格式）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Pipeline 特点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 输出结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-ppl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 PPL运行代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-pdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 PDF处理流水线与微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="5agent">第5课时：基于Agent的数据处理<a class="headerlink" href="#5agent" title="Permanent link">&para;</a></h1>
+<p>本章中我们将深入介绍什么是Agent，以及如何使用Agent作为工人搭建自动化数据处理流水线。</p>
+<h2 id="1-agent">1. Agent 概述<a class="headerlink" href="#1-agent" title="Permanent link">&para;</a></h2>
+<h3 id="11">1.1 基本概念<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<p>首先 Agent 是什么？中文中常见翻译为：代理人。我们要做一件事，一般有两种方式，自己一步一步来达成；另外就是找个人，这个人就叫做代理人，我们全权授权给代理人而不用关心他怎么做，只管他能帮我们达到目的。前者我们需要操心每个细节，而后者我们可以坐享其成。所以 Agent 的一个特点就是：不需要我们去关心达成某个任务的细节，而只需要放心把任务交给他，让他去帮我们达成。</p>
+<p>回到 AI 智能体（AI Agent），AI Agent 一般被认为是一个具有特定角色和任务的 LLM，它可以访问记忆和外部工具。但我觉得 AI 智能体更像是一个人，我们请来的代理人。我更愿意把它比作一个有着高度专业能力的人——专家。LLM 是其大脑，借助他聪明的大脑，他可以自动规划步骤，结合反馈反复采取行动（比如调用工具）来解决手头的任务，整个过程不需要我们操心，我们只需要放权让他去做就好！</p>
+<p>想象你是一位国王，当你想扩张领土的时候，你并不需要自己亲力亲为，你只需要找代理人——你的大将（即：带兵作战的专家），放权让大将去做，他自己会规划作战计划（规划）、调兵遣将（调用工具）、冲锋陷阵（采取行动）。你只需要等待他凯旋的好消息。这个大将就像是我们的 AI 智能体。</p>
+<h3 id="12">1.2 基本组件<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<p>一个 AI Agent 主要由下面组件构成：</p>
+<ul>
+<li>LLM：这个是智能体的大脑，对应大将军的大脑；</li>
+<li>记忆（Memory）：智能体的记忆，对应了大将军对某个领土扩张任务从开始到结束的所有记忆，甚至是之前的战斗记忆；</li>
+<li>规划（Planning）：智能体可以进行反思、自我批评、自动路由（采取行动）等，对应了国王放权给大将军，让他能按照自己的想法去达成任务；</li>
+<li>工具（Tools）：是智能体可以调用的工具，对应大将军可以调用的兵力，可以使用的武器等等；</li>
+</ul>
+<p><img alt="Agent 基本组成示意图" src="../assets/1.png" /></p>
+<h2 id="2-agent">2. Agent 策略<a class="headerlink" href="#2-agent" title="Permanent link">&para;</a></h2>
+<p>AI Agent 有很多类型的工作流程，这里介绍几种常见的工作流程：Function Call Agent、ReAct、PlanAndSolve 以及 ReWOO。AI 智能体的工作流程主要就是其行为模式，就像是一个人做事的行为习惯：</p>
+<ul>
+<li>Function Call Agent：在该智能体接到任务后，它会不断尝试以各种参数调用工具和观察输出，直到解决问题或达到最大重复次数。</li>
+<li>ReAct： 该智能体接到任务后，它会先思考，然后再尝试调用工具和观察输出，不断重复这个过程直到解决问题或达到最大重复次数。</li>
+<li>PlanAndSolve：该智能体接到任务后，会先计划把任务分解，然后尝试解决当前步骤任务，根据当前步骤的结果来继续执行任务或者重新计划后面的任务，直到任务被解决或达到最大重复次数。</li>
+<li>ReWOO: 该智能体接到任务后，也会先计划把任务分解，然后将所有步骤全部执行完毕，综合所有步骤的结果来进行反馈。</li>
+</ul>
+<h3 id="21-function-call-agent">2.1 Function Call Agent<a class="headerlink" href="#21-function-call-agent" title="Permanent link">&para;</a></h3>
+<p>Function Call Agent 主要包括以下的流程：</p>
+<ol>
+<li>行动（Action）：Agent 收到一个 query 后，它会直接行动，比如去调用某个工具；</li>
+<li>观察（Observation）: Agent 观察到行动的反馈，比如工具的输出。</li>
+</ol>
+<p>上面过程会不断循环往复，如果观察到行动的反馈没问题，满足了 query 的要求，或者达到了最大的迭代次数，那么 Agent 会退出并返回结果 response。</p>
+<p><img alt="Function Call Agent 执行流程图" src="../assets/2.png" /></p>
+<p>我们可以在LazyLLM中使用AI Agent，首先定义工具，然后把定义好的工具注册进 LazyLLM 中，之后就可以定义模型，并使用 FunctionCall Agent：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">fc_register</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">,</span> <span class="n">FunctionCallAgent</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_current_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;fahrenheit&quot;</span><span class="p">,</span> <span class="s2">&quot;celsius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;fahrenheit&quot;</span><span class="p">):</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="o">...</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_n_day_weather_forecast</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;celsius&quot;</span><span class="p">,</span> <span class="s2">&quot;fahrenheit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fahrenheit&#39;</span><span class="p">):</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="o">...</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="s2">&quot;internlm2-chat-20b&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>  <span class="c1"># or llm = lazyllm.OnlineChatModule()</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get_current_weather&quot;</span><span class="p">,</span> <span class="s2">&quot;get_n_day_weather_forecast&quot;</span><span class="p">]</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">fc</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">tools</span><span class="p">)</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;What&#39;s the weather like today in celsius in Tokyo and Paris.&quot;</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">ret</span> <span class="o">=</span> <span class="n">fc</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ret: </span><span class="si">{</span><span class="n">ret</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">FunctionCallAgent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">tools</span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">ret</span> <span class="o">=</span> <span class="n">agent</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ret: </span><span class="si">{</span><span class="n">ret</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="Function Call Agent 运行结果示例" src="../assets/3.png" /></p>
+<h3 id="22-react">2.2 ReAct<a class="headerlink" href="#22-react" title="Permanent link">&para;</a></h3>
+<p>React 主要包括以下的流程：</p>
+<ol>
+<li>思考（Thought）: Agent 在收到 query 后，对当前状态的推理分析然后给出下一步要采取的行动；</li>
+<li>行动（Action）: Agent 会采取并执行一个行动，比如使用工具（或者继续思考）；</li>
+<li>观察（Observation）: Agent 观察行动的反馈，比如工具的输出；</li>
+</ol>
+<p>上面过程也是会不断循环往复，直到满足 query 的请求，或者达到了最大的迭代次数。</p>
+<p><img alt="ReAct Agent 执行流程图" src="../assets/4.png" /></p>
+<p>ReactAgent 执行流程和 FunctionCallAgent 的执行流程一样，唯一区别是 prompt 不同，并且 ReactAgent 每一步都要有 Thought 输出，而普通 FunctionCallAgent 可能只有工具调用的信息输出，没有 content 内容。示例如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">fc_register</span><span class="p">,</span> <span class="n">ReactAgent</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">multiply_tool</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">add_tool</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;multiply_tool&quot;</span><span class="p">,</span> <span class="s2">&quot;add_tool&quot;</span><span class="p">]</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">OnlineChatModule</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;sensenova&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;DeepSeek-V3&quot;</span><span class="p">)</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">ReactAgent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">tools</span><span class="p">)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;What is 20+(2*4)? Calculate step by step.&quot;</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">res</span> <span class="o">=</span> <span class="n">agent</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="ReAct Agent 运行结果示例" src="../assets/5.png" /></p>
+<h3 id="23-planandsolve">2.3 PlanAndSolve<a class="headerlink" href="#23-planandsolve" title="Permanent link">&para;</a></h3>
+<p>PlanAndSolve 主要包括以下的流程：</p>
+<ol>
+<li>计划（Plan）：Agent 在收到 query 后，它会将这个任务分解为更小的子任务；</li>
+<li>行动（Action）: Agent 对当前的子任务进行执行；</li>
+<li>观察（Observation）: Agent 观察当前行动的结果，如果解决问题就返回，如果仅解决当前子任务就继续执行计划，如果没解决当前子任务就重新计划后续步骤；</li>
+</ol>
+<p>与ReAct agent的不同是：<strong>Plan-and-Solve 是“先把所有步骤想好再做”，而 ReAct 是“边做边想、根据结果随时调整下一步”。</strong></p>
+<p><img alt="Plan-and-Solve Agent 流程图" src="../assets/6.png" /></p>
+<p>* 注意： 上图中 ② Action x1 表示每次行动只执行一个子任务（不会全部将子任务执行完，区别于 ReWOO的对应流程中的 ② Action xN）。</p>
+<p>PlanAndSolveAgent 由两个组件组成：首先，将整个任务分解为更小的子任务，其次，根据计划执行这些子任务。最后结果作为答案进行输出。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">fc_register</span><span class="p">,</span> <span class="n">PlanAndSolveAgent</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">OnlineChatModule</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;sensenova&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;DeepSeek-V3&quot;</span><span class="p">)</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;multiply&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">]</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">PlanAndSolveAgent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;What is 20+(2*4)? Calculate step by step.&quot;</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="n">ret</span> <span class="o">=</span> <span class="n">agent</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="Plan-and-Solve Agent 运行结果示例" src="../assets/image.png" /></p>
+<h3 id="24-rewoo">2.4 ReWOO<a class="headerlink" href="#24-rewoo" title="Permanent link">&para;</a></h3>
+<p>ReWOO (Reasoning WithOut Observation) 主要包括以下流程：</p>
+<ol>
+<li>计划（Plan）：Agent 在收到 query 后，它会生成一个计划表，计划表中包含了这个任务分解的更小子任务，子任务间的执行结果用占位符表示；</li>
+<li>行动（Action）: Agent 对每个子任务依次进行执行（调用工具），将结果都填入计划表的占位符中；</li>
+<li>解决（Solve）: Agent 观察所有行动的反馈，将结果response返回给用户；</li>
+</ol>
+<p><img alt="ReWOO Agent 架构示意图" src="../assets/image2.png" /></p>
+<p>ReWOOAgent 包含三个部分：Planner 、 Worker 和 Solver。其中， Planner 使用可预见推理能力为复杂任务创建解决方案蓝图； Worker 通过工具调用来与环境交互，并将实际证据或观察结果填充到指令中； Solver 处理所有计划和证据以制定原始任务或问题的解决方案。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm</span><span class="w"> </span><span class="kn">import</span> <span class="n">fc_register</span><span class="p">,</span> <span class="n">ReWOOAgent</span><span class="p">,</span> <span class="n">deploy</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">wikipedia</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">WikipediaWorker</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="n">evidence</span> <span class="o">=</span> <span class="n">wikipedia</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="n">evidence</span> <span class="o">=</span> <span class="n">evidence</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="k">except</span> <span class="n">wikipedia</span><span class="o">.</span><span class="n">PageError</span><span class="p">:</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        <span class="n">evidence</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Could not find [</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">]. Similar: </span><span class="si">{</span><span class="n">wikipedia</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="k">except</span> <span class="n">wikipedia</span><span class="o">.</span><span class="n">DisambiguationError</span><span class="p">:</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>        <span class="n">evidence</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Could not find [</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">]. Similar: </span><span class="si">{</span><span class="n">wikipedia</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="k">return</span> <span class="n">evidence</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="nd">@fc_register</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">)</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="k">def</span><span class="w"> </span><span class="nf">LLMWorker</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">OnlineChatModule</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Respond in short directly with no extra words.</span><span class="se">\n\n</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">llm_chat_history</span><span class="o">=</span><span class="p">[])</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="k">return</span> <span class="n">response</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;WikipediaWorker&quot;</span><span class="p">,</span> <span class="s2">&quot;LLMWorker&quot;</span><span class="p">]</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="s2">&quot;Qwen2-72B-Instruct-AWQ&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">deploy_method</span><span class="p">(</span><span class="n">deploy</span><span class="o">.</span><span class="n">vllm</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">ReWOOAgent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">)</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;What is the name of the cognac house that makes the main ingredient in The Hennchata?&quot;</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="n">ret</span> <span class="o">=</span> <span class="n">agent</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="nb">print</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="ReWOO Agent 运行结果示例" src="../assets/7.png" /></p>
+<p>让我们简单总结如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Function Call Agent</th>
+<th style="text-align: left;">ReAct</th>
+<th style="text-align: left;">PlanAndSolve</th>
+<th style="text-align: left;">ReWOO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>工作流程</strong></td>
+<td style="text-align: left;">最大循环次数内循环：<br><br>- 试参调用工具；<br>- 观察工具输出，完成任务就结束循环。</td>
+<td style="text-align: left;">最大循环次数内循环：<br><br>- 思考；<br>- 试参调用工具；<br>- 观察工具输出，完成任务就结束循环。</td>
+<td style="text-align: left;">最大循环次数内循环：<br><br>- （重）计划并分解任务；<br>- 调用工具解决当前子任务；<br>- 观察工具输出，确定是否完成子任务，完成整个任务就结束循环</td>
+<td style="text-align: left;">- 计划并分解任务；<br>- 调用工具逐步解决所有子任务；<br>- 综合所有步骤结果进行反馈</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>工作特点</strong></td>
+<td style="text-align: left;">简单直接，思考过程不可见</td>
+<td style="text-align: left;">引入思考环节，思考可见</td>
+<td style="text-align: left;">强调任务的分解和任务的动态调整</td>
+<td style="text-align: left;">强调整体规划和综合反馈</td>
+</tr>
+</tbody>
+</table>
+<h3 id="25-agent">2.5 简化Agent工作流程<a class="headerlink" href="#25-agent" title="Permanent link">&para;</a></h3>
+<p>在Agent开发中，重复造轮子、工具接口不统一、上下文管理复杂等问题让开发流程冗长且低效。为了解决这些难点，我们可以通过“​<strong>MCP协议</strong>​+<strong>​LazyLLM”​</strong>的框架，提升开发效率、降低门槛，让开发者能专注于核心业务和创新设计，从而推动大模型应用更快落地。</p>
+<h4 id="251-mcp">2.5.1 MCP协议的基本概念<a class="headerlink" href="#251-mcp" title="Permanent link">&para;</a></h4>
+<p><strong>​MCP（Model Context Protocol，模型上下文协议）​</strong>是由Anthropic公司于2024年11月推出的一种​<strong>开放标准协议</strong>​，旨在让大语言模型能够“无缝连接”外部工具和数据源。</p>
+<p>简单来说，MCP就是为了解决开头那些痛点而生的“标准化利器”。一个更形象的比喻是：​<strong>MCP 相当于 AI 应用的USB-C接口</strong>​。</p>
+<p>正如USB-C统一了不同品牌电子设备的充电和数据接口一样，MCP则标准化了​<strong>AI与外部世界交互的方式</strong>​，使得模型能够以<strong>标准化</strong>的形式<strong>高效调用</strong>数据库、工具和网络搜索等多种资源，从而实现​<strong>模型与外部系统的高效联动</strong>​。</p>
+<p>换句话说，过去每接入一个新工具就头大的“接口不统一”问题，有了MCP后就像使用统一接口的外设一样，​<strong>插上就能用</strong>​。这样一来，​<strong>无需二次开发</strong>​，多种数据库、Web API、文件系统、GitHub…海量而强大的功能统统都可以通过这一个协议​<strong>轻松接入</strong>​。</p>
+<p><img alt="MCP 协议整体作用示意图" src="../assets/8.png" /></p>
+<!-- > 图片来源：https://mcpcn.com/blog/understanding-mcp-protocol/ -->
+
+<p>以前，想让AI Agent查天气、读PDF、执行Python代码，可能需要针对每个功能写一堆集成代码，其中包含工具的描述、入参等等，并封装成“工具（Tool）”给到模型；而有了MCP，只需要把符合需求的MCP服务器接上，模型就会自动知道有什么工具可用、该如何调用，并且输入输出格式也是统一好的。</p>
+<p><img alt="MCP 简化工具接入流程示意图" src="../assets/9.png" /></p>
+<p>整个过程就像给笔记本电脑插上<strong>扩展坞的</strong>瞬间，额外冒出HDMI、SD卡、网线等接口等<strong>繁琐的对接细节</strong>由协议帮你搞定，从此开发者无需关心那些转换过程。因此，MCP的出现<strong>大幅提升了AI Agent应用开发的效率。</strong></p>
+<h4 id="252-mcp">2.5.2 MCP的技术架构<a class="headerlink" href="#252-mcp" title="Permanent link">&para;</a></h4>
+<p>从技术架构上看，MCP遵循的是典型的​<strong>客户端-服务器模型</strong>​，它把AI应用的<strong>内部逻辑和外部扩展功能解耦</strong>为三个核心模块：</p>
+<p><img alt="MCP 客户端服务器架构图" src="../assets/10.png" /></p>
+<ol>
+<li>
+<p><strong>Host（主机）</strong></p>
+<p>指运行AI应用（类似支持AI对话的IDE插件如Cursor、桌面应用如Claude Desktop以及我们所创建的智能体应用）本身的​<strong>宿主环境</strong>​。Host负责​<strong>提供AI交互环境</strong>​，并在内部​<strong>启动MCP Client</strong>​。</p>
+</li>
+<li>
+<p><strong>Client（客户端）</strong></p>
+<p>运行在Host内部的客户端，它与MCP Server建立连接，充当AI应用和外部世界沟通的​<strong>桥梁</strong>​。MCP客户端维持与服务器的 1:1 连接，当AI模型需要调用工具或获取数据时，都是由Client按照协议与Server通信来完成。</p>
+</li>
+<li>
+<p><strong>Server（服务器）</strong></p>
+<p>MCP服务器提供具体的功能和数据，相当于AI大脑可以远程调用的​<strong>外设</strong>​。一个服务器上通常会暴露几类内容供AI使用：</p>
+<ul>
+<li>Tools（工具）：允许大模型调用的功能函数。例如代码执行、网页浏览、发送邮件等，这些能力都可以作为可调用的工具由Server打包并提供给AI。</li>
+<li>Resources（资源）：给大模型提供的数据或内容。例如数据库记录、文件内容、浏览网页截图等，Server可以将这些外部数据通过协议发送给AI应用，以充当LLM的上下文。</li>
+<li>Prompts（提示模板）：预设的可复用提示词模板或交互工作流。Server可以储存一些常用提示词，按需提供给AI，避免每次都从零编写复杂提示。</li>
+</ul>
+</li>
+</ol>
+<p>更多MCP技术架构的细节可查阅：<a href="https://modelcontextprotocol.io/docs/concepts/architecture">文档</a></p>
+<p>通过上述架构，过去东拼西凑解决的难题，现在有了明确的协议规范可循，那么，MCP、Agent、LLM、Tool Call...这些名词之间到底有什么关系？</p>
+<ul>
+<li><strong>LLM</strong>是Agent的​<strong>​“大脑”​</strong>​，能够根据输入信息（如系统提示词、用户指令、历史对话信息、可用工具集信息等），输出对应的文字内容，其中可能是阶段性的工具调用信息，也有可能是任务完成后的最终输出内容。</li>
+<li><strong>Tool Call</strong>是LLM经过大量训练后具备的一种​<strong>工具调用能力</strong>​，这种能力允许LLM能够综合历史信息和可用工具信息，动态决策并输出格式化的工具调用指令（决定使用哪个工具、工具调用时具体传入什么参数），通过这种指令指导Agent正确的完成工具调用，从而实现特定动作（如操作文件、执行代码）、获取必要信息（如返回网页爬虫结果）。</li>
+<li><strong>MCP Server</strong>则是遵循MCP协议的​<strong>工具供应商</strong>​，其提供给Agent强大的工具集，以供LLM辨识并执行Tool Call，同时接收Agent给到的Tool Call指令安全地与外部资源进行交互，以实现特定动作或返回特定信息。</li>
+<li><strong>Agent</strong>作为智能体应用与用户交互的​<strong>唯一入口</strong>​，在接收到任务指令后，会有序地调用LLM、各种工具，以完成任务。</li>
+</ul>
+<h4 id="253-lazyllmmcp">2.5.3 实践：在LazyLLM中使用MCP<a class="headerlink" href="#253-lazyllmmcp" title="Permanent link">&para;</a></h4>
+<p>针对MCP，LazyLLM提供了两种接入方式：<strong>直接接入</strong>和​<strong>部署并远程接入</strong>​。</p>
+<ul>
+<li><strong>​直接接入：​</strong>将指定MCP Server的启动配置直接给到lazyllm.tools.MCPClient，以Stdio模式启动Server，并获取Agent可调用的工具集。</li>
+<li><strong>​部署并远程接入：​</strong>针对一些资源占用高，或者期望启动的MCP Server可复用的场景，LazyLLM支持MCP Server的一键部署，只需一行命令，便可以将MCP Server单独启动，随后便可以SSE模式远程接入MCP Server。</li>
+</ul>
+<p>具体来说，步骤如下：</p>
+<ol>
+<li>
+<p>配置LazyLLM所需要的所有依赖</p>
+<p>首先参考: <a href="https://docs.lazyllm.ai/zh-cn/latest/">文档</a> 的Getting started部分，安装LazyLLM并完成环境配置。</p>
+<p>同时，由于MCP Server的使用依赖Node.js和npm，可参考: <a href="https://nodejs.org/en/download">文档</a> 完成最新版本的安装和配置。</p>
+</li>
+<li>
+<p>利用已有的MCP服务</p>
+<p>若需接入已有的 MCP 服务（如高德地图的地理位置服务），可通过 LazyLLM 的 MCPClient 工具直接连接，无需自行部署 Server。</p>
+<p>SSE URL 接入（以高德 MCP 为例）：</p>
+<p>无需启动本地 Server，直接通过服务提供商提供的 SSE 长连接 URL 配置 Client。需将”xxx”替换为自己的key。</p>
+<p>（创建key：<a href="https://lbs.amap.com/api/mcp-server/create-project-and-key">链接</a>）</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactAgent</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCPClient</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">mcp_configs</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="s2">&quot;amap_mcp&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://mcp.amap.com/sse?key=xxx&quot;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="p">}</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">}</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">client</span> <span class="o">=</span> <span class="n">MCPClient</span><span class="p">(</span><span class="n">command_or_url</span><span class="o">=</span><span class="n">mcp_configs</span><span class="p">[</span><span class="s2">&quot;amap_mcp&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">])</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">OnlineChatModule</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s1">&#39;qwen&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;qwen-max-latest&#39;</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">ReactAgent</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="o">.</span><span class="n">share</span><span class="p">(),</span> <span class="n">tools</span><span class="o">=</span><span class="n">client</span><span class="o">.</span><span class="n">get_tools</span><span class="p">(),</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">agent</span><span class="p">(</span><span class="s2">&quot;查询北京的天气&quot;</span><span class="p">))</span>
+</span></code></pre></div>
+<p><img alt="MCP Server 查询结果示例" src="../assets/11.png" /></p>
+<p>我们选择一个文件管理 MCP Server 并获取启动配置：</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p p-Indicator">{</span><span class="w">  </span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="s">&quot;mcpServers&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w">    </span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">        </span><span class="s">&quot;filesystem&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w">     </span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">            </span><span class="s">&quot;command&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">&quot;npx&quot;</span><span class="p p-Indicator">,</span><span class="w">      </span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">            </span><span class="s">&quot;args&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">        </span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">                </span><span class="s">&quot;-y&quot;</span><span class="p p-Indicator">,</span><span class="w">        </span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">                </span><span class="s">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p p-Indicator">,</span><span class="w">        </span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">                </span><span class="s">&quot;/Users/username/Desktop&quot;</span><span class="w">      </span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">            </span><span class="p p-Indicator">]</span><span class="w">    </span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="p p-Indicator">}</span><span class="w">  </span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="p p-Indicator">}</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p p-Indicator">}</span>
+</span></code></pre></div>
+<p>注意，如果你是Windows系统，command需要使用"cmd"，同时启动参数开头需要加上"/c"。启动配置会有些变化：</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p p-Indicator">{</span><span class="w">  </span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="s">&quot;mcpServers&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w">    </span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="s">&quot;filesystem&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w">     </span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">            </span><span class="s">&quot;command&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">&quot;cmd&quot;</span><span class="p p-Indicator">,</span><span class="w">      </span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">            </span><span class="s">&quot;args&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">                </span><span class="s">&quot;/c&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">                </span><span class="s">&quot;npx&quot;</span><span class="p p-Indicator">,</span><span class="w">         </span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">                </span><span class="s">&quot;-y&quot;</span><span class="p p-Indicator">,</span><span class="w">        </span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">                </span><span class="s">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p p-Indicator">,</span><span class="w">        </span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">                </span><span class="s">&quot;/Users/username/Desktop&quot;</span><span class="w">      </span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">            </span><span class="p p-Indicator">]</span><span class="w">    </span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="p p-Indicator">}</span><span class="w">  </span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="p p-Indicator">}</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="p p-Indicator">}</span>
+</span></code></pre></div>
+</li>
+<li>
+<p>MCP接入</p>
+<p>随后便可使用LazyLLM的MCPClient工具实现MCP Server的接入（这里的路径示例/xxx/xxx/xxx）</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCPClient</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;npx&quot;</span><span class="p">,</span> <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p">,</span> <span class="s2">&quot;/xxx/xxx/xxx&quot;</span><span class="p">]}</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">client</span> <span class="o">=</span> <span class="n">MCPClient</span><span class="p">(</span><span class="n">command_or_url</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">],</span> <span class="n">args</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;args&quot;</span><span class="p">],</span> <span class="n">env</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">))</span>
+</span></code></pre></div>
+</li>
+<li>
+<p>工具集获取</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">tools</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_tools</span><span class="p">()</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">Secure</span> <span class="n">MCP</span> <span class="n">Filesystem</span> <span class="n">Server</span> <span class="n">running</span> <span class="n">on</span> <span class="n">stdio</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">Allowed</span> <span class="n">directories</span><span class="p">:</span> <span class="p">[</span> <span class="s1">&#39;/Users/username/Desktop&#39;</span> <span class="p">]</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">tools</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">[</span><span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269cad11c0</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91e520</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91d800</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91d8a0</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91e5c0</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91e0c0</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91d940</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91e480</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91db20</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91da80</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">generate_lazyllm_tool</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">dynamic_lazyllm_func</span> <span class="n">at</span> <span class="mh">0x7f269c91dda0</span><span class="o">&gt;</span><span class="p">]</span>
+</span></code></pre></div>
+<p>​<strong>代码讲解</strong>​：调用client.get_tools()可以获取当前连接的MCP Server中所有的工具（在异步环境中，以下代码改为tools = await client.aget_tools()即可）。同时，LazyLLM支持开发者通过传入工具名称列表至方法的方式获取特定的工具集，例如client.get_tools(["tool_name1", "tool_name2"])。</p>
+</li>
+<li>
+<p>工具调用</p>
+<p>​<strong>代码讲解</strong>​：遍历从MCP Server获取的tools，其中每个成员都是一个函数。每个功能函数都有函数名（​<strong>name</strong>​）、函数描述（​<strong>doc</strong>​，包含了功能描与参数描述）以及入参声明（​<strong>annotations</strong>​），调用对应函数时，只需要传入正确的参数即可。下面给出两个函数调用的例子：</p>
+<ul>
+<li>调用文件读取工具read_file，传入所需入参path，即可获取读取文件后的返回信息；</li>
+<li>调用获取有权限路径工具list_allowed_directories，该工具无需任何入参，传入空即可获得工具返回。</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tools</span><span class="p">:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Tool name:</span><span class="se">\n</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="se">\n</span><span class="s2">Tool desc:</span><span class="se">\n</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="vm">__doc__</span><span class="si">}</span><span class="se">\n</span><span class="s2">Tool params:</span><span class="se">\n</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="vm">__annotations__</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="o">...</span> 
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">Tool</span> <span class="n">name</span><span class="p">:</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">read_file</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">Tool</span> <span class="n">desc</span><span class="p">:</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">Read</span> <span class="n">the</span> <span class="n">complete</span> <span class="n">contents</span> <span class="n">of</span> <span class="n">a</span> <span class="n">file</span> <span class="kn">from</span><span class="w"> </span><span class="nn">the</span> <span class="n">file</span> <span class="n">system</span><span class="o">.</span> <span class="n">Handles</span> <span class="n">various</span> <span class="n">text</span> <span class="n">encodings</span> <span class="ow">and</span> <span class="n">provides</span> <span class="n">detailed</span> <span class="n">error</span> <span class="n">messages</span> <span class="k">if</span> <span class="n">the</span> <span class="n">file</span> <span class="n">cannot</span> <span class="n">be</span> <span class="n">read</span><span class="o">.</span> <span class="n">Use</span> <span class="n">this</span> <span class="n">tool</span> <span class="n">when</span> <span class="n">you</span> <span class="n">need</span> <span class="n">to</span> <span class="n">examine</span> <span class="n">the</span> <span class="n">contents</span> <span class="n">of</span> <span class="n">a</span> <span class="n">single</span> <span class="n">file</span><span class="o">.</span> <span class="n">Only</span> <span class="n">works</span> <span class="n">within</span> <span class="n">allowed</span> <span class="n">directories</span><span class="o">.</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">Args</span><span class="p">:</span>    
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="n">path</span> <span class="p">(</span><span class="nb">str</span><span class="p">):</span> <span class="nb">type</span><span class="p">:</span> <span class="n">string</span><span class="o">.</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">Tool</span> <span class="n">params</span><span class="p">:</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="p">{</span><span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">str</span><span class="s1">&#39;&gt;}</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">Tool</span> <span class="n">name</span><span class="p">:</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">write_file</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="n">Tool</span> <span class="n">desc</span><span class="p">:</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="n">Create</span> <span class="n">a</span> <span class="n">new</span> <span class="n">file</span> <span class="ow">or</span> <span class="n">completely</span> <span class="n">overwrite</span> <span class="n">an</span> <span class="n">existing</span> <span class="n">file</span> <span class="k">with</span> <span class="n">new</span> <span class="n">content</span><span class="o">.</span> <span class="n">Use</span> <span class="k">with</span> <span class="n">caution</span> <span class="k">as</span> <span class="n">it</span> <span class="n">will</span> <span class="n">overwrite</span> <span class="n">existing</span> <span class="n">files</span> <span class="n">without</span> <span class="n">warning</span><span class="o">.</span> <span class="n">Handles</span> <span class="n">text</span> <span class="n">content</span> <span class="k">with</span> <span class="n">proper</span> <span class="n">encoding</span><span class="o">.</span> <span class="n">Only</span> <span class="n">works</span> <span class="n">within</span> <span class="n">allowed</span> <span class="n">directories</span><span class="o">.</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="n">Args</span><span class="p">:</span>    
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>    <span class="n">path</span> <span class="p">(</span><span class="nb">str</span><span class="p">):</span> <span class="nb">type</span><span class="p">:</span> <span class="n">string</span><span class="o">.</span>    
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>    <span class="n">content</span> <span class="p">(</span><span class="nb">str</span><span class="p">):</span> <span class="nb">type</span><span class="p">:</span> <span class="n">string</span><span class="o">.</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="n">Tool</span> <span class="n">params</span><span class="p">:</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="p">{</span><span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">str</span><span class="s1">&#39;&gt;, &#39;</span><span class="n">content</span><span class="s1">&#39;: &lt;class &#39;</span><span class="nb">str</span><span class="s1">&#39;&gt;}</span>
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="o">......</span>
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="n">Tool</span> <span class="n">name</span><span class="p">:</span>
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="n">list_allowed_directories</span>
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="n">Tool</span> <span class="n">desc</span><span class="p">:</span>
+</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a><span class="n">Returns</span> <span class="n">the</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">directories</span> <span class="n">that</span> <span class="n">this</span> <span class="n">server</span> <span class="ow">is</span> <span class="n">allowed</span> <span class="n">to</span> <span class="n">access</span><span class="o">.</span> <span class="n">Use</span> <span class="n">this</span> <span class="n">to</span> <span class="n">understand</span> <span class="n">which</span> <span class="n">directories</span> <span class="n">are</span> <span class="n">available</span> <span class="n">before</span> <span class="n">trying</span> <span class="n">to</span> <span class="n">access</span> <span class="n">files</span><span class="o">.</span>
+</span><span id="__span-9-26"><a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a><span class="n">Args</span><span class="p">:</span>    
+</span><span id="__span-9-27"><a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>    <span class="n">No</span> <span class="n">parameters</span><span class="o">.</span>
+</span><span id="__span-9-28"><a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a><span class="n">Tool</span> <span class="n">params</span><span class="p">:</span>
+</span><span id="__span-9-29"><a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a><span class="p">{}</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">t1</span> <span class="o">=</span> <span class="n">tools</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">t1</span><span class="o">.</span><span class="vm">__name__</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="s1">&#39;read_file&#39;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">t1</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;xxx/xxx/xxx/test.md&quot;</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">Secure</span> <span class="n">MCP</span> <span class="n">Filesystem</span> <span class="n">Server</span> <span class="n">running</span> <span class="n">on</span> <span class="n">stdio</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="n">Allowed</span> <span class="n">directories</span><span class="p">:</span> <span class="p">[</span> <span class="s1">&#39;xxx/xxx/xxx&#39;</span> <span class="p">]</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="s1">&#39;Tool call result:</span><span class="se">\n</span><span class="s1">Received text message:</span><span class="se">\n</span><span class="s1">This is a test file for LazyLLM and MCP.</span><span class="se">\n\n</span><span class="s1">End</span><span class="se">\n</span><span class="s1">&#39;</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">t2</span> <span class="o">=</span> <span class="n">tools</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">t2</span><span class="o">.</span><span class="vm">__name__</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="s1">&#39;list_allowed_directories&#39;</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">t2</span><span class="p">()</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="n">Secure</span> <span class="n">MCP</span> <span class="n">Filesystem</span> <span class="n">Server</span> <span class="n">running</span> <span class="n">on</span> <span class="n">stdio</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="n">Allowed</span> <span class="n">directories</span><span class="p">:</span> <span class="p">[</span> <span class="s1">&#39;xxx/xxx/xxx&#39;</span> <span class="p">]</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="s1">&#39;Tool call result:</span><span class="se">\n</span><span class="s1">Received text message:</span><span class="se">\n</span><span class="s1">Allowed directories:</span><span class="se">\n</span><span class="s1">/xxx/xxx/xxx&#39;</span>
+</span></code></pre></div>
+</li>
+<li>
+<p>一键部署MCP Server</p>
+<p>选择浏览器工具 <a href="https://github.com/microsoft/playwright-mcp">playwright</a>，获取配置信息：</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p p-Indicator">{</span><span class="w">  </span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="s">&quot;mcpServers&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w">    </span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">        </span><span class="s">&quot;playwright&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="w">      </span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">            </span><span class="s">&quot;command&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">&quot;npx&quot;</span><span class="p p-Indicator">,</span><span class="w">      </span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">            </span><span class="s">&quot;args&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">        </span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">                </span><span class="s">&quot;@playwright/mcp@latest&quot;</span><span class="w">     </span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">            </span><span class="p p-Indicator">]</span><span class="w">    </span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">        </span><span class="p p-Indicator">}</span><span class="w">  </span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="p p-Indicator">}</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="p p-Indicator">}</span>
+</span></code></pre></div>
+<p>在命令行中只需要使用“lazyllm deploy mcp_server xxxxxx”命令，并配置host、port，即可完成MCP Server的部署。由于linux环境没有GUI，这里演示Windows环境下的启动命令：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>lazyllm<span class="w"> </span>deploy<span class="w"> </span>mcp_server<span class="w"> </span>--sse-port<span class="w"> </span><span class="m">11238</span><span class="w"> </span>cmd<span class="w"> </span>--<span class="w"> </span>/c<span class="w"> </span>npx<span class="w"> </span>@playwright/mcp@latest
+</span></code></pre></div>
+<p>启动后如下所示：</p>
+<p><img alt="MCP Server 部署启动界面" src="../assets/14.png" /></p>
+<p><strong>接入部署完成的MCP Server</strong></p>
+<p>我们可以在其他程序中传入url，以SSE的方式接入MCP Server，注意，这里的url需要加上'/sse'，否则无法正常运行：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://127.0.0.1:11238/sse&quot;</span><span class="p">}</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">client</span> <span class="o">=</span> <span class="n">MCPClient</span><span class="p">(</span><span class="n">command_or_url</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">])</span>
+</span></code></pre></div>
+<p>用以上方式接入MCP Server后，具体的工具获取、工具调用方式与直接接入保持一致。</p>
+</li>
+<li>
+<p>LazyLLM调用MCP工具</p>
+<p>步骤 1：获取工具列表</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">tools</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_tools</span><span class="p">()</span>  <span class="c1"># 同步获取</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="c1"># 或 tools = await client.aget_tools()  # 异步环境</span>
+</span></code></pre></div>
+<p>步骤 2：查看工具详情</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tools</span><span class="p">:</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool name: </span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool desc: </span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="vm">__doc__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool params: </span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="vm">__annotations__</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>步骤 3：调用MCP工具</p>
+<p>以读取文件工具为例，假设 tools[0] 为 read_file</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">t1</span> <span class="o">=</span> <span class="n">tools</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">t1</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;xxx/xxx/xxx/test.md&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="接入 MCP Server 后的运行结果示例" src="../assets/15.png" /></p>
+</li>
+<li>
+<p>LazyLLM+MCP智能体Demo</p>
+<p>接下来我们使用filesystem+playwright，结合LazyLLM的Agent模块，创建一个智能体：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools.agent</span><span class="w"> </span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="kn">import</span> <span class="n">ReactAgent</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCPClient</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>    
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="n">mcp_configs</span> <span class="o">=</span> <span class="p">{</span>        
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>        <span class="s2">&quot;file_system&quot;</span><span class="p">:</span> <span class="p">{</span>            
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>            <span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;cmd&quot;</span><span class="p">,</span>            
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>            <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="p">[</span>                
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>                <span class="s2">&quot;/c&quot;</span><span class="p">,</span>                
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>                <span class="s2">&quot;npx&quot;</span><span class="p">,</span>                
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>                <span class="s2">&quot;-y&quot;</span><span class="p">,</span>                
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>                <span class="s2">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p">,</span>                
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>                <span class="s2">&quot;./&quot;</span>            
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>            <span class="p">]</span>        
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>        <span class="p">},</span>        
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>        <span class="s2">&quot;play_wright&quot;</span><span class="p">:</span> <span class="p">{</span>            
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>            <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://127.0.0.1:11244/sse&quot;</span>        
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>        <span class="p">}</span>    
+</span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>    <span class="p">}</span>    
+</span><span id="__span-17-21"><a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="n">client1</span> <span class="o">=</span> <span class="n">MCPClient</span><span class="p">(</span><span class="n">command_or_url</span><span class="o">=</span><span class="n">mcp_configs</span><span class="p">[</span><span class="s2">&quot;file_system&quot;</span><span class="p">][</span><span class="s2">&quot;command&quot;</span><span class="p">],</span> <span class="n">args</span><span class="o">=</span><span class="n">mcp_configs</span><span class="p">[</span><span class="s2">&quot;file_system&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">])</span>    
+</span><span id="__span-17-22"><a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="n">client2</span> <span class="o">=</span> <span class="n">MCPClient</span><span class="p">(</span><span class="n">command_or_url</span><span class="o">=</span><span class="n">mcp_configs</span><span class="p">[</span><span class="s2">&quot;play_wright&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">])</span>    
+</span><span id="__span-17-23"><a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">OnlineChatModule</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;deepseek&quot;</span><span class="p">)</span>    
+</span><span id="__span-17-24"><a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">ReactAgent</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="o">.</span><span class="n">share</span><span class="p">(),</span> <span class="n">tools</span><span class="o">=</span><span class="n">client1</span><span class="o">.</span><span class="n">get_tools</span><span class="p">()</span><span class="o">+</span><span class="n">client2</span><span class="o">.</span><span class="n">get_tools</span><span class="p">(),</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>    
+</span><span id="__span-17-25"><a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="nb">print</span><span class="p">(</span><span class="n">agent</span><span class="p">(</span><span class="s2">&quot;浏览谷歌新闻，并写一个今日新闻简报，以markdown格式保存至本地。&quot;</span><span class="p">))</span>
+</span></code></pre></div>
+</li>
+</ol>
+<p>通过本次实践，我们可以了解到，MCP Server的出现直接省去了Agent开发环节中工具研发和调试的成本，​<strong>大大提升了研发效率</strong>​。LazyLLM对于MCP提供了灵活的接入方式，让开发者使用MCP的​<strong>成本大大降低</strong>​。</p>
+<p>总结：在大模型时代，​<strong>开发效率就是核心竞争力</strong>​。从头造轮子或许可以练手，但在真正落地AI应用的过程中，我们更应该把宝贵的时间和脑力，留给真正创造价值的部分——如业务逻辑设计、用户体验优化、创新交互方式等，而不是重复造工具、上下文拼接等基础组件。</p>
+<p><strong>MCP</strong> 提供了一套高效、统一的​<strong>标准协议</strong>​；<strong>LazyLLM</strong> 则提供了一套​<strong>灵活的MCP接入方案</strong>​，让每一个开发者都能轻松上手，快速构建属于自己的智能Agent应用，从而站在<strong>社区和开源生态</strong>的“肩膀”上看得更远、做得更多。</p>
+<h2 id="3-agent">3. Agent 数据处理<a class="headerlink" href="#3-agent" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 核心思想<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>在大模型时代，​<strong>数据质量决定模型上限</strong>​。但高质量数据的构建本身是一项极其复杂、繁琐且容易出错的工作：
+数据来源多样、格式不统一、噪声多、标注主观性强，仅靠人工或单一脚本流程，往往效率低、成本高、且难以规模化。</p>
+<p>这正是 <strong>Agent 数据处理</strong> 发挥价值的地方。</p>
+<p>如果说在任务执行中，Agent 像是“替我们打仗的大将军”，
+那么在数据处理阶段，​<strong>Multi-Agent 系统更像是一支分工明确的专业团队</strong>​：
+有人负责清洗数据，有人负责理解和标注，有人负责审核与质检，彼此协作、相互校验，最终交付一批“可直接用于训练或微调的高质量数据”。</p>
+<h3 id="32-agent">3.2 为什么需要 Agent 来做数据处理？<a class="headerlink" href="#32-agent" title="Permanent link">&para;</a></h3>
+<p>传统数据处理流程通常是​<strong>线性的、规则驱动的</strong>​：</p>
+<blockquote>
+<p>规则过滤 → 人工抽样检查 → 人工修正 → 再跑一遍脚本</p>
+</blockquote>
+<p>而 Agent 驱动的数据处理是​<strong>智能化、自治式的</strong>​：</p>
+<ul>
+<li>能理解语义，而不仅是匹配规则</li>
+<li>能根据反馈反复修正自己的处理策略</li>
+<li>能在不确定场景下做出“类人判断”</li>
+<li>能将复杂流程拆解为多个可协作的子任务</li>
+</ul>
+<p>这使得 Agent 特别适合处理 <strong>指令数据、对话数据、多模态数据、弱标注数据</strong> 等复杂数据形态。</p>
+<h3 id="33-multi-agent">3.3 Multi-Agent 数据处理架构<a class="headerlink" href="#33-multi-agent" title="Permanent link">&para;</a></h3>
+<p>在 Agent 数据处理中，我们通常不会只使用一个 Agent，而是构建一个 ​<strong>Multi-Agent 协作系统</strong>​，每个 Agent 扮演不同角色：</p>
+<ul>
+<li><strong>数据清洗 Agent（Cleaner Agent）</strong></li>
+<li><strong>数据标注 Agent（Annotator Agent）</strong></li>
+<li><strong>数据审查 Agent（Reviewer / Judge Agent）</strong></li>
+<li>（可选）<strong>调度 Agent（Coordinator / Manager Agent）</strong></li>
+</ul>
+<p>它们共同组成一条“智能数据流水线”。</p>
+<p>可以类比为一个出版社：</p>
+<ul>
+<li>清洗 Agent：编辑，负责剔除低质量稿件</li>
+<li>标注 Agent：作者或校对，负责补充结构和标签</li>
+<li>审查 Agent：审稿专家，负责最终质量把关</li>
+</ul>
+<h3 id="34-cleaning">3.4 数据清洗（Cleaning）<a class="headerlink" href="#34-cleaning" title="Permanent link">&para;</a></h3>
+<p><strong>数据清洗 Agent</strong> 的目标是：</p>
+<blockquote>
+<p>去掉“明显不该留下的数据”，并修复“有潜力但存在问题的数据”。</p>
+</blockquote>
+<p>典型能力包括：</p>
+<ul>
+<li>识别并过滤：<ul>
+<li>无意义文本（乱码、重复、占位符）</li>
+<li>与任务无关的内容</li>
+<li>明显错误或冲突的信息</li>
+</ul>
+</li>
+<li>结构修复：<ul>
+<li>不完整的问答对</li>
+<li>JSON / 指令格式不规范的数据</li>
+</ul>
+</li>
+<li>语义级去重：<ul>
+<li>表面不同、语义高度相似的数据</li>
+</ul>
+</li>
+</ul>
+<p>与规则脚本不同，Agent 清洗依赖的是 ​<strong>LLM 的语义理解能力</strong>​，能判断“这条数据值不值得留下”，而不仅是“是否满足某个 if 条件”。</p>
+<h3 id="35-annotation">3.5 数据标注（Annotation）<a class="headerlink" href="#35-annotation" title="Permanent link">&para;</a></h3>
+<p><strong>数据标注 Agent</strong> 更像是一位“理解任务目标的专家”。</p>
+<p>它并不是机械地贴标签，而是基于上下文和任务定义进行​<strong>语义驱动的标注</strong>​，例如：</p>
+<ul>
+<li>指令数据：<ul>
+<li>推断用户真实意图</li>
+<li>补全或改写模糊指令</li>
+</ul>
+</li>
+<li>对话数据：<ul>
+<li>标注角色（user / assistant）</li>
+<li>区分 reasoning、tool-call、final-answer</li>
+</ul>
+</li>
+<li>多模态 / 任务型数据：<ul>
+<li>对齐输入与输出</li>
+<li>生成中间解释或 Chain-of-Thought（如需要）</li>
+</ul>
+</li>
+</ul>
+<p>在 Multi-Agent 系统中，多个标注 Agent 还可以 ​<strong>交叉标注同一数据</strong>​，为后续审查提供对比依据。</p>
+<h3 id="36-review-audit">3.6 数据审查（Review / Audit）<a class="headerlink" href="#36-review-audit" title="Permanent link">&para;</a></h3>
+<p><strong>数据审查 Agent</strong> 是整个流程中的“质量守门人”。</p>
+<p>它不负责生成数据，而是回答一个核心问题：</p>
+<blockquote>
+<p>这条数据，<strong>是否真的适合进入训练集？</strong></p>
+</blockquote>
+<p>典型审查维度包括：</p>
+<ul>
+<li>语义正确性（是否存在事实或逻辑错误）</li>
+<li>任务对齐性（是否真正符合训练目标）</li>
+<li>难度与信息密度（是否过于简单或冗余）</li>
+<li>潜在风险（偏见、幻觉、违规内容等）</li>
+</ul>
+<p>在实践中，审查 Agent 常被设计为：</p>
+<ul>
+<li>更严格的 prompt</li>
+<li>或使用不同模型（如更强或更保守的 LLM）
+  以避免“自己给自己打高分”的问题。</li>
+</ul>
+<h3 id="37-agent">3.7 Agent 数据处理的优势总结<a class="headerlink" href="#37-agent" title="Permanent link">&para;</a></h3>
+<p>相比传统数据流水线，Agent 数据处理具备以下优势：</p>
+<ul>
+<li>​<strong>自动化 + 智能化</strong>​：减少人工参与，但不牺牲质量</li>
+<li>​<strong>可扩展性强</strong>​：天然适合大规模数据构建</li>
+<li>​<strong>任务自适应</strong>​：同一套框架可迁移到不同任务</li>
+<li>​<strong>质量可控</strong>​：通过多 Agent 交叉验证提升可靠性</li>
+</ul>
+<p>从本质上看，Agent 数据处理并不是“用 AI 写数据”，
+而是 ​<strong>用一群有分工、有判断力的智能体，替我们完成一整套专业的数据工程工作</strong>​。</p>
+<p>这正是 Multi-Agent 在数据构建领域最具现实价值、也最容易落地的应用场景之一。</p>
+<h2 id="4-pdf">4. 多智能体协作流水线 (PDF 数据处理流水线)<a class="headerlink" href="#4-pdf" title="Permanent link">&para;</a></h2>
+<p>本节介绍基于 LazyLLM 的 PDF 数据处理流程。该流程将原始 PDF 文档逐步转换为可用于模型训练的标准化数据（SFT 格式），并支持图文多模态扩展。</p>
+<hr />
+<h3 id="41">4.1 总体流程<a class="headerlink" href="#41" title="Permanent link">&para;</a></h3>
+<p>PDF 数据处理流水线（Pdf2Qa Pipeline）是将原始 PDF 文档转换为可直接用于模型训练（SFT / 多模态 VQA）的结构化数据的标准化流程。整体流程如下：</p>
+<p><div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>PDF → 文本解析 → Chunk合并 → 图片提取 → QA生成 → QA评分 → 数据过滤 → 格式转换
+</span></code></pre></div>
+接下来我们将具体介绍各个算子的功能！</p>
+<hr />
+<h3 id="42">4.2 数据处理步骤<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<h4 id="1-pdf2qapdfprocessorpdf">1️⃣ Pdf2Qa.PdfProcessor（PDF解析 + 分块 + 图片处理）<a class="headerlink" href="#1-pdf2qapdfprocessorpdf" title="Permanent link">&para;</a></h4>
+<p>功能：</p>
+<ul>
+<li>调用 Mineru 服务解析 PDF 文档</li>
+<li>转换为 Markdown 文本</li>
+<li>按 <code>max_chunk_chars</code> 合并小文本块（chunk）</li>
+<li>提取 Markdown 中的图片路径</li>
+<li>自动下载图片并进行 resize</li>
+<li>建立文本与图片的对应关系</li>
+</ul>
+<p>输出结构：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="p">{</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span><span class="nt">&quot;chunk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;文本内容&quot;</span><span class="p">,</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="nt">&quot;image_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;./pdf_images/xxx.png&quot;</span><span class="p">]</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>说明：</p>
+<ul>
+<li>若无图片：<code>image_path</code> 为空字符串或空列表</li>
+<li>chunk 为后续 QA 生成的基本单位</li>
+</ul>
+<hr />
+<h4 id="2-pdf2qaimagetovqaqa">2️⃣ Pdf2Qa.ImageToVQA（QA生成）<a class="headerlink" href="#2-pdf2qaimagetovqaqa" title="Permanent link">&para;</a></h4>
+<p>功能：</p>
+<ul>
+<li>
+<p>基于：</p>
+<ul>
+<li>文本 chunk</li>
+<li>图片（可选）</li>
+</ul>
+</li>
+<li>
+<p>生成用于监督微调（SFT）的问答对</p>
+</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>支持纯文本 / 多模态输入</li>
+<li>可通过 prompt 控制生成质量与风格</li>
+</ul>
+<p>输出结构：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="p">{</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="nt">&quot;chunk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;文本内容&quot;</span><span class="p">,</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span><span class="nt">&quot;image_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;./pdf_images/xxx.png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;./pdf_images/xxx2.png&quot;</span><span class="p">],</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;问题&quot;</span><span class="p">,</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;答案&quot;</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h4 id="3-pdf2qapdfqascorerqa">3️⃣ Pdf2Qa.PdfQAScorer（QA质量评分）<a class="headerlink" href="#3-pdf2qapdfqascorerqa" title="Permanent link">&para;</a></h4>
+<p>功能：</p>
+<ul>
+<li>输入：<ul>
+<li>原文 chunk</li>
+<li>图片（可选）</li>
+<li>QA 对</li>
+</ul>
+</li>
+<li>判断 QA 是否严格来源于原文内容</li>
+</ul>
+<p>评分规则：</p>
+<ul>
+<li>符合原文语义 → 1</li>
+<li>不符合 → 0</li>
+</ul>
+<p>输出结构：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="p">{</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">&quot;chunk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="nt">&quot;image_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="w">  </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h4 id="4-qaqa_score_filter-multi_features_filter">4️⃣ QA过滤（qa_score_filter / multi_features_filter）<a class="headerlink" href="#4-qaqa_score_filter-multi_features_filter" title="Permanent link">&para;</a></h4>
+<p>功能：</p>
+<ul>
+<li>根据评分结果筛选数据</li>
+<li>过滤低质量 QA（score &lt; threshold）</li>
+</ul>
+<p>效果：</p>
+<ul>
+<li>提升数据一致性</li>
+<li>减少 hallucination 数据进入训练集</li>
+</ul>
+<hr />
+<h4 id="5-sft">5️⃣ 格式转换（SFT / 多模态）<a class="headerlink" href="#5-sft" title="Permanent link">&para;</a></h4>
+<p>根据训练目标，转换为不同格式：</p>
+<h4 id="sft">✔ 单模态（文本 SFT）<a class="headerlink" href="#sft" title="Permanent link">&para;</a></h4>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="p">{</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;问题&quot;</span><span class="p">,</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;文本chunk&quot;</span><span class="p">,</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;答案&quot;</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h4 id="vqa-chat">✔ 多模态（VQA / Chat 格式）<a class="headerlink" href="#vqa-chat" title="Permanent link">&para;</a></h4>
+<p>通过：</p>
+<ul>
+<li><code>Pdf2Qa.vqa_to_chat_format</code></li>
+<li><code>Text2qa.to_alpaca_sft</code></li>
+</ul>
+<p>可生成包含图片路径的对话格式数据，用于视觉语言模型（VLM）训练。</p>
+<blockquote>
+<p>多模态Chat格式：</p>
+</blockquote>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="p">{</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nt">&quot;messages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;image&gt;诊断报告中的系数比较图展示了哪些估计方法和置信区间？&quot;</span><span class="p">},</span><span class="w"> </span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;系数比较图展示了普通最小二乘法（OLS）和两阶段最小二乘法（2SLS）的点估计，并且包括了分析、bootstrap-c、bootstrap-t、tF以及Anderson-Rubin置信区间。&quot;</span><span class="p">}</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">    </span><span class="p">],</span><span class="w"> </span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="nt">&quot;images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;/xxxxx/pdf_experiment/pdfs/images/9fc1b845e4f12f7e0bca556871ed9e50009343012a4d63757d5bab2bbfaec1a3.jpg&quot;</span><span class="p">]</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p>纯文本Alpaca格式：</p>
+</blockquote>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="p">{</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">    </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;反射机制在AI代理中的作用是什么？&quot;</span><span class="p">,</span><span class="w"> </span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">    </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6. Reflexive and Self-Critique Mechanisms: AI Agents xxxx&quot;</span><span class="p">,</span><span class="w"> </span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">    </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;反射机制使AI代理具备自我评估的能力，通过二次推理过程对已完成的任务进行自我批评，从而提高鲁棒性并降低错误率。此外，对于具有能动性的AI，反射机制还扩展到代理之间的相互评估，例如验证器代理可以审查总结器代理的工作，以确保协作质量控制和增强可信度。这种机制还支持迭代改进和适应性重新规划，特别是在与记忆日志或反馈队列集成时。&quot;</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h3 id="43-pipeline">4.3 Pipeline 特点<a class="headerlink" href="#43-pipeline" title="Permanent link">&para;</a></h3>
+<p>该数据流水线具备以下能力：</p>
+<ul>
+<li>自动从 PDF 构建训练数据</li>
+<li>语义级 chunk 切分（控制上下文长度）</li>
+<li>文本与图片自动对齐</li>
+<li>QA 自动生成与质量控制</li>
+<li>支持单模态与多模态训练数据</li>
+</ul>
+<hr />
+<h3 id="44">4.4 输出结果<a class="headerlink" href="#44" title="Permanent link">&para;</a></h3>
+<p>最终输出为可直接用于模型训练的数据：</p>
+<ul>
+<li>JSON 格式</li>
+<li>支持 train / test 切分</li>
+<li>可用于：<ul>
+<li>指令微调（SFT）</li>
+<li>多模态训练（VLM）</li>
+<li>RAG 数据构建</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>这是一个标准的 Alpaca 微调数据：
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>    <span class="s2">&quot;instruction&quot;</span><span class="p">:</span> <span class="s2">&quot;AI Agent 中的反射机制（Reflection Mechanism）有什么作用？&quot;</span><span class="p">,</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>    <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;在复杂任务中，AI Agent 可以通过反射机制对自己的决策进行评估和修正。反射机制允许代理在完成子任务后对自己的行为进行自我审查，并结合历史反馈优化下一步行动。&quot;</span><span class="p">,</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>    <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="s2">&quot;反射机制使 AI Agent 能够自我评估和纠正行为，从而提高任务完成的准确性和鲁棒性。它支持二次推理和自我批评，使代理在面对复杂或动态环境时减少错误，并能够迭代改进策略。此外，对于多代理系统，反射机制还可以用于代理间的互评，提升协作质量和可信度。&quot;</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="p">}</span>
+</span></code></pre></div></p>
+</blockquote>
+<h3 id="45-ppl">4.5 PPL运行代码<a class="headerlink" href="#45-ppl" title="Permanent link">&para;</a></h3>
+<p>该代码用于构建并执行一个完整的 PDF → QA 数据生成流水线（pipeline），实现从原始 PDF 到结构化训练数据的自动转换。</p>
+<p>关键参数说明：</p>
+<ul>
+<li><code>mineru_api</code>：PDF解析服务地址</li>
+<li><code>max_chunk_chars</code>：控制每个文本块长度</li>
+<li><code>qa_user_prompt</code>：QA生成策略</li>
+<li><code>chat_format=False</code>：<ul>
+<li>False → 生成纯文本 SFT 数据（Alpaca格式）</li>
+<li>True → 生成多模态对话数据（含图片）</li>
+</ul>
+</li>
+<li><code>context_key='chunk'</code>：QA生成时使用的上下文字段</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">generator_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="s1">你是一个用于构建训练数据的助手，需要基于给定的图像或文本内容，生成一个xxxx</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="s1">只能输出 JSON，不能包含任何额外说明或解释</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="s1">&#39;&#39;&#39;</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="c1"># ====== 构建 pipeline ======</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="n">ppl</span> <span class="o">=</span> <span class="n">build_pdf2qa_pipeline</span><span class="p">(</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> 
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>    <span class="n">mineru_api</span><span class="o">=</span><span class="s2">&quot;http://10.119.30.80:20234&quot;</span><span class="p">,</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>    <span class="n">image_output_folder</span><span class="o">=</span><span class="n">output_folder</span><span class="p">,</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>    <span class="n">chunk_key</span><span class="o">=</span><span class="s1">&#39;chunk&#39;</span><span class="p">,</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>    <span class="n">image_key</span><span class="o">=</span><span class="s1">&#39;image_path&#39;</span><span class="p">,</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>    <span class="n">qa_user_prompt</span><span class="o">=</span><span class="n">generator_prompt</span><span class="p">,</span>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>    <span class="n">max_chunk_chars</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>    <span class="n">chat_format</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># 控制数据格式: 训练和推理的时候不给图片 False 使用纯文本 alpaca sft格式；</span>
+</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a>    <span class="n">context_key</span><span class="o">=</span><span class="s1">&#39;chunk&#39;</span>
+</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a>
+</span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17" href="#__codelineno-26-17"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="46-pdf">4.6 PDF处理流水线与微调<a class="headerlink" href="#46-pdf" title="Permanent link">&para;</a></h3>
+<p>前面 <code>4.2节</code> 已经介绍了 PDF2QA 流水线的核心组件，这里补充看一下完整脚本 <a href="../code/pdfppl.py">pdfppl.py</a> 是如何把这些步骤串起来的。</p>
+<p>这个脚本的主线非常直接，可以概括为：</p>
+<blockquote>
+<p>下载 PDF → 生成 QA 数据 → 划分训练/测试集 → SFT 微调 → 基座模型对比推理 → 评分模型打分 → 统计结果</p>
+</blockquote>
+<p>对应主流程代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>    <span class="n">MODEL_PATH</span> <span class="o">=</span> <span class="s2">&quot;Qwen2.5-VL-32B-Instruct&quot;</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>    <span class="n">SFT_BASE_MODEL</span> <span class="o">=</span> <span class="s2">&quot;qwen1.5-0.5b-chat&quot;</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>    <span class="n">SCORE_MODEL</span> <span class="o">=</span> <span class="s2">&quot;qwen3-14b&quot;</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="n">generate_model</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="n">MODEL_PATH</span><span class="p">)</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>    <span class="n">train_data</span><span class="p">,</span> <span class="n">test_data</span> <span class="o">=</span> <span class="n">generate_qa_from_pdfs</span><span class="p">(</span><span class="n">generate_model</span><span class="p">)</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>    <span class="n">sft_model</span> <span class="o">=</span> <span class="n">build_sft_model</span><span class="p">(</span><span class="n">SFT_BASE_MODEL</span><span class="p">,</span> <span class="n">TRAIN_JSON</span><span class="p">)</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>    <span class="n">infer_model</span> <span class="o">=</span> <span class="n">build_infer_model</span><span class="p">(</span><span class="n">SFT_BASE_MODEL</span><span class="p">)</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>    <span class="n">score_predictions_with_model</span><span class="p">(</span><span class="n">sft_output</span><span class="p">,</span> <span class="n">scorer_model</span><span class="p">,</span> <span class="n">SFT_SCORE_JSON</span><span class="p">)</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a>    <span class="n">score_predictions_with_model</span><span class="p">(</span><span class="n">infer_output</span><span class="p">,</span> <span class="n">scorer_model</span><span class="p">,</span> <span class="n">INFER_SCORE_JSON</span><span class="p">)</span>
+</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a>
+</span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a>    <span class="n">analyze_scores</span><span class="p">(</span><span class="n">SFT_SCORE_JSON</span><span class="p">)</span>
+</span><span id="__span-27-16"><a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a>    <span class="n">analyze_scores</span><span class="p">(</span><span class="n">INFER_SCORE_JSON</span><span class="p">)</span>
+</span></code></pre></div>
+<p>其中几个关键函数分别承担不同职责：</p>
+<ul>
+<li><code>generate_qa_from_pdfs()</code>：调用 <code>build_pdf2qa_pipeline</code>，把 PDF 自动转换为问答数据，并随机切分为训练集与测试集。</li>
+<li><code>build_sft_model()</code>：基于训练集构建微调模型，使用 <code>llamafactory</code> 完成 SFT。</li>
+<li><code>build_infer_model()</code>：加载同一个基座模型做原始推理，作为对照组。</li>
+<li><code>score_predictions_with_model()</code>：再引入一个打分模型，对 “标准答案 vs 模型预测” 做 <code>0 / 0.5 / 1</code> 评分。</li>
+<li><code>analyze_scores()</code>：统计平均分和分布，用来直观看 SFT 前后的质量差异。</li>
+</ul>
+<p>从工程角度看，这段代码的价值在于它不是只“生成数据”，而是形成了一个完整闭环：</p>
+<ol>
+<li>用多模态模型从 PDF 中抽取训练样本。</li>
+<li>用这些样本微调小模型。</li>
+<li>让微调模型和原始模型在同一测试集上生成答案。</li>
+<li>用统一评分器做自动评测。</li>
+<li>输出分数分布，方便判断数据构造是否真正带来收益。</li>
+</ol>
+<blockquote>
+<p>结果
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="err">📊</span> <span class="n">File</span><span class="p">:</span> <span class="o">.../</span><span class="n">sft_score_result</span><span class="o">.</span><span class="n">json</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="n">Total</span><span class="p">:</span> <span class="mi">133</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="n">Average</span> <span class="n">score</span><span class="p">:</span> <span class="mf">0.5526</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="n">Distribution</span><span class="p">:</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>  <span class="mf">0.0</span><span class="p">:</span> <span class="mi">14</span> <span class="p">(</span><span class="mf">10.53</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>  <span class="mf">0.5</span><span class="p">:</span> <span class="mi">91</span> <span class="p">(</span><span class="mf">68.42</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>  <span class="mf">1.0</span><span class="p">:</span> <span class="mi">28</span> <span class="p">(</span><span class="mf">21.05</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="err">📊</span> <span class="n">File</span><span class="p">:</span> <span class="o">.../</span><span class="n">infer_score_result</span><span class="o">.</span><span class="n">json</span>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="n">Total</span><span class="p">:</span> <span class="mi">133</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="n">Average</span> <span class="n">score</span><span class="p">:</span> <span class="mf">0.4361</span>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="n">Distribution</span><span class="p">:</span>
+</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a>  <span class="mf">0.0</span><span class="p">:</span> <span class="mi">28</span> <span class="p">(</span><span class="mf">21.05</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-14"><a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a>  <span class="mf">0.5</span><span class="p">:</span> <span class="mi">94</span> <span class="p">(</span><span class="mf">70.68</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-15"><a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a>  <span class="mf">1.0</span><span class="p">:</span> <span class="mi">11</span> <span class="p">(</span><span class="mf">8.27</span><span class="o">%</span><span class="p">)</span>
+</span></code></pre></div>
+<img alt="结果" src="../assets/res.png" /></p>
+</blockquote>
+<p>从评分结果可以看到，SFT 模型的平均分从 <strong>0.4361</strong> 提升到 <strong>0.5526</strong>，说明基于 PDF 自动构造的数据确实带来了可观收益。进一步看分布，SFT 后 <strong>满分样本占比</strong>从 <strong>8.27%</strong> 提升到 <strong>21.05%</strong>，而 <strong>完全错误样本占比</strong>从 <strong>21.05%</strong> 降到 <strong>10.53%</strong>，说明模型不仅整体回答质量更高，而且明显减少了完全答偏的情况。</p>
+<p>与此同时，两组结果中 <code>0.5</code> 分样本仍然占多数，这也说明当前流程已经能稳定提升“部分正确”与“基本可用”的回答质量，但距离大量产出高置信、高完整度答案还有优化空间。也就是说，这条 PDF 数据处理流水线已经验证了方向有效，后续仍可继续从 <strong>PDF 解析质量、QA 生成提示词、训练样本规模和评分标准</strong> 等方面进一步增强效果。</p>
+<h2 id="_1">参考文献<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p><a href="https://mcpcn.com/blog/understanding-mcp-protocol/">一文读懂MCP协议：大模型AI-Agent的USB-C接口</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../chapter4/4/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第4课时：模型部署与推理加速">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第4课时：模型部署与推理加速
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../chapter6/6/" class="md-footer__link md-footer__link--next" aria-label="Next: 第6课时：基于 LazyLLM 的全流程实践">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                第6课时：基于 LazyLLM 的全流程实践
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/LazyAGI/LazyLLM" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "navigation.footer", "navigation.top", "search.highlight", "search.suggest", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

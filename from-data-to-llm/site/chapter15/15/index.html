@@ -1,0 +1,4505 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="End-to-end LLM training and data engineering course built on LazyLLM.">
+      
+      
+        <meta name="author" content="LazyLLM Community">
+      
+      
+      
+        <link rel="prev" href="../../chapter14/14/">
+      
+      
+        <link rel="next" href="../../chapter16/16/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://img.icons8.com/?size=100&id=121346&format=png&color=000000">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第15课时：对齐算法原理 (RLHF & GRPO) - From Data to LLM</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="data:text/css,.md-grid{max-width:90%25!important}">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#15-rlhf-grpo" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="From Data to LLM" class="md-header__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            From Data to LLM
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第15课时：对齐算法原理 (RLHF & GRPO)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  课程简介
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../outline/" class="md-tabs__link">
+          
+  
+  
+  课程内容
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="From Data to LLM" class="md-nav__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    From Data to LLM
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程体系
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程内容
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程内容
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程大纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一部分：大模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第一部分：大模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter1/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1课时：Transformer 核心与 Self-Attention 深度剖析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter2/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2课时：LLM 训练范式与数据工程全景
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二部分：系统工程基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第二部分：系统工程基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter3/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3课时：分布式训练技术概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter4/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4课时：模型部署与推理加速
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter5/5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter6/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6课时：基于 LazyLLM 的全流程实践
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三部分：预训练数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第三部分：预训练数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter7/7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7课时：预训练原理、策略与评测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter8/8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8课时：预训练数据构建全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter9/9/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9课时：基于 LazyLLM 的预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter10/10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10课时：多模态 LLM 架构与预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四部分：微调数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第四部分：微调数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter11/11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter12/12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12课时：通用指令数据构建、合成与蒸馏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter13/13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13课时：基于 LazyLLM 的微调实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter14/14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五部分：对齐数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第五部分：对齐数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rlhf-reward-model-rm-ppo-proximal-policy-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一部分：RLHF 基础：Reward Model (RM) 与 PPO (Proximal Policy Optimization)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一部分：RLHF 基础：Reward Model (RM) 与 PPO (Proximal Policy Optimization)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-ppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 PPO 定义与背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 训练阶段详解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2 训练阶段详解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-pre-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1 预训练阶段 (Pre-training)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-unsupervised-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2 无监督学习（Unsupervised Learning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123-supervised-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3 监督学习（Supervised Learning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#124-sftsupervised-fine-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4 监督微调（SFT，Supervised Fine-Tuning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#125-rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.5 强化学习（RL）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 强化学习核心要素
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 为什么在 LLM 中如此重要？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二部分：PPO 训练中的详细工作流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第二部分：PPO 训练中的详细工作流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-pporlhf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 PPO/RLHF 流程中的四个模型协作图
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 PPO/RLHF 流程中的四个模型协作图">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211-step-1-sft-supervised-fine-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 Step 1: SFT (Supervised Fine-Tuning, 有监督微调)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-step-2-rw-reward-modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 Step 2: RW (Reward Modeling, 奖励模型训练)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-step-3-rlhf-ppo-reinforcement-learning-from-human-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.3 Step 3: RLHF-PPO (Reinforcement Learning from Human Feedback)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-rollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 阶段一：生成与收集 (Rollout)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 阶段一：生成与收集 (Rollout)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 概念解析
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 阶段二：评估与打分
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 阶段二：评估与打分">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#231" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.1 核心概念与角色定义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#232-the-reward-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.2 奖励流的构建 (The Reward Function)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#233" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.3 三种价值估计算法的融合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#234" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.4 完整的打分与计算流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#235" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.5 参数字典与物理意义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#236-rm-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.6 总结：RM 与 VM 的区别图谱
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-ppo-ac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 在大模型 PPO 中的 AC 架构
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4 在大模型 PPO 中的 AC 架构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241-ac-actor-critic-architecture-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.1 AC 架构（Actor-Critic Architecture，演员-评论家架构）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 阶段三：优化与更新（Optimization）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.5 阶段三：优化与更新（Optimization）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#251-ppo-policy-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.1 目标：使用 PPO 算法，根据分数调整 Policy Model。
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#252-ppo-the-grand-formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.2 PPO 总损失公式 (The Grand Formula)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#253-actor-loss-ppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.3 策略损失 (Actor Loss) —— PPO 的灵魂
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#254-value-loss-critic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.4 价值损失 (Value Loss) —— 让 Critic 更准
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#255-entropy-bonus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.5 熵奖励 (Entropy Bonus) —— 鼓励探索
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dpo-direct-preference-optimization-ipo-kto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第三部分：直接偏好优化：DPO (Direct Preference Optimization), IPO, KTO 原理对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第三部分：直接偏好优化：DPO (Direct Preference Optimization), IPO, KTO 原理对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-dpo-direct-preference-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 DPO (Direct Preference Optimization)：化繁为简的里程碑
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 DPO (Direct Preference Optimization)：化繁为简的里程碑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心数学原理：从 RL 到分类问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DPO 的直观理解
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        优缺点总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-ipo-identity-preference-optimization-dpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 IPO (Identity Preference Optimization)：解决 DPO 的过拟合
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 IPO (Identity Preference Optimization)：解决 DPO 的过拟合">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心数学原理：正则化的回归
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        优缺点总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-kto-kahneman-tversky-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 KTO (Kahneman-Tversky Optimization)：非成对数据的福音
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 KTO (Kahneman-Tversky Optimization)：非成对数据的福音">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心痛点与解决方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心数学原理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        优缺点总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 算法横向对比表
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deepseek-r1-grpo-group-relative-policy-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第四部分：前沿技术：DeepSeek-R1 中的 GRPO (Group Relative Policy Optimization) 与强化推理能力
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第四部分：前沿技术：DeepSeek-R1 中的 GRPO (Group Relative Policy Optimization) 与强化推理能力">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-grpoppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 为什么需要 GRPO？PPO 的瓶颈
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-grpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 GRPO 核心原理与数学推导
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 GRPO 核心原理与数学推导">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#421" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.1 算法流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#422" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.2 核心优势与局限性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#423-grpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.3 基于 GRPO 的改进算法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-sft-r1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 强化推理能力：从 SFT 到 R1 的进化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 强化推理能力：从 SFT 到 R1 的进化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#431-rl-deepseek-r1-zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.1 纯 RL 训练 (DeepSeek-R1-Zero)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#432-cold-start-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.2 冷启动数据 (Cold Start Data) 的重要性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 总结：RL在大模型时代的演变
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter16/16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16课时：偏好数据构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter17/17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17课时：模型风险、合规与伦理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter18/18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18课时：基于 LazyLLM 的对齐实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六部分：特定能力数据
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第六部分：特定能力数据
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter19/19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19课时：推理与数学能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter20/20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20课时：代码能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter21/21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter22/22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22课时：结构化输出与格式对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter23/23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23课时：Agent 能力增强 (Tools & Planning)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter24/24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24课时：行业领域模型实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七部分：RAG 数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第七部分：RAG 数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter25/25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter26/26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26课时：Embedding 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter27/27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27课时：Reranker 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter28/28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rlhf-reward-model-rm-ppo-proximal-policy-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一部分：RLHF 基础：Reward Model (RM) 与 PPO (Proximal Policy Optimization)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一部分：RLHF 基础：Reward Model (RM) 与 PPO (Proximal Policy Optimization)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-ppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 PPO 定义与背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 训练阶段详解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2 训练阶段详解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-pre-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1 预训练阶段 (Pre-training)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-unsupervised-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2 无监督学习（Unsupervised Learning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123-supervised-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3 监督学习（Supervised Learning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#124-sftsupervised-fine-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4 监督微调（SFT，Supervised Fine-Tuning）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#125-rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.5 强化学习（RL）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 强化学习核心要素
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 为什么在 LLM 中如此重要？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二部分：PPO 训练中的详细工作流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第二部分：PPO 训练中的详细工作流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-pporlhf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 PPO/RLHF 流程中的四个模型协作图
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 PPO/RLHF 流程中的四个模型协作图">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211-step-1-sft-supervised-fine-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 Step 1: SFT (Supervised Fine-Tuning, 有监督微调)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-step-2-rw-reward-modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 Step 2: RW (Reward Modeling, 奖励模型训练)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-step-3-rlhf-ppo-reinforcement-learning-from-human-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.3 Step 3: RLHF-PPO (Reinforcement Learning from Human Feedback)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-rollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 阶段一：生成与收集 (Rollout)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 阶段一：生成与收集 (Rollout)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 概念解析
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 阶段二：评估与打分
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 阶段二：评估与打分">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#231" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.1 核心概念与角色定义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#232-the-reward-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.2 奖励流的构建 (The Reward Function)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#233" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.3 三种价值估计算法的融合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#234" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.4 完整的打分与计算流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#235" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.5 参数字典与物理意义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#236-rm-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3.6 总结：RM 与 VM 的区别图谱
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-ppo-ac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 在大模型 PPO 中的 AC 架构
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4 在大模型 PPO 中的 AC 架构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241-ac-actor-critic-architecture-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.1 AC 架构（Actor-Critic Architecture，演员-评论家架构）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 阶段三：优化与更新（Optimization）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.5 阶段三：优化与更新（Optimization）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#251-ppo-policy-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.1 目标：使用 PPO 算法，根据分数调整 Policy Model。
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#252-ppo-the-grand-formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.2 PPO 总损失公式 (The Grand Formula)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#253-actor-loss-ppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.3 策略损失 (Actor Loss) —— PPO 的灵魂
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#254-value-loss-critic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.4 价值损失 (Value Loss) —— 让 Critic 更准
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#255-entropy-bonus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.5 熵奖励 (Entropy Bonus) —— 鼓励探索
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dpo-direct-preference-optimization-ipo-kto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第三部分：直接偏好优化：DPO (Direct Preference Optimization), IPO, KTO 原理对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第三部分：直接偏好优化：DPO (Direct Preference Optimization), IPO, KTO 原理对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-dpo-direct-preference-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 DPO (Direct Preference Optimization)：化繁为简的里程碑
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 DPO (Direct Preference Optimization)：化繁为简的里程碑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心数学原理：从 RL 到分类问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DPO 的直观理解
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        优缺点总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-ipo-identity-preference-optimization-dpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 IPO (Identity Preference Optimization)：解决 DPO 的过拟合
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 IPO (Identity Preference Optimization)：解决 DPO 的过拟合">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心数学原理：正则化的回归
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        优缺点总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-kto-kahneman-tversky-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 KTO (Kahneman-Tversky Optimization)：非成对数据的福音
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 KTO (Kahneman-Tversky Optimization)：非成对数据的福音">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心痛点与解决方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心数学原理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        优缺点总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 算法横向对比表
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deepseek-r1-grpo-group-relative-policy-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第四部分：前沿技术：DeepSeek-R1 中的 GRPO (Group Relative Policy Optimization) 与强化推理能力
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第四部分：前沿技术：DeepSeek-R1 中的 GRPO (Group Relative Policy Optimization) 与强化推理能力">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-grpoppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 为什么需要 GRPO？PPO 的瓶颈
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-grpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 GRPO 核心原理与数学推导
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 GRPO 核心原理与数学推导">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#421" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.1 算法流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#422" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.2 核心优势与局限性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#423-grpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.3 基于 GRPO 的改进算法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-sft-r1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 强化推理能力：从 SFT 到 R1 的进化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 强化推理能力：从 SFT 到 R1 的进化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#431-rl-deepseek-r1-zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.1 纯 RL 训练 (DeepSeek-R1-Zero)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#432-cold-start-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.2 冷启动数据 (Cold Start Data) 的重要性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 总结：RL在大模型时代的演变
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="15-rlhf-grpo">第15课时：对齐算法原理 (RLHF &amp; GRPO)<a class="headerlink" href="#15-rlhf-grpo" title="Permanent link">&para;</a></h1>
+<h2 id="rlhf-reward-model-rm-ppo-proximal-policy-optimization">第一部分：RLHF 基础：Reward Model (RM) 与 PPO (Proximal Policy Optimization)<a class="headerlink" href="#rlhf-reward-model-rm-ppo-proximal-policy-optimization" title="Permanent link">&para;</a></h2>
+<h3 id="11-ppo">1.1 PPO 定义与背景<a class="headerlink" href="#11-ppo" title="Permanent link">&para;</a></h3>
+<p><strong>PPO（近端策略优化）</strong> 是一种强化学习（Reinforcement Learning, RL）算法，由 OpenAI 于 2017 年提出。它属于 <strong>策略梯度（Policy Gradient）</strong> 方法的一种。在大模型的训练序列中（预训练 -&gt; SFT -&gt; 强化学习），PPO 扮演着将人类偏好注入模型的关键角色。</p>
+<h3 id="12">1.2 训练阶段详解<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<h4 id="121-pre-training">1.2.1 预训练阶段 (Pre-training)<a class="headerlink" href="#121-pre-training" title="Permanent link">&para;</a></h4>
+<p>大语言模型通过在一个大型的通用数据集上通过无监督学习的方式进行预训练来学习语言的表征/初始化模型权重/学习概率分布。期望在预训练后模型能够处理大量、多种类的数据集，进而可以通过监督学习的方式来微调模型使其适应特定的任务。</p>
+<h4 id="122-unsupervised-learning">1.2.2 无监督学习（Unsupervised Learning）<a class="headerlink" href="#122-unsupervised-learning" title="Permanent link">&para;</a></h4>
+<p>主要研究如何让计算机在缺乏外部显式指导（即没有人工标注的标签或目标值）的情况下，通过对输入数据的统计分布、结构特征或内在联系进行建模，从而自动发现数据中隐藏的模式、结构或知识。</p>
+<h4 id="123-supervised-learning">1.2.3 监督学习（Supervised Learning）<a class="headerlink" href="#123-supervised-learning" title="Permanent link">&para;</a></h4>
+<p>利用一组已知类别的训练样本（即输入数据及其对应的标签）来训练模型，使其能够学习到输入与输出之间的映射关系。在监督学习中，每个训练实例都由一个输入对象（通常是向量）和一个期望的输出值（称为标签或目标）组成。</p>
+<h4 id="124-sftsupervised-fine-tuning">1.2.4 监督微调（SFT，Supervised Fine-Tuning）<a class="headerlink" href="#124-sftsupervised-fine-tuning" title="Permanent link">&para;</a></h4>
+<p>属于监督学习的范畴，是一种在预训练模型上使用小规模有标签数据集进行训练的方法。相比于预训练一个全新的模型，对已有的预训练模型进行监督微调是更快速更节省成本的途径。</p>
+<h4 id="125-rl">1.2.5 强化学习（RL）<a class="headerlink" href="#125-rl" title="Permanent link">&para;</a></h4>
+<p>研究智能体（Agent）如何在复杂、不确定的环境（Environment）中，通过"试错(Trial and Error) 的交互方式，学习一套最优的策略 (Policy)，以实现在长期交互过程中获得的累积奖励（Cumulative Reward）最大化。</p>
+<h3 id="13">1.3 强化学习核心要素<a class="headerlink" href="#13" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>智能体 (Agent)</strong>：模型本身（比如多模态大模型）。</p>
+</li>
+<li>
+<p><strong>环境 (Environment)</strong>：外界指令、图片以及对话上下文。</p>
+</li>
+<li>
+<p><strong>动作 (Action)</strong>：模型生成的下一个 Token 或整句回复。</p>
+</li>
+<li>
+<p><strong>状态 (State)</strong>：当前对话进行到了哪一步，图片长什么样。</p>
+</li>
+<li>
+<p><strong>奖励 (Reward)</strong>：评价模型表现的分数（由 奖励模型 给出）。</p>
+</li>
+</ol>
+<p>用强化学习核心要素总结以下循环图： 马里奥（智能体）看到当前的屏幕画面（状态），决定向上跳跃（动作），这个动作作用于游戏世界（环境）后，顶到了砖块并获得了一枚金币（奖励），同时游戏画面更新到了下一帧(新状态）。
+<img alt="ppo" src="../assets/img1.png" /></p>
+<p>简单来说，结合强化学习的概念，PPO 的核心目的是：在训练智能体（Agent）时，既要让它不断学习变得更好，又要防止它步子迈得太大而“跌倒”（模型崩溃），实现奖励最大化 和 步长最小化。</p>
+<h3 id="14-llm">1.4 为什么在 LLM 中如此重要？<a class="headerlink" href="#14-llm" title="Permanent link">&para;</a></h3>
+<p>在当代大语言模型训练中，强化学习主要应用于 RLHF (Reinforcement Learning from Human Feedback) 阶段：利用 PPO 等算法，根据奖励模型（Reward Model）提供的偏好分数，微调 SFT 后的模型，使其生成的回复在安全性、真实性和逻辑性上与人类价值观对齐。</p>
+<p>即便 SFT 已经能让模型学会听懂指令并规范对答，PPO 阶段仍然不可或缺，主要原因如下：</p>
+<p>A. 解决“模仿”的局限性（超越标注者）</p>
+<p>SFT 本质上是让模型做“复读机”，学习人类给出的特定回答。但在很多复杂问题下，并没有唯一的标准答案。PPO 允许模型在广阔的可能回答空间中进行<strong>探索（Exploration）</strong>，通过奖励信号发现那些人类可能写不出来、但逻辑更优或更符合偏好的表述方式。</p>
+<p>B. 更好的“对齐”人类价值观（Alignment）</p>
+<p>人类对“好回答”的感知往往是综合的（例如：语气要诚恳、逻辑要严密、不能带有偏见）。</p>
+<p>SFT 的局限：很难通过简单的“模仿”来教会模型这些微妙的偏好。</p>
+<p>PPO 的优势：奖励模型可以捕捉人类复杂的偏好（如安全、诚实、有用），PPO 则利用这些打分作为导航，让模型在生成的过程中不断向这些价值观靠拢。</p>
+<p>C. 抑制“幻觉”与提升诚实度</p>
+<p>在 SFT 阶段，模型可能会为了模仿标注数据中的特定风格而编造事实。而在 PPO 阶段，如果奖励模型对“虚假信息”给予严厉的负分（负奖励），PPO 算法就会强制模型在遇到不确定的事实时选择说“我不知道”，从而有效减少幻觉。</p>
+<h2 id="ppo">第二部分：PPO 训练中的详细工作流程<a class="headerlink" href="#ppo" title="Permanent link">&para;</a></h2>
+<p>PPO 训练可以分为三个主要阶段：生成与收集 (Rollout)、评估与打分、优化与更新。</p>
+<p>在 PPO（Proximal Policy Optimization，近端策略优化）算法中，通常存在四个关键角色，分别是<strong>Actor（Policy model)、Ref Model(Reference Model)、Reward Model、Critic(Value Model)</strong>，将依次介绍各个角色在流程中发挥的作用。</p>
+<h3 id="21-pporlhf">2.1 PPO/RLHF 流程中的四个模型协作图<a class="headerlink" href="#21-pporlhf" title="Permanent link">&para;</a></h3>
+<p><img alt="ReAct" src="../assets/img2.jpg" /></p>
+<p>这张流程图展示了大语言模型（LLM）训练中经典的<strong>强化学习人类反馈（RLHF）</strong>三阶段过程，主要参考了 OpenAI 在 InstructGPT 中使用的经典范式。</p>
+<p>以下是针对图中三个核心步骤的详细解释：</p>
+<h4 id="211-step-1-sft-supervised-fine-tuning">2.1.1 Step 1: SFT (Supervised Fine-Tuning, 有监督微调)<a class="headerlink" href="#211-step-1-sft-supervised-fine-tuning" title="Permanent link">&para;</a></h4>
+<p>这是训练的起点，旨在让预训练模型学会遵循人类指令。</p>
+<ul>
+<li>
+<p><strong>输入</strong>：预训练模型（Pretrained Model）和人工标注的数据（Human labeled data，通常是"指令-回答"对）。</p>
+</li>
+<li>
+<p><strong>过程</strong>：在高质量的人工示范数据上进行微调。</p>
+</li>
+<li>
+<p><strong>输出</strong>：得到 <strong>SFT 模型</strong>，它初步具备了对话和执行任务的能力。</p>
+</li>
+</ul>
+<h4 id="212-step-2-rw-reward-modeling">2.1.2 Step 2: RW (Reward Modeling, 奖励模型训练)<a class="headerlink" href="#212-step-2-rw-reward-modeling" title="Permanent link">&para;</a></h4>
+<p>这一阶段是为了构建一个"打分器"，用来模拟人类的偏好。</p>
+<ul>
+<li>
+<p><strong>输入</strong>：SFT 后的模型生成的多个答案，由人类对这些答案进行排序或标注（Pair good/bad answers）。</p>
+</li>
+<li>
+<p><strong>过程</strong>：利用这些偏好数据训练一个<strong>奖励模型（Reward Model）</strong>。</p>
+</li>
+<li>
+<p><strong>输出</strong>：奖励模型能够对任何给定的回答输出一个标量分数（Reward），分数越高代表回答越符合人类偏好。</p>
+</li>
+</ul>
+<h4 id="213-step-3-rlhf-ppo-reinforcement-learning-from-human-feedback">2.1.3 Step 3: RLHF-PPO (Reinforcement Learning from Human Feedback)<a class="headerlink" href="#213-step-3-rlhf-ppo-reinforcement-learning-from-human-feedback" title="Permanent link">&para;</a></h4>
+<p>这是最复杂的阶段，利用近端策略优化（PPO）算法进一步对齐模型。图中展示了四个子模型之间的协作：</p>
+<ul>
+<li>
+<p><strong>Actor Model（演员模型）</strong>：即正在优化的模型。它接收 Prompt（提示词），产生动作 <span class="arithmatex">\(A_t\)</span>（即生成的文本）。</p>
+</li>
+<li>
+<p><strong>Reference Model（参考模型）</strong>：通常是一个冻结参数的 SFT 模型，用于计算 KL 散度，防止 Actor 模型在强化学习过程中为了刷分而变得"面目全非"。</p>
+</li>
+<li>
+<p><strong>Reward Model（奖励模型）</strong>：计算生成的回答在人类偏好下的得分 <span class="arithmatex">\(R_t\)</span>。</p>
+</li>
+<li>
+<p><strong>Critic Model（评论家模型）</strong>：预测当前状态的价值 <span class="arithmatex">\(V_t\)</span>（期待的总奖励），帮助模型更稳定地学习。</p>
+</li>
+</ul>
+<p><strong>核心逻辑循环：</strong></p>
+<ol>
+<li>
+<p><strong>Prompts (1)</strong> 输入到 Actor。</p>
+</li>
+<li>
+<p><strong>Actor 生成回答 (2)</strong>。</p>
+</li>
+<li>
+<p><strong>系统计算 Loss (3)</strong>：综合奖励信号 <span class="arithmatex">\(R_t\)</span> 和价值预测 <span class="arithmatex">\(V_t\)</span>。通过计算出的损失函数来更新 Actor 和 Critic 模型的参数，使模型最终能够生成既符合逻辑又满足人类偏好的高质量内容。</p>
+</li>
+</ol>
+<h3 id="22-rollout">2.2 阶段一：生成与收集 (Rollout)<a class="headerlink" href="#22-rollout" title="Permanent link">&para;</a></h3>
+<p>🎯 目标：让 Policy Model 与环境互动，收集一批数据。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">模型</th>
+<th style="text-align: left;">角色</th>
+<th style="text-align: left;">输入</th>
+<th style="text-align: left;">输出</th>
+<th style="text-align: left;">关键操作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Actor Model</strong> (Policy Model)</td>
+<td style="text-align: left;"><strong>生成者</strong></td>
+<td style="text-align: left;">Prompt (提示词)</td>
+<td style="text-align: left;">Response (生成的回复文本)</td>
+<td style="text-align: left;">使用当前策略 <span class="arithmatex">\(\pi_{\theta}\)</span> 生成回复。参数在训练中<strong>持续更新</strong>，旨在最大化奖励。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Reference Model</strong></td>
+<td style="text-align: left;"><strong>锚定者</strong></td>
+<td style="text-align: left;">Prompt + Response</td>
+<td style="text-align: left;">Log Probabilities (原始对数概率)</td>
+<td style="text-align: left;"><strong>参数冻结</strong>。通过计算 KL 散度约束 Actor，防止模型坍缩或过度拟合奖励模型（Reward Hacking）。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Reward Model</strong></td>
+<td style="text-align: left;"><strong>打分者</strong></td>
+<td style="text-align: left;">Prompt + Response</td>
+<td style="text-align: left;">Reward Score (奖励分)</td>
+<td style="text-align: left;"><strong>参数冻结</strong>。模拟人类偏好，为生成的文本质量提供量化的反馈信号。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Critic Model</strong></td>
+<td style="text-align: left;"><strong>评估者</strong></td>
+<td style="text-align: left;">Prompt + Response</td>
+<td style="text-align: left;">State Value (状态价值 <span class="arithmatex">\(V\)</span>)</td>
+<td style="text-align: left;"><strong>参数更新</strong>。学习预测当前回复的预期收益，用于计算优势函数（Advantage）以降低方差。</td>
+</tr>
+</tbody>
+</table>
+<p>结果： 收集到三元组：</p>
+<div class="arithmatex">\[ (Prompt, Response, \text{Response Log Probs from Reference Model}) \]</div>
+<p><img alt="PPO" src="../assets/img3.png" /> </p>
+<p>PPO生成阶段的KL约束机制 - Actor模型生成回复，Reference模型计算基准概率，两者对比产生KL惩罚，防止模型过度偏离原分布。</p>
+<p><img alt="PPO" src="../assets/img4.png" /></p>
+<p>Rollout数据收集结果 - 展示三元组(Prompt, Response, Reference Log Probs)，为Reward Model和Critic Model的后续评估提供基础数据。</p>
+<h4 id="221">2.2.1 概念解析<a class="headerlink" href="#221" title="Permanent link">&para;</a></h4>
+<p><strong>什么是 Actor（行动者）？</strong></p>
+<p>在标准的强化学习框架中，Actor 是负责做出决策的实体。它观察当前的环境状态 <span class="arithmatex">\(s\)</span>，然后根据某种概率选择一个动作 <span class="arithmatex">\(a\)</span>。</p>
+<p>在大模型 PPO 中：Actor 就是你正在微调的那个<strong>语言模型（LLM）</strong>。</p>
+<ul>
+<li>
+<p>输入（状态）：用户给出的提示词（Prompt）。</p>
+</li>
+<li>
+<p>动作（Action）：模型生成的下一个 Token（词片段）。</p>
+</li>
+<li>
+<p>目标：Actor 的任务是学会生成那些能够获得高奖励（即人类更喜欢、更准确）的回复。</p>
+</li>
+</ul>
+<p><strong>什么是策略（Policy）？</strong></p>
+<p>策略（通常用 <span class="arithmatex">\(\pi\)</span> 表示）是 Actor 内部的“决策逻辑”或“说明书”。它定义了在特定状态下选择某个动作的概率分布。</p>
+<p>公式表达：$$ \pi(a|s) $$</p>
+<p>即在状态 <span class="arithmatex">\(s\)</span> 下采取动作 <span class="arithmatex">\(a\)</span> 的概率。</p>
+<p>在 LLM 中的体现：</p>
+<ol>
+<li>
+<p>模型在生成文本时，会对词表中的每个词计算一个概率（Softmax 后的结果）。</p>
+</li>
+<li>
+<p>这个全词表的概率分布就是当前的策略。</p>
+</li>
+<li>
+<p>训练的目的：通过 PPO 算法不断调整模型的权重，使得“好词”的出现概率变大，“坏词”或“幻觉词”的出现概率变小。</p>
+</li>
+</ol>
+<p><strong>什么是 KL 散度？</strong></p>
+<p>简单来说，KL 散度（Kullback-Leibler Divergence） 是衡量两个概率分布 <span class="arithmatex">\(P\)</span> 和 <span class="arithmatex">\(Q\)</span> 之间“差异程度”的一个指标。</p>
+<p>在机器学习和强化学习中，我们通常用 <span class="arithmatex">\(P\)</span> 代表真实分布（或目标分布），用 <span class="arithmatex">\(Q\)</span> 代表模型预测的分布。KL 散度告诉我们：
+如果我们用分布 <span class="arithmatex">\(Q\)</span> 来近似分布 <span class="arithmatex">\(P\)</span>，会损失多少信息？</p>
+<p><strong>数学定义：</strong></p>
+<p>对于离散变量，从 <span class="arithmatex">\(Q\)</span> 到 <span class="arithmatex">\(P\)</span> 的 KL 散度定义为：</p>
+<div class="arithmatex">\[ D_{KL}(P \parallel Q) = \sum_{x \in X} P(x) \log \left( \frac{P(x)}{Q(x)} \right) \]</div>
+<p>通过对数换算，它可以拆解为：</p>
+<div class="arithmatex">\[ D_{KL}(P \parallel Q) = \sum P(x) \log P(x) - \sum P(x) \log Q(x) \]</div>
+<p>即：$$ D_{KL}(P \parallel Q) = \sum P(x) \log P(x) - \sum P(x) \log Q(x) $$</p>
+<p>关键特性：不对称性</p>
+<blockquote>
+<div class="arithmatex">\[ D_{KL}(P \parallel Q) \neq D_{KL}(Q \parallel P) \]</div>
+</blockquote>
+<p>这就是为什么它被称为“散度”而不是“距离”。在训练模型时，参照物是谁非常重要。</p>
+<p><strong>两个模型的关系</strong></p>
+<ul>
+<li>
+<p><strong>Actor (Policy Model)</strong>：它是我们的最终目标模型。在训练过程中，它的参数会随着优化器不断更新。它变得越来越会"讨好"奖励模型（Reward Model）。</p>
+</li>
+<li>
+<p><strong>Ref Model</strong>：它是基座模型的一个备份，参数是完全冻结的。</p>
+</li>
+</ul>
+<p>如果只有 Actor 和 Reward Model，Actor 很快就会发现一些"捷径"。比如，如果奖励模型喜欢长句子，Actor 可能会学会一直重复无意义的词来拉长篇幅（这叫 Reward Hacking）。Ref Model 的存在是为了计算 KL 散度：它要求 Actor 在追求高分的同时，生成的概率分布不能偏离 Ref Model 太远。这保证了模型在变聪明的同时，仍然保持着人类语言的基本逻辑。</p>
+<p><strong>概率对齐（Logits 计算）</strong></p>
+<p>当 Actor 生成完一段话后，为了后续的训练，我们需要知道：</p>
+<ol>
+<li>
+<p>Actor Logits：针对刚刚生成的这段话，Actor 自己认为每个 Token 出现的概率是多少？</p>
+</li>
+<li>
+<p>Ref Logits：针对同一段话，那个“没被训练过”的 Ref Model 认为每个 Token 出现的概率应该是多少？
+公式化表达：</p>
+</li>
+</ol>
+<p>这一步会产生一个 KL 惩罚项：</p>
+<p>如果 Actor 给某个词的概率远高于 Ref Model，这个惩罚值就会变大，抵消掉一部分奖励。</p>
+<h3 id="23">2.3 阶段二：评估与打分<a class="headerlink" href="#23" title="Permanent link">&para;</a></h3>
+<p>🎯 目标：用 Reward Model 和 Value Model 给生成的数据打分。</p>
+<p><img alt="ReAct" src="../assets/img5.png" /> </p>
+<p>Reward Model评估机制 - RM作为最终裁判，对完整Prompt+Response序列输出标量分数，代表人类偏好程度。</p>
+<p><img alt="ReAct" src="../assets/img6.png" /> </p>
+<p>Critic Model预测机制 - VM作为实时评论员，预测当前状态的预期总收益，用于降低训练方差和计算优势函数。</p>
+<h4 id="231">2.3.1 核心概念与角色定义<a class="headerlink" href="#231" title="Permanent link">&para;</a></h4>
+<p>在 PPO 训练中，我们需要两个评分模型，它们分别代表"现实的反馈"和"预期的判断"。</p>
+<p><strong>Reward Model (RM)</strong></p>
+<ul>
+<li>
+<p><strong>性质</strong>：通常是一个基于 BERT 或 Llama 的分类/回归模型，<strong>参数冻结</strong>（不参与训练）。</p>
+</li>
+<li>
+<p><strong>输入</strong>：完整的 Prompt + Response 序列。</p>
+</li>
+<li>
+<p><strong>输出</strong>：一个标量分数。</p>
+</li>
+<li>
+<p><strong>作用</strong>：提供 Ground Truth（基准事实），告诉系统这条生成结果最终符合人类偏好的程度。</p>
+</li>
+</ul>
+<p><strong>Value Model (VM / Critic) —— 实时评论员</strong></p>
+<ul>
+<li>
+<p><strong>性质</strong>：与 Actor 共享大部分参数（或独立网络），<strong>参数动态更新</strong>。</p>
+</li>
+<li>
+<p><strong>输入</strong>：当前的 Token 序列状态 <span class="arithmatex">\(s_t\)</span>。</p>
+</li>
+<li>
+<p><strong>输出</strong>：一个标量预测值 <span class="arithmatex">\(V(s_t)\)</span>。</p>
+</li>
+<li>
+<p><strong>作用</strong>：预测从当前状态 <span class="arithmatex">\(s_t\)</span> 开始，一直写到结束，预期能获得多少总收益。它是用来降低训练方差的关键工具。</p>
+</li>
+</ul>
+<h4 id="232-the-reward-function">2.3.2 奖励流的构建 (The Reward Function)<a class="headerlink" href="#232-the-reward-function" title="Permanent link">&para;</a></h4>
+<p>在计算优势之前，我们必须定义每一步的“即时奖励” <span class="arithmatex">\(r_t\)</span>。在 RLHF 中，即时奖励由 KL 散度惩罚 和 RM 最终打分 共同构成。</p>
+<p>假设序列长度为 <span class="arithmatex">\(T\)</span>，对于时间步 <span class="arithmatex">\(t\)</span>：</p>
+<div class="arithmatex">\[ r_t = \begin{cases} 
+-\beta \log\left(\frac{\pi_{\theta}(a_t|s_t)}{\pi_{\text{ref}}(a_t|s_t)}\right) &amp; \text{if } t &lt; T \\ 
+R_{\text{score}} - \beta \log\left(\frac{\pi_{\theta}(a_t|s_t)}{\pi_{\text{ref}}(a_t|s_t)}\right) &amp; \text{if } t = T 
+\end{cases} \]</div>
+<p>核心变量：</p>
+<ul>
+<li><span class="arithmatex">\(r_t\)</span>：即时奖励（Reward），表示在时间步 <span class="arithmatex">\(t\)</span> 获得的奖励值，用于后续计算优势函数</li>
+</ul>
+<p>模型相关：</p>
+<ul>
+<li>
+<p><span class="arithmatex">\(\pi_{\theta}(a_t|s_t)\)</span>：Actor模型（策略模型）在状态 <span class="arithmatex">\(s_t\)</span> 下选择动作 <span class="arithmatex">\(a_t\)</span> 的概率，由当前参数 <span class="arithmatex">\(\theta\)</span> 决定</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\pi_{\text{ref}}(a_t|s_t)\)</span>：Reference模型（基准模型）在相同状态下选择相同动作的概率，参数冻结不变</p>
+</li>
+</ul>
+<p>状态与动作：</p>
+<ul>
+<li>
+<p><span class="arithmatex">\(s_t\)</span>：时间步 <span class="arithmatex">\(t\)</span> 的状态，表示当前生成的token序列</p>
+</li>
+<li>
+<p><span class="arithmatex">\(a_t\)</span>：时间步 <span class="arithmatex">\(t\)</span> 的动作，表示在该步选择的token</p>
+</li>
+</ul>
+<p>控制参数：</p>
+<ul>
+<li>
+<p><span class="arithmatex">\(\beta\)</span>：KL散度惩罚系数，控制Actor模型偏离Reference模型的惩罚强度</p>
+</li>
+<li>
+<p><span class="arithmatex">\(T\)</span>：序列总长度，最后一个时间步的索引</p>
+</li>
+</ul>
+<p>奖励得分：</p>
+<ul>
+<li><span class="arithmatex">\(R_{\text{score}}\)</span>：Reward Model（奖励模型）对完整序列输出的最终得分，只在序列结束时（<span class="arithmatex">\(t = T\)</span>）出现</li>
+</ul>
+<h4 id="233">2.3.3 三种价值估计算法的融合<a class="headerlink" href="#233" title="Permanent link">&para;</a></h4>
+<p>有了 <span class="arithmatex">\(r_t\)</span> 序列后，我们如何计算每个动作的 优势 (Advantage,<span class="arithmatex">\(\hat{A}_t\)</span> )？优势的定义是：“实际采取的动作比平均预期好多少？”</p>
+<p>这里融合了三种核心思想：</p>
+<p>1.<strong>时序差分 (Temporal Difference, TD) —— 只看眼前</strong></p>
+<p><strong>TD 误差 (<span class="arithmatex">\(\delta_t\)</span>)</strong> 衡量了“当前的惊喜”。它利用 Value Model 对下一步的预测来修正当前的预测。</p>
+<div class="arithmatex">\[ \delta_t = \underbrace{r_t + \gamma V(s_{t+1})}_{\text{TD Target (修正后的现实)}} - \underbrace{V(s_t)}_{\text{当前的预期}} \]</div>
+<ul>
+<li>
+<p><span class="arithmatex">\(\gamma\)</span>：折扣因子，表示<strong>“远见程度”</strong>。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\gamma \to 0\)</span>：模型只在乎当前的 KL 惩罚，不看最后得分。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\gamma \to 1\)</span>：模型极度重视最终的 RM 得分。</p>
+</li>
+<li>
+<p>如果 <span class="arithmatex">\(\delta_t &gt; 0\)</span>：说明当前动作带来的即时奖励或未来潜力比 VM 预期的要好。</p>
+</li>
+</ul>
+<p>2.<strong>蒙特卡洛估计 (Monte Carlo, MC) —— 只看结果</strong></p>
+<p>MC 方法不依赖 VM 的预测，而是等到 episode 结束，把后面所有的真实奖励加起来。</p>
+<div class="arithmatex">\[ G_t = r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \dots + \gamma^{T-t} r_T \]</div>
+<p><span class="arithmatex">\(G_t\)</span> 是从当前时刻一直加到结束的总回报</p>
+<ul>
+<li>
+<p>优点：无偏差（Unbiased），因为是真实发生的。</p>
+</li>
+<li>
+<p>缺点：高方差（High Variance），生成过程随机性太强，导致训练不稳定。因为采样的随机性，有的结局好，有的结局坏。在 MC 看来这种巨大的波动会让模型训练非常不稳定，梯度的方向忽左忽右。</p>
+</li>
+</ul>
+<p>3.<strong>广义优势估计 (Generalized Advantage Estimation，GAE) —— 中庸之道</strong></p>
+<p>GAE 是 PPO 的核心。它通过一个参数 <span class="arithmatex">\(\lambda\)</span> 对 TD Error 进行指数加权平均，从而在 TD（稳定但有偏差）和 MC（真实但不稳定）之间找到平衡点。</p>
+<p>公式如下：</p>
+<div class="arithmatex">\[ \hat{A}_t^{GAE} = \sum_{l=0}^{\infty} (\gamma \lambda)^l \delta_{t+l} \]</div>
+<p>展开来看：</p>
+<div class="arithmatex">\[ \hat{A}_t^{GAE} = \delta_t + (\gamma \lambda)\delta_{t+1} + (\gamma \lambda)^2\delta_{t+2} + \dots \]</div>
+<p>递归形式：</p>
+<div class="arithmatex">\[ \hat{A}_t^{GAE} = \delta_t + (\gamma \lambda) \hat{A}_{t+1}^{GAE} \]</div>
+<ul>
+<li>
+<p><span class="arithmatex">\(\lambda\)</span>：GAE系数，“方差-偏差权衡”。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\lambda \to 0\)</span>：退化为 TD，只看一步预测，方差小，偏差大（太信赖 VM）。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(\lambda \to 1\)</span>：退化为 MC，看所有后续奖励，无偏差，方差大（训练难收敛）。</p>
+</li>
+</ul>
+<h4 id="234">2.3.4 完整的打分与计算流程<a class="headerlink" href="#234" title="Permanent link">&para;</a></h4>
+<p><strong>第一步：Rollout 与 基础数据获取</strong></p>
+<p>Actor 生成完整个序列后，我们得到：</p>
+<ul>
+<li>
+<p>Tokens: <span class="arithmatex">\(s_0, s_1, \dots, s_T\)</span></p>
+</li>
+<li>
+<p>Logits: Actor 和 Ref Model 的概率。</p>
+</li>
+<li>
+<p>Values: VM 对每一步的预测 <span class="arithmatex">\(V(s_0), \dots, V(s_T)\)</span>。</p>
+</li>
+</ul>
+<p><strong>第二步：计算即时奖励 <span class="arithmatex">\(r_t\)</span></strong></p>
+<p>利用 Logits 计算 KL 散度，并在最后一步加上 RM 分数。得到序列：<span class="arithmatex">\(r_0, r_1, \dots, r_T\)</span>。</p>
+<p><strong>第三步：计算 TD Error <span class="arithmatex">\(\delta_t\)</span></strong></p>
+<p>遍历每一步，计算“惊喜值”：</p>
+<div class="arithmatex">\[ \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t) \]</div>
+<blockquote>
+<p>(注：最后一步 <span class="arithmatex">\(V(s_{T+1}) = 0\)</span>)</p>
+</blockquote>
+<p><strong>第四步：递归计算 GAE</strong></p>
+<p>为了高效计算，通常使用从后往前（Backward Pass）的递归公式：</p>
+<div class="arithmatex">\[ \hat{A}_t = \delta_t + (\gamma \lambda) \cdot \hat{A}_{t+1} \]</div>
+<p>这是 PPO 用于更新 Actor 的最终梯度依据。</p>
+<p><strong>第五步：计算 Critic 的目标值 (Returns)</strong></p>
+<p>Value Model 也需要训练，它的目标是预测得更准。它的拟合目标（Target）通常是：
+$$ \text{Returns}_t = \hat{A}_t + V(s_t) $$</p>
+<h4 id="235">2.3.5 参数字典与物理意义<a class="headerlink" href="#235" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">符号</th>
+<th style="text-align: left;">参数名称</th>
+<th style="text-align: left;">典型值</th>
+<th style="text-align: left;">物理意义与调节影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\gamma\)</span></td>
+<td style="text-align: left;">折扣因子 (Gamma)</td>
+<td style="text-align: left;">0.99 - 1.0</td>
+<td style="text-align: left;">“远见程度”。<br>较小值：模型只在乎当前的 KL 惩罚，不看最后得分。<br>较大值：模型极度重视最终的 RM 得分。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\lambda\)</span></td>
+<td style="text-align: left;">GAE 系数 (Lambda)</td>
+<td style="text-align: left;">0.95</td>
+<td style="text-align: left;">“方差-偏差权衡”。<br><span class="arithmatex">\(\lambda=0\)</span>：退化为 TD。只看一步预测，方差小，偏差大（太信赖 VM）。<br><span class="arithmatex">\(\lambda=1\)</span>：退化为 MC。看所有后续奖励，无偏差，方差大（训练难收敛）。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\beta\)</span></td>
+<td style="text-align: left;">KL 系数 (Beta)</td>
+<td style="text-align: left;">0.01 - 0.1</td>
+<td style="text-align: left;">“约束力度”。<br>值太大：模型不敢改动，训练无效。<br>值太小：模型为了高分会“崩坏”（输出乱码或欺骗 RM）。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(V(s)\)</span></td>
+<td style="text-align: left;">状态价值</td>
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">“心理预期”。代表模型认为自己当前处于多有利的局面。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\delta\)</span></td>
+<td style="text-align: left;">TD 误差</td>
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">“现实修正”。代表这一步动作让局势变好了多少（相对于预期）。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="236-rm-vm">2.3.6 总结：RM 与 VM 的区别图谱<a class="headerlink" href="#236-rm-vm" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">维度</th>
+<th style="text-align: left;">Reward Model (RM)</th>
+<th style="text-align: left;">Value Model (VM)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>核心逻辑</strong></td>
+<td style="text-align: left;">基于结果 (Outcome-based)</td>
+<td style="text-align: left;">基于预期 (Prediction-based)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>打分频率</strong></td>
+<td style="text-align: left;">每条数据 1 次 (Sparse)</td>
+<td style="text-align: left;">每个 Token 1 次 (Dense)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>信息来源</strong></td>
+<td style="text-align: left;">人类偏好数据 (训练前定死)</td>
+<td style="text-align: left;">自身策略的历史表现 (训练中自适应)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>在公式中的位置</strong></td>
+<td style="text-align: left;">构成 <span class="arithmatex">\(r_T\)</span> (奖励源头)</td>
+<td style="text-align: left;">构成 <span class="arithmatex">\(\delta\)</span> 和 <span class="arithmatex">\(A_t\)</span> (基线 Baseline)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>如果没有它</strong></td>
+<td style="text-align: left;">模型不知道什么是“好”</td>
+<td style="text-align: left;">训练方差太大，无法收敛，或者只能用简单的 MC 方法</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-ppo-ac">2.4 在大模型 PPO 中的 AC 架构<a class="headerlink" href="#24-ppo-ac" title="Permanent link">&para;</a></h3>
+<h4 id="241-ac-actor-critic-architecture-">2.4.1 AC 架构（Actor-Critic Architecture，演员-评论家架构）<a class="headerlink" href="#241-ac-actor-critic-architecture-" title="Permanent link">&para;</a></h4>
+<p>是强化学习 RL 中目前最流行、最强大的架构模式之一。包括 PPO在内的许多现代 RL 算法，本质上都是基于 AC 架构的。</p>
+<p>在 LLM 的 PPO 训练中，AC 架构的具体形态通常如下：</p>
+<p><strong>结构：Hydra（九头蛇）模式</strong></p>
+<p>由于 Actor（语言模型）和 Critic（价值评估）都需要理解文本语义，通常不会训练两个完全独立的巨大网络。</p>
+<ul>
+<li>
+<p>共享主干（Shared Backbone）：Qwen/Llama 的 Transformer 主体部分。</p>
+</li>
+<li>
+<p>Actor Head：原本的 lm_head（线性层），输出维度 = 词表大小（几万到十几万），用于生成。</p>
+</li>
+<li>
+<p>Critic Head (Value Head)：新增的一个线性层，输出维度 = 1，用于打分。</p>
+</li>
+</ul>
+<p><strong>交互流程</strong>：</p>
+<ol>
+<li>Actor 看到 Prompt，生成回答。</li>
+<li>Critic 看着 Actor 生成的每一个词，预测：“目前的走势，最后大概能得 80 分。”</li>
+<li>环境 给出真实反馈（比如到了某个词，违反了规则，扣分）。</li>
+<li>计算优势（Advantage）：
+        如果 A &gt; 0：说明 Actor 表现得比 Critic 预期的好（惊喜）-&gt; Actor 强化这个动作。
+        如果 A &lt; 0：说明 Actor 表现得比 Critic 预期的差（失望）-&gt; Actor 抑制这个动作。</li>
+<li>Critic 自我反思：根据真实结果修正自己的预测能力，争取下次猜得更准。</li>
+</ol>
+<h3 id="25-optimization">2.5 阶段三：优化与更新（Optimization）<a class="headerlink" href="#25-optimization" title="Permanent link">&para;</a></h3>
+<h4 id="251-ppo-policy-model">2.5.1 目标：使用 PPO 算法，根据分数调整 Policy Model。<a class="headerlink" href="#251-ppo-policy-model" title="Permanent link">&para;</a></h4>
+<p><img alt="PPO" src="../assets/img7.png" /> </p>
+<p>在 PPO 的更新阶段，我们实际上是在计算一个总损失（Total Loss），然后通过反向传播（Backpropagation）来同时更新 Actor 和 Critic 的参数。为了便于理解，我们通常采用最小化损失的视角。</p>
+<h4 id="252-ppo-the-grand-formula">2.5.2 PPO 总损失公式 (The Grand Formula)<a class="headerlink" href="#252-ppo-the-grand-formula" title="Permanent link">&para;</a></h4>
+<div class="arithmatex">\[ L^{Total} = \underbrace{L^{CLIP}(\theta)}_{\text{1. 策略损失 (Actor)}} + \\ c_1 \cdot \underbrace{L^{VF}(\theta)}_{\text{2. 价值损失 (Critic)}} - \ c_2 \cdot \underbrace{S[\pi_\theta](s)}_{\text{3. 熵奖励 (Entropy)}} \]</div>
+<p>或者写作更直观的中文逻辑：</p>
+<div class="arithmatex">\[ 总损失 = \text{策略梯度损失 (带截断)} + \text{价值预测误差 (MSE)} - \text{探索奖励 (熵)} \]</div>
+<blockquote>
+<p>注意：在 RLHF 中，还有一种隐形的“第四部分”叫 KL 惩罚，但它通常已经直接扣除在奖励 <span class="arithmatex">\(r_t\)</span> 里了（即影响了优势函数 <span class="arithmatex">\(A_t\)</span> 的计算），所以不直接出现在这个梯度更新公式中。</p>
+</blockquote>
+<h4 id="253-actor-loss-ppo">2.5.3 策略损失 (Actor Loss) —— PPO 的灵魂<a class="headerlink" href="#253-actor-loss-ppo" title="Permanent link">&para;</a></h4>
+<p>这是 PPO 被称为 "Proximal"（近端）的原因。它的目标是：<strong>让好的动作概率变大，坏的动作概率变小，但不要改得太猛</strong>。</p>
+<p>公式如下：</p>
+<div class="arithmatex">\[ L^{CLIP}(\theta) = - \mathbb{E}_t \left[ \min \left( r_t(\theta) \hat{A}_t, \\ \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t \right) \right] \]</div>
+<p>让我们分情况理解这个目标函数：</p>
+<p><strong>情况1：优势 <span class="arithmatex">\(\hat{A}_t &gt; 0\)</span>（好的动作）</strong></p>
+<ul>
+<li>
+<p>如果 (  heta) &lt; 1+\epsilon$：正常增加该动作概率</p>
+</li>
+<li>
+<p>如果 (  heta) \ge 1+\epsilon<span class="arithmatex">\(：剪裁到 +\epsilon\)</span>，防止过度增加</p>
+</li>
+</ul>
+<p><strong>情况2：优势 <span class="arithmatex">\(\hat{A}_t &lt; 0\)</span>（坏的动作）</strong></p>
+<ul>
+<li>
+<p>如果 (  heta) &gt; 1-\epsilon$：正常减少该动作概率</p>
+</li>
+<li>
+<p>如果 (  heta) \le 1-\epsilon<span class="arithmatex">\(：剪裁到 -\epsilon\)</span>，防止过度减少</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">参数符号</th>
+<th style="text-align: left;">名称</th>
+<th style="text-align: left;">含义</th>
+<th style="text-align: left;">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\theta\)</span></td>
+<td style="text-align: left;">策略参数</td>
+<td style="text-align: left;">当前正在训练的策略模型（Policy Model，Actor）的权重参数。</td>
+<td style="text-align: left;">我们的目标是通过最大化 <span class="arithmatex">\(J(\theta)\)</span> 来优化这些参数。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\hat{\mathbb{E}}_t\)</span></td>
+<td style="text-align: left;">经验均值</td>
+<td style="text-align: left;">表示对时间步 <span class="arithmatex">\(t\)</span> 的经验样本取平均值。</td>
+<td style="text-align: left;">在 PPO 中，这通常是对 Rollout 阶段收集到的所有 Mini-Batch 样本取平均。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(r_t(\theta)\)</span></td>
+<td style="text-align: left;">概率比率 (Ratio)</td>
+<td style="text-align: left;">新策略 <span class="arithmatex">\(\pi_{\theta}\)</span> 和旧策略 <span class="arithmatex">\(\pi_{\theta_{old}}\)</span> 之间的概率比值。</td>
+<td style="text-align: left;"><span class="arithmatex">\(r_t(\theta) = \frac{\pi_{\theta}(a_t \vert s_t)}{\pi_{\theta_{old}}(a_t \vert s_t)}\)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\hat{A}_t\)</span></td>
+<td style="text-align: left;">优势函数 (Advantage)</td>
+<td style="text-align: left;">在状态 <span class="arithmatex">\(s_t\)</span> 下采取行动 <span class="arithmatex">\(a_t\)</span> 的相对好坏程度。</td>
+<td style="text-align: left;"><span class="arithmatex">\(\hat{A}_t = Q(s_t, a_t) - V(s_t)\)</span>。正值表示该行动比预期好，负值表示比预期差。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\epsilon\)</span></td>
+<td style="text-align: left;">截断超参数 (Clip)</td>
+<td style="text-align: left;">一个小的正值（例如 <span class="arithmatex">\(0.1\)</span> 或 <span class="arithmatex">\(0.2\)</span>），用于定义策略更新的“安全区间”。</td>
+<td style="text-align: left;">它定义了 <span class="arithmatex">\(r_t(\theta)\)</span> 允许的范围 <span class="arithmatex">\([1-\epsilon, 1+\epsilon]\)</span>。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\text{clip}(\dots)\)</span></td>
+<td style="text-align: left;">截断函数</td>
+<td style="text-align: left;">这是一个数学函数，将 <span class="arithmatex">\(r_t(\theta)\)</span> 限制在 <span class="arithmatex">\([1-\epsilon, 1+\epsilon]\)</span> 的范围内。</td>
+<td style="text-align: left;">如果 <span class="arithmatex">\(r_t(\theta)\)</span> 超出这个范围，它将被强制拉回到边界值。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><span class="arithmatex">\(\min(\dots)\)</span></td>
+<td style="text-align: left;">取最小值</td>
+<td style="text-align: left;">PPO 截断机制的核心操作。</td>
+<td style="text-align: left;">它在“原始目标”和“截断目标”之间取较小值。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="254-value-loss-critic">2.5.4 价值损失 (Value Loss) —— 让 Critic 更准<a class="headerlink" href="#254-value-loss-critic" title="Permanent link">&para;</a></h4>
+<p>Actor 在努力拿高分，而 Critic (Value Model) 的任务是精准预测局面。Critic 越准，算出来的优势函数<span class="arithmatex">\(\hat{A}_t\)</span>  就越准，Actor 学得就越稳。</p>
+<p>这通常是一个简单的均方误差 (MSE)：</p>
+<div class="arithmatex">\[ L^{VF}(\theta) = \mathbb{E}_t \left[ (V_\phi(s_t) - V_t^{\text{target}})^2 \right] \]</div>
+<ul>
+<li>
+<p><span class="arithmatex">\(V_\phi(s_t)\)</span> ：Value Model 当前的预测值。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(V_t^{\text{target}}\)</span>：真实的回报目标（通常是 GAE 计算后的 ）。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(c_1\)</span>：价值损失系数（通常是 0.5 或 1.0），平衡它和策略损失的比重。</p>
+</li>
+</ul>
+<p>在 PPO 的损失函数计算过程中，Value 模型（Critic）的评分结果实际上会被计算 <strong>两次</strong>，但这两次发生在不同的阶段，且扮演着完全不同的角色。</p>
+<p>为了理解这两次计算，我们需要区分 <strong>数据采集（Rollout）</strong> 阶段和 <strong>参数更新（Optimization）</strong> 阶段。</p>
+<ul>
+<li>
+<p>在计算 <span class="arithmatex">\(L^{CLIP}\)</span> 时：使用的是第一次计算得到的 (s_t)$（通过 <span class="arithmatex">\(\hat{A}_t\)</span> 间接引入），它是固定的背景板。这一次计算的结果会通过 GAE 算法转化为 <span class="arithmatex">\(V_t^{target}\)</span>（目标价值）和 <span class="arithmatex">\(\hat{A}_t\)</span>（优势）。在随后的反向传播中，这些值被视为 常数（detach），不产生梯度。</p>
+</li>
+<li>
+<p>在计算 <span class="arithmatex">\(L^{VF}\)</span> 时：使用的是第二次计算得到的 \phi(s_t)<span class="arithmatex">\(，\)</span>V_\phi(s_t)$ 是带有梯度的，它是被优化的对象。</p>
+</li>
+</ul>
+<h4 id="255-entropy-bonus">2.5.5 熵奖励 (Entropy Bonus) —— 鼓励探索<a class="headerlink" href="#255-entropy-bonus" title="Permanent link">&para;</a></h4>
+<p>这是公式中的“惩罚项”，但在 loss 中用减号表示，所以实际上是奖励。</p>
+<div class="arithmatex">\[ S[\pi_\theta](s) = - \sum \pi(a|s) \log \pi(a|s) \]</div>
+<p><strong>什么是熵 (Entropy)？</strong>：衡量概率分布的“混乱程度”或“不确定性”。</p>
+<ul>
+<li>
+<p>如果模型对某个动作 100% 确定，熵 = 0。</p>
+</li>
+<li>
+<p>如果模型在几个动作之间犹豫不决（均匀分布），熵最大。</p>
+</li>
+</ul>
+<p><strong>为什么要减去熵？（即最大化熵）</strong>：在训练初期，我们不希望 Actor 过早地“迷信”某一个动作（过早收敛到局部最优）。通过在 Loss 里加入这一项，我们强迫模型保持一定的“随机性”和“好奇心”，去尝试那些它没试过的词。</p>
+<p><span class="arithmatex">\(c_2\)</span>：熵系数（通常很小，如 0.01），随着训练进行通常会衰减。</p>
+<p><strong>计算 KL 散度惩罚</strong>:比较 Policy Model 生成的 Log Probabilities 和 Reference Model 生成的 Log Probabilities。如果差异太大，PPO 会给最终奖励 <span class="arithmatex">\(r\)</span> 施加一个惩罚项，确保模型在学习新策略时不会发散（防止跑偏）。</p>
+<p>PPO 优化:最终，PPO 使用包含 截断（Clipping） 机制和 KL 惩罚 的目标函数，通过梯度下降同时更新：</p>
+<ul>
+<li>
+<p>Policy Model (Actor) 的参数（使其生成更高奖励的回复）。</p>
+</li>
+<li>
+<p>Value Model (Critic) 的参数（使其能更准确地预测状态价值）。
+这个三阶段循环不断重复，直到 Policy Model 的回复在满足人类偏好的同时，还能保持其基础的语言能力。</p>
+</li>
+</ul>
+<h2 id="dpo-direct-preference-optimization-ipo-kto">第三部分：直接偏好优化：DPO (Direct Preference Optimization), IPO, KTO 原理对比<a class="headerlink" href="#dpo-direct-preference-optimization-ipo-kto" title="Permanent link">&para;</a></h2>
+<p>随着大语言模型对齐技术的演进，传统的 PPO 流程因其训练复杂性和高资源消耗（需要维护 Actor、Critic、Ref、Reward 四个模型）而备受挑战。学术界开始探索更轻量、更稳定的替代方案，其中 DPO (Direct Preference Optimization) 及其变体 IPO 和 KTO 成为了当前最主流的研究方向。</p>
+<p>本部分将深入剖析这三种算法的核心数学原理，对比它们的异同与适用场景。</p>
+<h3 id="31-dpo-direct-preference-optimization">3.1 DPO (Direct Preference Optimization)：化繁为简的里程碑<a class="headerlink" href="#31-dpo-direct-preference-optimization" title="Permanent link">&para;</a></h3>
+<p><strong>DPO (直接偏好优化)</strong> 由 Stanford 研究团队于 2023 年提出，其核心思想是跳过显式的奖励模型（Reward Model）训练，直接利用偏好数据对策略模型进行优化。</p>
+<h4 id="rl">核心数学原理：从 RL 到分类问题<a class="headerlink" href="#rl" title="Permanent link">&para;</a></h4>
+<p>在 RLHF 中，我们通常假设人类偏好服从 <strong>Bradley-Terry (BT) 模型</strong>。对于给定的输入 <span class="arithmatex">\(x\)</span> 和两个回答 <span class="arithmatex">\(y_w\)</span>（Chosen，胜者）与 <span class="arithmatex">\(y_l\)</span>（Rejected，败者），人类偏好分布 <span class="arithmatex">\(p^*\)</span> 可以表示为：</p>
+<div class="arithmatex">\[ p^*(y_w \succ y_l | x) = \frac{\exp(r^*(x, y_w))}{\exp(r^*(x, y_w)) + \exp(r^*(x, y_l))} \]</div>
+<p>其中 <span class="arithmatex">\(r^*(x, y)\)</span> 是隐含的真实奖励函数。</p>
+<p>DPO 的推导基于 RL 的最优策略公式。对于带有 KL 散度约束的奖励最大化问题，其最优策略 <span class="arithmatex">\(\pi^*\)</span> 与最优奖励函数 <span class="arithmatex">\(r^*\)</span> 存在如下解析关系：</p>
+<div class="arithmatex">\[ r^*(x, y) = \beta \log \frac{\pi^*(y|x)}{\pi_{\text{ref}}(y|x)} + Z(x) \]</div>
+<ul>
+<li>
+<p><span class="arithmatex">\(\beta\)</span>：KL 惩罚系数，控制偏离参考模型的程度。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(Z(x)\)</span>：仅与输入 <span class="arithmatex">\(x\)</span> 有关的配分函数（Partition Function）。</p>
+</li>
+</ul>
+<p>将这个关系代入 BT 模型公式，消去难算的 <span class="arithmatex">\(Z(x)\)</span>，我们可以直接得到仅包含策略模型 <span class="arithmatex">\(\pi_{\theta}\)</span> 和参考模型 <span class="arithmatex">\(\pi_{\text{ref}}\)</span> 的目标函数：</p>
+<div class="arithmatex">\[ L_{\text{DPO}}(\pi_{\theta}; \pi_{\text{ref}}) = - \mathbb{E}_{(x, y_w, y_l) \sim D} \left[ \log \sigma \left( \beta \log \frac{\pi_{\theta}(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta \log \frac{\pi_{\theta}(y_l|x)}{\pi_{\text{ref}}(y_l|x)} \right) \right] \]</div>
+<p><span class="arithmatex">\(L_{DPO}\)</span>:</p>
+<ul>
+<li>
+<p>DPO 算法的损失函数值。</p>
+</li>
+<li>
+<p>最小化该损失会增大胜出回答与失败回答之间的隐式奖励差距。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(π_θ ()\)</span>:</p>
+<ul>
+<li>
+<p>当前正在训练的目标策略模型。</p>
+</li>
+<li>
+<p>目标是学习一个参数 <span class="arithmatex">\(θ\)</span>，使得模型输出更符合人类偏好的 <span class="arithmatex">\(y_w\)</span>。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(π_{ref} ()\)</span>:</p>
+<ul>
+<li>
+<p>预训练好的参考模型（通常是经过 SFT 的模型）。</p>
+</li>
+<li>
+<p>参数在训练期间保持冻结，作为正则化的基准，防止模型产生灾难性遗忘或模式崩坏。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\((x, y_w, y_l) \sim D\)</span>:</p>
+<ul>
+<li>数据集中的偏好对。<span class="arithmatex">\(x\)</span> 为输入提示词，<span class="arithmatex">\(y_w\)</span> 为胜出回答，<span class="arithmatex">\(y_l\)</span> 为失败回答。</li>
+</ul>
+<p><span class="arithmatex">\(β (beta)\)</span>:</p>
+<ul>
+<li>
+<p>调节参数（超参数）。</p>
+</li>
+<li>
+<p>控制对参考模型 <span class="arithmatex">\(π_{ref}\)</span> 偏离程度的惩罚力度。<span class="arithmatex">\(β\)</span> 越大，对偏离的惩罚越重，模型越保守。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(log(π_θ(y|x) / π_{ref}(y|x))\)</span>:</p>
+<ul>
+<li>
+<p>隐式奖励（Implicit Reward）。</p>
+</li>
+<li>
+<p>DPO 的核心思想：某回答的奖励与其在当前模型与参考模型间的对数概率比值成正比。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(σ (sigma)\)</span>:</p>
+<ul>
+<li>
+<p>Sigmoid 激活函数。</p>
+</li>
+<li>
+<p>将两个回答的隐式奖励差值映射到 (0, 1) 区间，将其转化为一个二分类概率问题。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(E [ log σ (...) ]\)</span>:</p>
+<ul>
+<li>
+<p>负对数似然损失。</p>
+</li>
+<li>
+<p>通过最大化胜出项相对于失败项的优势，来优化策略。</p>
+</li>
+</ul>
+<h4 id="dpo">DPO 的直观理解<a class="headerlink" href="#dpo" title="Permanent link">&para;</a></h4>
+<p>这个公式看起来复杂，但其梯度更新的物理意义非常直观：</p>
+<ol>
+<li>
+<p><strong>增加胜者概率</strong>：如果 <span class="arithmatex">\(\pi_{\theta}\)</span> 对 <span class="arithmatex">\(y_w\)</span> 的预测概率（相对于 <span class="arithmatex">\(\pi_{\text{ref}}\)</span>）较高，损失减小。</p>
+</li>
+<li>
+<p><strong>降低败者概率</strong>：如果 <span class="arithmatex">\(\pi_{\theta}\)</span> 对 <span class="arithmatex">\(y_l\)</span> 的预测概率（相对于 <span class="arithmatex">\(\pi_{\text{ref}}\)</span>）较高，损失增大。</p>
+</li>
+<li>
+<p><strong>隐式奖励</strong>：DPO 本质上是将“奖励建模”和“策略优化”合二为一，直接通过最大似然估计来求解最优策略，从而避免了 PPO 中 Actor 和 Critic 相互拉扯的不稳定性。</p>
+</li>
+</ol>
+<h4 id="_1">优缺点总结<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>优点</strong>：</p>
+<ul>
+<li>
+<p><strong>极简架构</strong>：不需要训练独立的 Reward Model，甚至不需要 Critic Model，显存占用减半。</p>
+</li>
+<li>
+<p><strong>训练稳定</strong>：本质上是一个分类任务（Cross-Entropy Loss 的变体），避免了 RL 中的高方差和超参数敏感问题。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li><strong>泛化性争议</strong>：有研究指出，DPO 在分布外（OOD）数据上的泛化能力可能不如 PPO。</li>
+</ul>
+</li>
+</ul>
+<h3 id="32-ipo-identity-preference-optimization-dpo">3.2 IPO (Identity Preference Optimization)：解决 DPO 的过拟合<a class="headerlink" href="#32-ipo-identity-preference-optimization-dpo" title="Permanent link">&para;</a></h3>
+<p><strong>IPO (身份偏好优化)</strong> 是由 Google DeepMind 提出的，旨在解决 DPO 在某些情况下容易过拟合的问题。</p>
+<h4 id="_2">核心数学原理：正则化的回归<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<p>DPO 的目标函数中包含 Sigmoid 函数（<span class="arithmatex">\(\sigma\)</span>），这使得它本质上是一个分类损失。当模型对偏好数据的预测非常确信时（概率趋近于 0 或 1），梯度会消失，导致模型停止学习或对训练数据过拟合。</p>
+<p>IPO 摒弃了 BT 模型的假设，直接通过均方误差（MSE）来约束偏好差距：</p>
+<div class="arithmatex">\[ L_{\text{IPO}}(\pi_{\theta}; \pi_{\text{ref}}) = \mathbb{E}_{(x, y_w, y_l) \sim D} \left[ \left( \log \frac{\pi_{\theta}(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \log \frac{\pi_{\theta}(y_l|x)}{\pi_{\text{ref}}(y_l|x)} - \frac{\tau}{2} \right)^2 \right] \]</div>
+<p><span class="arithmatex">\(L_{IPO}\)</span>:</p>
+<ul>
+<li>
+<p>IPO 算法的损失函数值。</p>
+</li>
+<li>
+<p>目标是最小化这个平方误差，使模型偏好与人类偏好对齐，同时保持输出概率的正则化。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(π_θ ()\)</span>:</p>
+<ul>
+<li>
+<p>当前正在训练的目标模型（Policy Model）。</p>
+</li>
+<li>
+<p>我们希望通过优化 θ，让模型更倾向于生成 <span class="arithmatex">\(y_w\)</span> 而非 <span class="arithmatex">\(y_l\)</span>。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(π_{ref} ()\)</span>:</p>
+<ul>
+<li>
+<p>基准模型（Reference Model）。通常是 SFT（有监督微调）后的模型，且在训练过程中参数冻结。</p>
+</li>
+<li>
+<p>作用是作为锚点，防止训练后的模型偏离原始分布太远。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\((x, y_w, y_l) \sim D\)</span>:</p>
+<ul>
+<li>
+<p>数据集 D 中的一个三元组样本。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(x\)</span>: 输入的 Prompt（提示词）。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(y_w\)</span> (winner): 比较中胜出的回答（Chosen/Preferred）。</p>
+</li>
+<li>
+<p><span class="arithmatex">\(y_l\)</span> (loser): 比较中失败的回答（Rejected）。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(log(π_θ(y|x) / π_{ref}(y|x))\)</span>:</p>
+<ul>
+<li>
+<p>对数比例。</p>
+</li>
+<li>
+<p>衡量目标模型相对于基准模型在某个回答上的概率增长。</p>
+</li>
+<li>
+<p>这一项实际上就是 DPO 中定义的隐式奖励（Implicit Reward）。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(τ/2\)</span>,是预设的奖励差值目标值:</p>
+<ul>
+<li>
+<p>超参数（控制正则化的强度）。</p>
+</li>
+<li>
+<p>类似于 DPO 中的 beta，但在 IPO 中它直接定义了两个回答之间奖励差值的目标。</p>
+</li>
+<li>
+<p><strong>物理意义</strong>：IPO 并不追求让 <span class="arithmatex">\(y_w\)</span> 的概率无限大、让 <span class="arithmatex">\(y_l\)</span> 的概率无限小。相反，它设定了一个固定的目标差距 <span class="arithmatex">\(\tau/2\)</span>。只要 <span class="arithmatex">\(y_w\)</span> 和 <span class="arithmatex">\(y_l\)</span> 之间的对数概率差达到了这个阈值，模型就认为“足够好了”，不再继续激进地优化。</p>
+</li>
+</ul>
+<h4 id="_3">优缺点总结<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>优点</strong>：更强的正则化效果，防止模型为了迎合偏好数据而彻底遗忘预训练知识，从而避免过拟合。</p>
+</li>
+<li>
+<p><strong>缺点</strong>：在某些简单任务上，收敛速度可能不如 DPO 快。</p>
+</li>
+</ul>
+<h3 id="33-kto-kahneman-tversky-optimization">3.3 KTO (Kahneman-Tversky Optimization)：非成对数据的福音<a class="headerlink" href="#33-kto-kahneman-tversky-optimization" title="Permanent link">&para;</a></h3>
+<p><strong>KTO (Kahneman-Tversky 优化)</strong> 由 Contextual AI 提出，其灵感来源于行为经济学中的 <strong>前景理论 (Prospect Theory)</strong>。</p>
+<h4 id="_4">核心痛点与解决方案<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<p>DPO 和 IPO 都依赖 <strong>成对数据 (Pairwise Data)</strong>，即必须有 <span class="arithmatex">\((x, y_w, y_l)\)</span>。然而，在实际应用中，收集这种“好坏对比”数据非常昂贵。很多时候，我们只有 <strong>点状数据 (Pointwise Data)</strong>：即“这个回答是好的” (Thumbs Up) 或“这个回答是坏的” (Thumbs Down)，而没有直接的对比项。</p>
+<p>KTO 的设计初衷就是直接利用这些非成对的 <span class="arithmatex">\((x, y, \text{label})\)</span> 数据进行训练。</p>
+<h4 id="_5">核心数学原理<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<p>KTO 将损失函数定义为两部分，分别处理“好数据”和“坏数据”：</p>
+<div class="arithmatex">\[ L_{\text{KTO}} = \mathbb{E}_{(x, y) \sim D} \left[ w(y) \cdot \text{Loss}_{\text{KTO}}(x, y) \right] \]</div>
+<p><span class="arithmatex">\(L_{KTO}\)</span>:</p>
+<ul>
+<li>
+<p>KTO 算法的总体损失值。</p>
+</li>
+<li>
+<p>该算法基于前景理论（Prospect Theory），模拟人类对“获得”与“损失”的不对称感知。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\((x, y) \sim D\)</span>:</p>
+<ul>
+<li>
+<p>数据集中的单个样本。</p>
+</li>
+<li>
+<p>x: 输入的 Prompt（提示词）。</p>
+</li>
+<li>
+<p>y: 模型的回答。注意：这里不需要 y_w 和 y_l 成对出现。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(w(y)\)</span>:</p>
+<ul>
+<li>
+<p>权重函数。</p>
+</li>
+<li>
+<p>根据回答的标签（Desirable / Undesirable）分配不同的权重，以平衡正负样本对梯度的贡献。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(Loss_{KTO}(x, y)\)</span>，核心损失项。其内部通常包含：</p>
+<ul>
+<li>隐式奖励计算：<span class="arithmatex">\(r(x, y) = β · log(π_θ(y|x) / π_{ref}(y|x))\)</span></li>
+<li>价值函数变换：通过一个非线性函数（类似 Sigmoid）处理奖励值与参考点（KLD）的差。</li>
+</ul>
+<p>具体损失形式利用了前景理论中的<strong>损失厌恶 (Loss Aversion)</strong> 原理：人类对“失去”的痛苦感远大于对“获得”的快乐感。因此，KTO 对“把好数据预测低了”和“把坏数据预测高了”赋予不同的权重惩罚。</p>
+<p>其简化的目标函数试图让“好回答”的隐含奖励大于某个参考值，让“坏回答”的隐含奖励小于某个参考值，而无需两两配对。</p>
+<h4 id="_6">优缺点总结<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>优点</strong>：</p>
+<ul>
+<li>
+<p><strong>数据利用率高</strong>：可以使用海量的点状反馈数据（如用户点击的点赞/点踩），无需构建昂贵的对比数据。</p>
+</li>
+<li>
+<p><strong>效果惊人</strong>：在某些基准测试中，仅使用点状数据的 KTO 甚至能匹敌使用成对数据的 DPO。</p>
+</li>
+<li><strong>缺点</strong>：超参数调节相对复杂（如权重的平衡）。</li>
+</ul>
+</li>
+</ul>
+<h3 id="34">3.4 算法横向对比表<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">特性</th>
+<th style="text-align: left;">DPO</th>
+<th style="text-align: left;">IPO</th>
+<th style="text-align: left;">KTO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>全称</strong></td>
+<td style="text-align: left;">Direct Preference Optimization</td>
+<td style="text-align: left;">Identity Preference Optimization</td>
+<td style="text-align: left;">Kahneman-Tversky Optimization</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>数据需求</strong></td>
+<td style="text-align: left;"><strong>Pairwise</strong> (成对数据 <span class="arithmatex">\(y_w \succ y_l\)</span>)</td>
+<td style="text-align: left;"><strong>Pairwise</strong> (成对数据 <span class="arithmatex">\(y_w \succ y_l\)</span>)</td>
+<td style="text-align: left;"><strong>Unpaired</strong> (非成对数据 <span class="arithmatex">\(y, \text{label}\)</span>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>核心假设</strong></td>
+<td style="text-align: left;">Bradley-Terry 模型 (Sigmoid)</td>
+<td style="text-align: left;">均方误差 (MSE) 正则</td>
+<td style="text-align: left;">前景理论 (损失厌恶)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>优点</strong></td>
+<td style="text-align: left;">简单、稳定、无需显式 RM</td>
+<td style="text-align: left;">防止过拟合，正则化强</td>
+<td style="text-align: left;">数据获取成本低，利用率高</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>缺点</strong></td>
+<td style="text-align: left;">可能过拟合，OOD 泛化稍弱</td>
+<td style="text-align: left;">收敛速度可能较慢</td>
+<td style="text-align: left;">超参数较多，调优复杂</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>适用场景</strong></td>
+<td style="text-align: left;">通用偏好对齐，SFT 后首选</td>
+<td style="text-align: left;">数据噪声较大或易过拟合场景</td>
+<td style="text-align: left;">拥有大量点赞/点踩数据，缺乏对比数据</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="deepseek-r1-grpo-group-relative-policy-optimization">第四部分：前沿技术：DeepSeek-R1 中的 GRPO (Group Relative Policy Optimization) 与强化推理能力<a class="headerlink" href="#deepseek-r1-grpo-group-relative-policy-optimization" title="Permanent link">&para;</a></h2>
+<p>随着 DeepSeek-R1 等新一代模型的发布，强化学习在大模型中的应用进入了一个新的阶段：从单纯的“偏好对齐”转向“推理能力强化”。其中，<strong>GRPO (Group Relative Policy Optimization)</strong> 作为 DeepSeek-R1 背后的核心算法，展现了在数学、代码等推理密集型任务上的巨大潜力。</p>
+<h3 id="41-grpoppo">4.1 为什么需要 GRPO？PPO 的瓶颈<a class="headerlink" href="#41-grpoppo" title="Permanent link">&para;</a></h3>
+<p>在传统的 PPO 架构中，Critic Model (Value Function) 是必不可少的。它负责预测状态价值 <span class="arithmatex">\(V(s)\)</span>，用于计算优势函数 <span class="arithmatex">\(A(s, a)\)</span>。</p>
+<p>然而，Critic Model 带来了巨大的计算开销：</p>
+<ol>
+<li>
+<p><strong>显存翻倍</strong>：Critic Model 通常与 Actor Model 大小相当，这意味着训练一个 67B 的模型，实际上需要承载约 130B+ 的参数（Actor + Critic + Ref + gradients）。</p>
+</li>
+<li>
+<p><strong>训练困难</strong>：Critic 的价值估计往往很难收敛，尤其是在长推理链（Long Chain-of-Thought）任务中，预测每一步的价值极具挑战性。</p>
+</li>
+</ol>
+<p>GRPO 的核心创新在于：<strong>完全移除了 Critic Model</strong>，直接通过“组内相对优势”来优化策略。</p>
+<h3 id="42-grpo">4.2 GRPO 核心原理与数学推导<a class="headerlink" href="#42-grpo" title="Permanent link">&para;</a></h3>
+<p>GRPO (Group Relative Policy Optimization) 的核心思想是：对于同一个问题 <span class="arithmatex">\(q\)</span>，让旧策略 <span class="arithmatex">\(\pi_{\theta_{old}}\)</span> 采样一组输出 <span class="arithmatex">\(\{o_1, o_2, \dots, o_G\}\)</span>，然后通过比较这组输出内部的相对好坏来计算优势。</p>
+<h4 id="421">4.2.1 算法流程<a class="headerlink" href="#421" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><strong>分组采样 (Group Sampling)</strong>：</p>
+<p>对于每个问题 <span class="arithmatex">\(q\)</span>，从旧策略 <span class="arithmatex">\(\pi_{\theta_{old}}\)</span> 中采样 <span class="arithmatex">\(G\)</span> 个不同的输出：</p>
+<div class="arithmatex">\[ \{o_1, o_2, \dots, o_G\} \sim \pi_{\theta_{old}}(o|q) \]</div>
+</li>
+<li>
+<p><strong>奖励计算 (Reward Computation)</strong>：</p>
+<p>利用环境或规则（如数学题答案校验、代码编译器）计算每个输出的奖励：</p>
+<div class="arithmatex">\[ r_1, r_2, \dots, r_G \]</div>
+</li>
+<li>
+<p><strong>优势估计 (Advantage Estimation)</strong>：</p>
+<p>这是 GRPO 的灵魂。它不依赖 Critic 预测基线，而是直接计算这组奖励的<strong>均值</strong>和<strong>标准差</strong>作为基线：</p>
+<div class="arithmatex">\[ \text{Mean: } \bar{r} = \frac{1}{G} \sum_{i=1}^G r_i, \quad \text{Std: } \sigma = \sqrt{\frac{1}{G} \sum_{i=1}^G (r_i - \bar{r})^2} \]</div>
+<p>每个输出 <span class="arithmatex">\(o_i\)</span> 的优势 <span class="arithmatex">\(A_i\)</span> 定义为标准化后的奖励：</p>
+<div class="arithmatex">\[ A_i = \frac{r_i - \bar{r}}{\sigma} \]</div>
+<ul>
+<li><strong>直观理解</strong>：如果某个回答的奖励高于这一组的平均水平，它的优势就是正的；反之则是负的。这就是“相对策略优化”。</li>
+</ul>
+</li>
+<li>
+<p><strong>策略更新 (Policy Update)</strong>：</p>
+<p>利用 PPO 的裁剪损失函数，但使用上述计算出的 <span class="arithmatex">\(A_i\)</span>：</p>
+<div class="arithmatex">\[ J_{GRPO}(\theta) = \mathbb{E}_{q \sim P(Q), \{o_i\}_{i=1}^G \sim \pi_{\theta_{old}}} \left[ \frac{1}{G} \sum_{i=1}^G \left( \min \left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)} A_i, \text{clip}\left( \frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}, 1-\epsilon, 1+\epsilon \right) A_i \right) - \beta D_{KL}(\pi_{\theta} || \pi_{\text{ref}}) \right) \right] \]</div>
+</li>
+</ol>
+<p><span class="arithmatex">\(J_{GRPO}(θ)\)</span>:</p>
+<ul>
+<li>
+<p>GRPO 的目标函数（目标是最大化该值）。</p>
+</li>
+<li>
+<p>它结合了策略梯度优化、重要性采样剪切（Clip）和 KL 散度约束。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(q \sim P(Q)\)</span>:</p>
+<ul>
+<li>从问题分布 P(Q) 中采样出的提示词（Prompt）。</li>
+</ul>
+<p><span class="arithmatex">\(\{o_i\}_{i=1}^G \sim \pi_{\theta_{old}}\)</span></p>
+<ul>
+<li>
+<p>对于同一个问题 q，使用旧策略模型（<span class="arithmatex">\(π_{\theta_{old}}\)</span>）并行采样生成的一组（Group）回答。</p>
+</li>
+<li>
+<p>G 表示每组样本的数量（例如 G=64）。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(\frac{\pi_{\theta}(o_i|q)}{\pi_{\theta_{old}}(o_i|q)}\)</span></p>
+<ul>
+<li>
+<p>重要性采样权重（Importance Sampling Ratio）。</p>
+</li>
+<li>
+<p>衡量当前更新的策略与采样时的旧策略之间的概率差异。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(A_i (优势函数 - Group Relative Advantage)\)</span>:</p>
+<ul>
+<li>
+<p>GRPO 的核心：<span class="arithmatex">\(A_i = (Reward_i - Mean(Rewards)) / Std(Rewards)\)</span>。</p>
+</li>
+<li>
+<p>它不再依赖额外的 Critic 网络预估价值，而是通过这 G 个回答的奖励值进行归一化，得到相对好坏。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(min(..., clip(...) * A_i)\)</span>:</p>
+<ul>
+<li>
+<p>剪切项（PPO 核心逻辑）。</p>
+</li>
+<li>
+<p>防止策略更新过快，将概率变化限制在 <span class="arithmatex">\([1-ε, 1+ε]\)</span> 范围内，保证训练稳定性。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(β * {D_KL}(π_θ || π_ref)\)</span>:</p>
+<ul>
+<li>
+<p>KL 散度惩罚项。</p>
+</li>
+<li>
+<p>约束当前策略 <span class="arithmatex">\(π_θ\)</span> 不要偏离基准模型 <span class="arithmatex">\(π_{ref}\)</span>（通常是 SFT 模型）太远，保持语言模型的生成质量。</p>
+</li>
+</ul>
+<p><span class="arithmatex">\(1/G * Σ\)</span>:</p>
+<ul>
+<li>对组内所有 G 个样本的指标进行平均。</li>
+</ul>
+<h4 id="422">4.2.2 核心优势与局限性<a class="headerlink" href="#422" title="Permanent link">&para;</a></h4>
+<p><strong>优势：</strong></p>
+<ul>
+<li>
+<p><strong>显存节省</strong>：无需 Critic Model，显存占用大幅降低，使得在有限资源下训练超大模型（如 DeepSeek-R1-Zero）成为可能。</p>
+</li>
+<li>
+<p><strong>基线自适应</strong>：通过组内平均值作为 Baseline，天然适应了不同问题的难度差异（有些问题普遍分低，有些普遍分高，相对值更能反映策略好坏）。</p>
+</li>
+</ul>
+<p><strong>局限性：</strong></p>
+<ul>
+<li>
+<p><strong>奖励稀疏敏感</strong>：GRPO 依赖组内奖励分布计算优势，当奖励信号过于稀疏（大量样本奖励为0）或组内奖励方差极小时，优势估计会失效。</p>
+</li>
+<li>
+<p><strong>样本效率问题</strong>：每个问题需要采样 <span class="arithmatex">\(G\)</span> 个完整回答（通常 <span class="arithmatex">\(G=16\)</span> 或 <span class="arithmatex">\(64\)</span>），生成阶段计算开销大，且仅通过组内相对比较，没有利用历史样本信息。</p>
+</li>
+<li>
+<p><strong>长文本稳定性</strong>：在长推理链（Long CoT）场景下，序列长度差异大，组内奖励方差可能剧烈波动，导致训练不稳定。</p>
+</li>
+</ul>
+<h3 id="423-grpo">4.2.3 基于 GRPO 的改进算法<a class="headerlink" href="#423-grpo" title="Permanent link">&para;</a></h3>
+<p>针对 GRPO 的局限性，2024-2025 年研究者提出了若干改进算法：</p>
+<p><strong>1. DAPO (Decoupled Advantage Policy Optimization)</strong></p>
+<p>DAPO 针对 GRPO 中优势估计与策略优化耦合的问题进行改进：</p>
+<ul>
+<li><strong>解耦优势计算</strong>：引入独立的 Advantage Model，通过历史数据学习更稳定的优势估计，而非仅依赖单组样本。</li>
+<li><strong>动态分组策略</strong>：根据问题难度动态调整组大小 <span class="arithmatex">\(G\)</span>，简单问题减少采样，复杂问题增加采样，提升样本效率。</li>
+<li><strong>核心公式</strong>：<span class="arithmatex">\(A_i^{DAPO} = f_{adv}(r_i, q) - \frac{1}{G}\sum_{j=1}^G f_{adv}(r_j, q)\)</span>，其中 <span class="arithmatex">\(f_{adv}\)</span> 是可学习的优势函数。</li>
+</ul>
+<p><strong>2. GSPO (Group Self-Play Optimization)</strong></p>
+<p>GSPO 通过引入"自我对弈"机制增强 GRPO：</p>
+<ul>
+<li><strong>历史组对比</strong>：不仅与当前组比较，还与模型自身历史生成的"最佳组"进行比较，形成更鲁棒的优势信号。</li>
+<li><strong>渐进式难度筛选</strong>：根据模型当前能力动态调整问题难度分布，类似课程学习（Curriculum Learning）。</li>
+<li><strong>双重 KL 约束</strong>：同时对 <span class="arithmatex">\(\pi_{ref}\)</span>（参考模型）和 <span class="arithmatex">\(\pi_{history}\)</span>（历史最佳策略）施加 KL 约束，防止模型遗忘已学知识。</li>
+</ul>
+<p><strong>3. RLOO (REINFORCE Leave-One-Out)</strong></p>
+<p>虽非直接基于 GRPO，但提供了类似的"无 Critic"思路：</p>
+<ul>
+<li>对每个问题采样 <span class="arithmatex">\(G\)</span> 个回答，每个回答的优势计算时使用"其他 <span class="arithmatex">\(G-1\)</span> 个样本的平均奖励"作为基线，与 GRPO 的标准化方法形成对比。</li>
+<li>实现更简单，在某些任务上训练稳定性优于 GRPO。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>核心改进</th>
+<th>适用场景</th>
+<th>计算开销</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GRPO</td>
+<td>组内相对优势，无 Critic</td>
+<td>通用推理任务</td>
+<td>中等</td>
+</tr>
+<tr>
+<td>DAPO</td>
+<td>解耦优势学习，动态分组</td>
+<td>奖励稀疏任务</td>
+<td>较高</td>
+</tr>
+<tr>
+<td>GSPO</td>
+<td>历史自对弈，课程学习</td>
+<td>长文本复杂推理</td>
+<td>较高</td>
+</tr>
+<tr>
+<td>RLOO</td>
+<td>Leave-one-out 基线</td>
+<td>快速实验验证</td>
+<td>低</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-sft-r1">4.3 强化推理能力：从 SFT 到 R1 的进化<a class="headerlink" href="#43-sft-r1" title="Permanent link">&para;</a></h3>
+<p>DeepSeek-R1 的另一个重大突破是展示了强化学习如何<strong>自发涌现 (Emergence)</strong> 出强大的推理能力，而不仅仅是做风格对齐。</p>
+<h4 id="431-rl-deepseek-r1-zero">4.3.1 纯 RL 训练 (DeepSeek-R1-Zero)<a class="headerlink" href="#431-rl-deepseek-r1-zero" title="Permanent link">&para;</a></h4>
+<p>DeepSeek 团队尝试了直接在 Base Model 上应用 GRPO，而不经过 SFT 阶段。</p>
+<ul>
+<li>
+<p><strong>奖励设计</strong>：仅使用两种简单的奖励信号：</p>
+<ol>
+<li>
+<p><strong>准确性奖励 (Accuracy Reward)</strong>：最终答案是否通过了测试用例（LeetCode）或数学校验。</p>
+</li>
+<li>
+<p><strong>格式奖励 (Format Reward)</strong>：强制模型将思考过程包裹在 <code>&lt;think&gt;</code> 标签中。</p>
+</li>
+</ol>
+</li>
+<li>
+<p><strong>结果</strong>：模型在数千步的 RL 更新中，不仅准确率飙升，还<strong>自学</strong>会了诸如“自我反思”、“尝试多种解法”、“长链条推理”等高级思维模式。这证明了 RL 是激发 LLM 潜在推理能力的关键。</p>
+</li>
+</ul>
+<h4 id="432-cold-start-data">4.3.2 冷启动数据 (Cold Start Data) 的重要性<a class="headerlink" href="#432-cold-start-data" title="Permanent link">&para;</a></h4>
+<p>虽然纯 RL (R1-Zero) 效果惊人，但它生成的文本可读性较差（不仅思考过程混乱，还可能混杂多语言）。</p>
+<p>DeepSeek-R1 正式版引入了少量的<strong>长思维链 (Long CoT) SFT 数据</strong>作为冷启动：</p>
+<ol>
+<li>
+<p><strong>SFT 阶段</strong>：先用少量高质量的 CoT 数据微调，教会模型“如何规范地思考”和“如何优雅地输出”。</p>
+</li>
+<li>
+<p><strong>RL 阶段 (GRPO)</strong>：在此基础上进行大规模强化学习，专注于提升解题的正确率和思维的深度。</p>
+</li>
+</ol>
+<p>这种 <strong>"SFT (Format &amp; Basic Logic) -&gt; RL (Reasoning &amp; Generalization)"</strong> 的范式，成为了当前提升大模型推理能力的标准路径。</p>
+<h3 id="44-rl">4.4 总结：RL在大模型时代的演变<a class="headerlink" href="#44-rl" title="Permanent link">&para;</a></h3>
+<p>从 PPO 到 DPO，再到 GRPO，我们见证了强化学习在大模型领域的三次跨越：</p>
+<ol>
+<li>
+<p><strong>PPO 时代</strong>：建立了 RLHF 的标准范式，引入 Critic 和 Reward Model，解决了“对齐”问题，但极其昂贵且不稳定。</p>
+</li>
+<li>
+<p><strong>DPO 时代</strong>：通过数学推导移除 Critic 和显式 Reward Model，将 RL 问题转化为分类问题，极大降低了对齐门槛，成为开源社区首选。</p>
+</li>
+<li>
+<p><strong>GRPO 时代</strong>：为了追求极致的推理能力（Reasoning），回归 RL 本质但移除 Critic，通过组内相对优势激发模型的自我进化能力，开启了“强化推理”的新纪元。</p>
+</li>
+</ol>
+<h2 id="_7">参考文献<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://spinningup.openai.com/en/latest/algorithms/ppo.html">OpenAI Spinning Up: PPO</a></li>
+<li><a href="https://huggingface.co/blog/deep-rl-ppo">Hugging Face Blog: Deep RL PPO</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/677607581">猛猿：图解大模型RLHF系列之：人人都能看懂的PPO原理与源码解读</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../chapter14/14/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第14课时：多模态指令微调与实战">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第14课时：多模态指令微调与实战
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../chapter16/16/" class="md-footer__link md-footer__link--next" aria-label="Next: 第16课时：偏好数据构建">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                第16课时：偏好数据构建
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/LazyAGI/LazyLLM" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "navigation.footer", "navigation.top", "search.highlight", "search.suggest", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

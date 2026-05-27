@@ -1,0 +1,3611 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="End-to-end LLM training and data engineering course built on LazyLLM.">
+      
+      
+        <meta name="author" content="LazyLLM Community">
+      
+      
+      
+        <link rel="prev" href="../../chapter13/13/">
+      
+      
+        <link rel="next" href="../../chapter15/15/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://img.icons8.com/?size=100&id=121346&format=png&color=000000">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第14课时：多模态指令微调与实战 - From Data to LLM</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="data:text/css,.md-grid{max-width:90%25!important}">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#14" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="From Data to LLM" class="md-header__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            From Data to LLM
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第14课时：多模态指令微调与实战
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  课程简介
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../outline/" class="md-tabs__link">
+          
+  
+  
+  课程内容
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="From Data to LLM" class="md-nav__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    From Data to LLM
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程体系
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程内容
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程内容
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程大纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一部分：大模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第一部分：大模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter1/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1课时：Transformer 核心与 Self-Attention 深度剖析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter2/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2课时：LLM 训练范式与数据工程全景
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二部分：系统工程基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第二部分：系统工程基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter3/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3课时：分布式训练技术概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter4/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4课时：模型部署与推理加速
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter5/5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter6/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6课时：基于 LazyLLM 的全流程实践
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三部分：预训练数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第三部分：预训练数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter7/7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7课时：预训练原理、策略与评测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter8/8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8课时：预训练数据构建全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter9/9/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9课时：基于 LazyLLM 的预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter10/10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10课时：多模态 LLM 架构与预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四部分：微调数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第四部分：微调数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter11/11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter12/12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12课时：通用指令数据构建、合成与蒸馏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter13/13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13课时：基于 LazyLLM 的微调实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-caption-vqavisual-instruction-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 从 Caption 到 VQA：Visual Instruction Tuning 的演化路径
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1 从 Caption 到 VQA：Visual Instruction Tuning 的演化路径">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-image-caption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Image Caption：从“看见”到“描述”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-visual-question-answeringvqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Visual Question Answering（VQA）：从“描述”到“回答问题”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-vqa-visual-instruction-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 从 VQA 到 Visual Instruction Tuning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-visual-instruction-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Visual Instruction Tuning 的统一视角
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 多模态指令数据：CoT 与交错图文
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2 多模态指令数据：CoT 与交错图文">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 经典图文数据集
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 专业垂直领域多模态数据集
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-chain-of-thoughtcot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 为什么需要多模态 Chain-of-Thought（CoT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 多模态 CoT 的设计原则
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4 多模态 CoT 的设计原则">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.1 推理必须可追溯到图像证据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#242-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.2 CoT 应突出任务所需的最短推理链
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#243" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.3 最终答案应结构化、可提取
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-interleaved-image-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 交错图文（Interleaved Image-Text）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 图文交错数据的简单抽取示例
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 常见数据格式设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.7 常见数据格式设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#271-vqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7.1 标准 VQA 数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#272-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7.2 带多模态 CoT 的指令数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#273" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7.3 交错图文样本
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-lazyllm-img-ppl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 用 LazyLLM 玩转医学多模态推理增强（Img + PPL）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3 用 LazyLLM 玩转医学多模态推理增强（Img + PPL）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 数据集简介
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 数据集简介">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#311" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.1 数据结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#312" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.2 数据规模
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 数据处理与增强 Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 数据处理与增强 Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#321" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.1 数据下载与格式转换
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#322" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.2 图片保存与预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#323" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.3 生成增强数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#324-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.4 增强 Prompt 设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#325-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.5 直接进入 SFT 训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 模型微调（SFT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 自动评测方法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 实验结果
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 实验结果">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#351" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.1 定量结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#352" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.2 提升分析
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 结果对比示例
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五部分：对齐数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第五部分：对齐数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter15/15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter16/16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16课时：偏好数据构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter17/17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17课时：模型风险、合规与伦理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter18/18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18课时：基于 LazyLLM 的对齐实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六部分：特定能力数据
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第六部分：特定能力数据
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter19/19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19课时：推理与数学能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter20/20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20课时：代码能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter21/21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter22/22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22课时：结构化输出与格式对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter23/23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23课时：Agent 能力增强 (Tools & Planning)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter24/24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24课时：行业领域模型实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七部分：RAG 数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第七部分：RAG 数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter25/25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter26/26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26课时：Embedding 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter27/27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27课时：Reranker 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter28/28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-caption-vqavisual-instruction-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 从 Caption 到 VQA：Visual Instruction Tuning 的演化路径
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1 从 Caption 到 VQA：Visual Instruction Tuning 的演化路径">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-image-caption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Image Caption：从“看见”到“描述”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-visual-question-answeringvqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Visual Question Answering（VQA）：从“描述”到“回答问题”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-vqa-visual-instruction-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 从 VQA 到 Visual Instruction Tuning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-visual-instruction-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Visual Instruction Tuning 的统一视角
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 多模态指令数据：CoT 与交错图文
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2 多模态指令数据：CoT 与交错图文">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 经典图文数据集
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 专业垂直领域多模态数据集
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-chain-of-thoughtcot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 为什么需要多模态 Chain-of-Thought（CoT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 多模态 CoT 的设计原则
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4 多模态 CoT 的设计原则">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.1 推理必须可追溯到图像证据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#242-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.2 CoT 应突出任务所需的最短推理链
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#243" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.3 最终答案应结构化、可提取
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-interleaved-image-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 交错图文（Interleaved Image-Text）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 图文交错数据的简单抽取示例
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 常见数据格式设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.7 常见数据格式设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#271-vqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7.1 标准 VQA 数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#272-cot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7.2 带多模态 CoT 的指令数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#273" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7.3 交错图文样本
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-lazyllm-img-ppl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 用 LazyLLM 玩转医学多模态推理增强（Img + PPL）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3 用 LazyLLM 玩转医学多模态推理增强（Img + PPL）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 数据集简介
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 数据集简介">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#311" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.1 数据结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#312" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.2 数据规模
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 数据处理与增强 Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 数据处理与增强 Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#321" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.1 数据下载与格式转换
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#322" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.2 图片保存与预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#323" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.3 生成增强数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#324-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.4 增强 Prompt 设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#325-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2.5 直接进入 SFT 训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 模型微调（SFT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 自动评测方法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 实验结果
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 实验结果">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#351" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.1 定量结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#352" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.2 提升分析
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 结果对比示例
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="14">第14课时：多模态指令微调与实战<a class="headerlink" href="#14" title="Permanent link">&para;</a></h1>
+<p>本课时聚焦多模态指令微调，讨论模型如何同时理解图像与文本，并在受任务约束的条件下输出可评估的答案。与纯文本 SFT 相比，多模态微调的核心难点不只是“会不会回答”，而是“回答是否真正依赖了视觉证据”。</p>
+<p>因此，本章分为两个部分展开。前半部分介绍多模态指令数据的基本形态，包括从图像描述到 VQA 的演化、多模态 CoT 数据和交错图文数据；后半部分结合 LazyLLM 的完整实验流程，演示如何使用大模型生成高质量医学影像训练数据，再微调小模型以增强其医学视觉问答能力。</p>
+<h2 id="1-caption-vqavisual-instruction-tuning">1 从 Caption 到 VQA：Visual Instruction Tuning 的演化路径<a class="headerlink" href="#1-caption-vqavisual-instruction-tuning" title="Permanent link">&para;</a></h2>
+<p>在多模态大模型的发展过程中，视觉指令微调并非一蹴而就，而是经历了从“被动描述”到“主动理解与决策”的逐步演化。本节的目标是回答两个问题：</p>
+<ul>
+<li>为什么 VQA 是多模态指令微调的重要起点</li>
+<li>为什么它比单纯的图像描述更接近真实任务</li>
+</ul>
+<p><img alt="视觉问答任务示意图" src="../assets/vqa.png" /></p>
+<!-- > 图片来源：https://research.google/blog/rewriting-image-captions-for-visual-question-answering-data-creation/ -->
+
+<hr />
+<h3 id="11-image-caption">1.1 Image Caption：从“看见”到“描述”<a class="headerlink" href="#11-image-caption" title="Permanent link">&para;</a></h3>
+<p><strong>Image Captioning（图像描述）</strong> 是最早的视觉-语言任务之一，其目标是让模型将图像内容转化为自然语言描述。</p>
+<p><strong>任务形式：</strong></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Input : Image
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Output: A descriptive sentence
+</span></code></pre></div>
+<p><strong>示例：</strong></p>
+<blockquote>
+<p>Input：一张胸部 CT 图像<br />
+Output：<code>A CT scan of the chest showing bilateral lung opacities.</code></p>
+</blockquote>
+<p><strong>特点与局限：</strong></p>
+<ul>
+<li>学会基础视觉语义对齐，如 object、region、attribute</li>
+<li>建立“视觉 -&gt; 语言”的映射能力</li>
+<li>输出自由度高，缺乏明确任务约束</li>
+<li>难以判断描述是否抓住了当前任务真正关心的信息</li>
+<li>无法直接支撑决策类场景</li>
+</ul>
+<p>关键结论是：Image Caption 解决的是“图像里有什么”，而不是“基于图像应作出什么判断”。</p>
+<hr />
+<h3 id="12-visual-question-answeringvqa">1.2 Visual Question Answering（VQA）：从“描述”到“回答问题”<a class="headerlink" href="#12-visual-question-answeringvqa" title="Permanent link">&para;</a></h3>
+<p>为了让模型具备目标导向的视觉理解能力，研究者提出了 <strong>Visual Question Answering（VQA）</strong>。它在图像之外增加了明确的问题约束，使模型必须围绕具体任务作答。</p>
+<p><strong>任务形式：</strong></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Input : Image + Question
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Output: Answer
+</span></code></pre></div>
+<p><strong>示例（医学场景）：</strong></p>
+<blockquote>
+<p>Image：脑部 CT<br />
+Question：<code>Are regions of the brain infarcted?</code><br />
+Answer：<code>Yes</code></p>
+</blockquote>
+<p>与 Caption 相比，VQA 引入了显式的语言条件 <code>Question</code>，迫使模型：</p>
+<ul>
+<li>聚焦图像中的特定区域或属性</li>
+<li>根据问题语义筛选视觉证据</li>
+<li>输出可验证、可评估的结果</li>
+</ul>
+<p>VQA 相较 Caption 的核心差异可以总结如下：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Image Caption</th>
+<th>VQA</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输出形式</td>
+<td>自由文本</td>
+<td>受限答案</td>
+</tr>
+<tr>
+<td>是否有任务目标</td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td>是否便于自动评估</td>
+<td>较难</td>
+<td>较容易</td>
+</tr>
+<tr>
+<td>是否支持决策任务</td>
+<td>否</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<p>关键转变在于：模型不再被要求“说得多”，而是被要求“答得对”。</p>
+<hr />
+<h3 id="13-vqa-visual-instruction-tuning">1.3 从 VQA 到 Visual Instruction Tuning<a class="headerlink" href="#13-vqa-visual-instruction-tuning" title="Permanent link">&para;</a></h3>
+<p>虽然 VQA 在形式上看起来只是问答任务，但从训练机制上看，它已经具备了视觉指令微调所需的关键成分。</p>
+<p>第一，VQA 中的问题本身就是一种显式指令。例如在医学场景中，问题往往并不是泛泛而谈，而是要求模型完成某种判断：</p>
+<ul>
+<li><code>Is there evidence of hemorrhage?</code></li>
+<li><code>Does the gallbladder appear distended?</code></li>
+</ul>
+<p>这些问题本质上都可以理解为：</p>
+<blockquote>
+<p>请根据图像完成一个受约束的判断任务。</p>
+</blockquote>
+<p>第二，模型输出必须同时依赖两种输入：</p>
+<ul>
+<li>视觉输入，即图像中的区域、器官、病灶或结构信息</li>
+<li>文本输入，即问题所规定的关注点和回答目标</li>
+</ul>
+<p>这意味着模型学习的其实是一个跨模态条件生成过程：</p>
+<div class="arithmatex">\[
+P(\text{Answer} \mid \text{Image}, \text{Question})
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(\text{Image}\)</span> 表示输入图像及其视觉特征</li>
+<li><span class="arithmatex">\(\text{Question}\)</span> 表示文本问题或任务指令</li>
+<li><span class="arithmatex">\(\text{Answer}\)</span> 表示模型最终输出的回答</li>
+<li><span class="arithmatex">\(P(\cdot \mid \cdot)\)</span> 表示在图像和问题共同条件下的生成概率</li>
+</ul>
+<p>第三，在许多专业 VQA 数据集中，输出空间是相对标准化的，例如：</p>
+<ul>
+<li><code>Yes / No</code></li>
+<li>器官名称</li>
+<li>病灶类型</li>
+<li>数值型回答</li>
+</ul>
+<p>这种标准化输出使模型行为更稳定，也更便于评测与比较。</p>
+<p>因此可以说，VQA 是多模态指令微调的“最小可控形态”。它虽然还不等于完整的多模态 Agent，但已经完整体现了 Instruction Following 的本质。</p>
+<hr />
+<h3 id="14-visual-instruction-tuning">1.4 Visual Instruction Tuning 的统一视角<a class="headerlink" href="#14-visual-instruction-tuning" title="Permanent link">&para;</a></h3>
+<p>从更高层次看，Caption、VQA 与 Visual Instruction 并不是彼此割裂的任务，而是处在同一条能力演化链条上：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Image Caption
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    ↓
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Visual Question Answering
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    ↓
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>Visual Instruction Following
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    ↓
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>Multimodal Reasoning &amp; Agent
+</span></code></pre></div>
+<p>这条链条可以理解为三个阶段：</p>
+<ul>
+<li>Caption 解决视觉与语言的初步对齐问题</li>
+<li>VQA 解决在任务约束下进行选择与判断的问题</li>
+<li>Visual Instruction Tuning 解决更复杂的执行、规划与推理问题</li>
+</ul>
+<p>在本课时中，我们选择 <strong>VQA-RAD</strong> 作为实验切入点，正是因为它同时满足以下条件：</p>
+<ul>
+<li>数据规模可控</li>
+<li>任务形式清晰</li>
+<li>医学决策价值高</li>
+<li>非常适合验证多模态微调效果</li>
+</ul>
+<hr />
+<h2 id="2-cot">2 多模态指令数据：CoT 与交错图文<a class="headerlink" href="#2-cot" title="Permanent link">&para;</a></h2>
+<p>在多模态指令微调中，数据质量往往比模型规模更重要。相比简单地把“图像 + 文本”直接拼接，高质量多模态数据更关心两件事：</p>
+<ul>
+<li>模型如何进行推理</li>
+<li>模型如何在多轮图像与文本交互中逐步形成判断</li>
+</ul>
+<p>围绕这两个问题，本节重点介绍两类数据形式：</p>
+<ul>
+<li>多模态 Chain-of-Thought（CoT）数据</li>
+<li>交错图文（Interleaved Image-Text）数据</li>
+</ul>
+<hr />
+<h3 id="21">2.1 经典图文数据集<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<p>这类数据集主要用于完成视觉与文本之间的基础对齐，是训练模型“看图说话”、图文理解和跨模态生成的基础。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">数据集</th>
+<th style="text-align: left;">领域</th>
+<th style="text-align: left;">规模</th>
+<th style="text-align: left;">特点</th>
+<th style="text-align: left;">Schema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>LAION-5B</strong></td>
+<td style="text-align: left;">通用多模态</td>
+<td style="text-align: left;">58.5 亿图文对</td>
+<td style="text-align: left;">全球规模最大的开源图文对数据集之一，含 URL、文本与相似度分数</td>
+<td style="text-align: left;"><code>{"url": str, "caption": str, "similarity": float}</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ScienceQA</strong></td>
+<td style="text-align: left;">科学教育</td>
+<td style="text-align: left;">2.1k 样本</td>
+<td style="text-align: left;">多模态科学问答，包含图像、上下文和详细 CoT 解析</td>
+<td style="text-align: left;"><code>{"image": img, "hint": str, "solution": str, "lecture": str}</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ShareGPT4V</strong></td>
+<td style="text-align: left;">高质量描述</td>
+<td style="text-align: left;">1.2M 样本</td>
+<td style="text-align: left;">使用 GPT-4V 生成精细图像描述，适合提升细节刻画能力</td>
+<td style="text-align: left;"><code>{"image": str, "conversations": List[Dict]}</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>OCR-VQA</strong></td>
+<td style="text-align: left;">OCR</td>
+<td style="text-align: left;">20 万图像</td>
+<td style="text-align: left;">聚焦图像中文字理解，适合提升 OCR 与图文问答能力</td>
+<td style="text-align: left;"><code>{"image_id": int, "questions": List[str], "answers": List[str]}</code></td>
+</tr>
+</tbody>
+</table>
+<p>这些数据集共同完成的，是“视觉语义对齐”的基础工作。但如果希望模型完成更强的视觉决策任务，仅靠这类数据通常还不够。</p>
+<hr />
+<h3 id="22">2.2 专业垂直领域多模态数据集<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<p>在专业领域中，多模态任务不再只是“识别图里有什么”，而是需要把图像证据与领域知识结合起来进行判断。下面列出几个典型数据集。</p>
+<ul>
+<li><strong><a href="https://huggingface.co/datasets/flaviagiammarino/path-vqa">PathVQA</a></strong>：病理影像多模态问答。模型必须识别病理切片中的细胞结构，再回答专家提出的问题。</li>
+</ul>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;image&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pathology_slide_102.jpg&quot;</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;图像中的细胞核是否表现出明显的异型性？&quot;</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Yes&quot;</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong><a href="https://huggingface.co/datasets/hz2475/geoQA">GeoQA</a></strong>：几何逻辑多模态问答。模型需要理解图形结构并结合题干完成推理。</li>
+</ul>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;image&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;geometry_05.png&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;subject&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;已知圆 O 的半径为 5，求阴影部分的面积。&quot;</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;识别圆形与切线&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;应用勾股定理&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;计算扇形减去三角形&quot;</span><span class="p">],</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;25π/4&quot;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong><a href="https://huggingface.co/datasets/lmms-lab/DocVQA">DocVQA</a></strong>：文档理解多模态。模型需要同时具备 OCR、版面分析和语义问答能力。</li>
+</ul>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;image&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;invoice_00023.png&quot;</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;What is the total amount due on this invoice?&quot;</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1,245.00 USD&quot;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong><a href="https://huggingface.co/datasets/ahmed-masry/chartqa">ChartQA</a></strong>：图表理解与数值推理。模型要从图像中读取数值信息并执行比较、排序或计算。</li>
+</ul>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">&quot;image&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sales_chart_12.png&quot;</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Which year shows the largest increase in revenue compared to the previous year?&quot;</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2019&quot;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这些垂直数据集说明，多模态能力真正有价值的地方，往往不在通用描述，而在专业推理。</p>
+<hr />
+<h3 id="23-chain-of-thoughtcot">2.3 为什么需要多模态 Chain-of-Thought（CoT）<a class="headerlink" href="#23-chain-of-thoughtcot" title="Permanent link">&para;</a></h3>
+<p>在标准 VQA 任务中，训练样本通常采用如下映射：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Image + Question → Answer
+</span></code></pre></div>
+<p>这种监督方式虽然能让模型学会“输出正确答案”，但存在明显局限：</p>
+<ul>
+<li>模型可能依赖语言先验而不是视觉证据</li>
+<li>推理过程完全隐式，难以判断模型是否真的看懂了图像</li>
+<li>在医学、工业等高风险场景中，容易产生“自信但错误”的回答</li>
+</ul>
+<p>多模态 CoT 的目标是将人类的推理路径显式写入训练样本中，即：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>视觉观察 → 语义解释 → 决策结论
+</span></code></pre></div>
+<p>通过把中间推理步骤作为监督信号，模型不仅学习“答案是什么”，还学习：</p>
+<ul>
+<li>应该关注哪些视觉现象</li>
+<li>如何将视觉证据映射到领域语义</li>
+<li>如何由证据推出最终结论</li>
+</ul>
+<p><img alt="视觉链式推理流程图" src="../assets/cot.png" /></p>
+<!-- > 图片来源：https://blog.csdn.net/m0_38097087/article/details/149329087 -->
+
+<p>多模态 CoT 的核心价值，不是让模型输出更长文本，而是要求其推理路径显式依赖图像证据。</p>
+<hr />
+<h3 id="24-cot">2.4 多模态 CoT 的设计原则<a class="headerlink" href="#24-cot" title="Permanent link">&para;</a></h3>
+<p>在实际构造多模态 CoT 数据时，至少应遵循以下三个原则。</p>
+<h4 id="241">2.4.1 推理必须可追溯到图像证据<a class="headerlink" href="#241" title="Permanent link">&para;</a></h4>
+<p>错误示例：</p>
+<blockquote>
+<p>根据医学常识，脑梗塞通常会出现低密度影。</p>
+</blockquote>
+<p>正确示例：</p>
+<blockquote>
+<p>在 CT 图像中，右侧基底节区可见低密度灶，该影像特征通常对应缺血性脑梗塞。</p>
+</blockquote>
+<p>两者的本质区别在于，后者把判断与图像中的具体证据绑定在了一起。</p>
+<hr />
+<h4 id="242-cot">2.4.2 CoT 应突出任务所需的最短推理链<a class="headerlink" href="#242-cot" title="Permanent link">&para;</a></h4>
+<p>多模态 CoT 的目标不是生成完整诊断报告，而是保留完成当前任务所需的关键中间步骤。对大多数 VQA 场景而言，2 到 4 步推理通常已经足够：</p>
+<ol>
+<li>识别关键视觉现象</li>
+<li>解释这些现象对应的领域语义</li>
+<li>给出最终判断</li>
+</ol>
+<p>过长的推理文本容易引入噪声，反而会降低训练稳定性。</p>
+<hr />
+<h4 id="243">2.4.3 最终答案应结构化、可提取<a class="headerlink" href="#243" title="Permanent link">&para;</a></h4>
+<p>在训练数据中，应将 <strong>Reasoning</strong> 与 <strong>Answer</strong> 明确区分，例如：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Reasoning: ...
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Answer: Yes
+</span></code></pre></div>
+<p>这样做有三个好处：</p>
+<ul>
+<li>推理内容可作为辅助监督信号</li>
+<li>最终答案可作为主要优化目标</li>
+<li>评测阶段可直接抽取标准答案</li>
+</ul>
+<hr />
+<h3 id="25-interleaved-image-text">2.5 交错图文（Interleaved Image-Text）<a class="headerlink" href="#25-interleaved-image-text" title="Permanent link">&para;</a></h3>
+<p>标准 VQA 往往假设一张图就足以回答问题，但在真实场景中，这个假设经常不成立。例如：</p>
+<ul>
+<li>多切片 CT / MRI</li>
+<li>多视角 X-ray</li>
+<li>同一器官在不同时刻或不同平面的图像</li>
+</ul>
+<p>医生阅片时，往往是反复切换图像与文字信息，逐步形成判断。交错图文正是在模拟这一认知过程。</p>
+<p>其核心结构通常如下：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>&lt;image&gt;
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>文本描述 / 观察
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>&lt;image&gt;
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>进一步观察
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>问题 / 指令
+</span></code></pre></div>
+<p>医学场景下的一个简单示例如下：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>&lt;image&gt;
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Axial CT slice shows hypodensity in the right basal ganglia.
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>&lt;image&gt;
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>Coronal view confirms the extent of the lesion.
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>Question: Is the infarction acute?
+</span></code></pre></div>
+<p>交错图文的关键并不是“放多张图”，而是用文本把不同图像中的观察串联起来，模拟人类逐步查看、逐步归纳的过程。</p>
+<hr />
+<h3 id="26">2.6 图文交错数据的简单抽取示例<a class="headerlink" href="#26" title="Permanent link">&para;</a></h3>
+<p>下面这段代码展示如何从一个简短的图文交错片段中抽取图片链接，并构造成可用于训练的数据字段。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">describe_image</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="c1"># 模拟一个图像描述函数（真实场景中可由 VLM 生成）</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="k">return</span> <span class="s2">&quot;The chest X-ray shows signs of possible pneumonia.&quot;</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">paragraph</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="s2">A chest X-ray is commonly used to examine the lungs and heart.</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="s2">See the image here: https://fake-med-data.org/images/chest_xray_001.png</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="s2">In this image, the patient shows signs of possible pneumonia.</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;https?://</span><span class="se">\\</span><span class="s2">S+</span><span class="se">\\</span><span class="s2">.png&quot;</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="n">image_urls</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">paragraph</span><span class="p">)</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="n">text</span> <span class="o">=</span> <span class="n">paragraph</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="n">answer</span> <span class="o">=</span> <span class="s2">&quot;The X-ray shows signs consistent with pneumonia.&quot;</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="n">describe</span> <span class="o">=</span> <span class="p">[</span><span class="n">describe_image</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">image_urls</span><span class="p">]</span>
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="nb">print</span><span class="p">({</span>
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>    <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>    <span class="s2">&quot;answer&quot;</span><span class="p">:</span> <span class="n">answer</span><span class="p">,</span>
+</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>    <span class="s2">&quot;describe&quot;</span><span class="p">:</span> <span class="n">describe</span>
+</span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a><span class="p">})</span>
+</span></code></pre></div>
+<p><strong>输出示例：</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>  <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;A chest X-ray is commonly used to examine the lungs and heart.</span><span class="se">\n</span><span class="s1">See the image here: https://fake-med-data.org/images/chest_xray_001.png</span><span class="se">\n</span><span class="s1">In this image, the patient shows signs of possible pneumonia.&#39;</span><span class="p">,</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>  <span class="s1">&#39;answer&#39;</span><span class="p">:</span> <span class="s1">&#39;The X-ray shows signs consistent with pneumonia.&#39;</span><span class="p">,</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>  <span class="s1">&#39;describe&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;The chest X-ray shows signs of possible pneumonia.&#39;</span><span class="p">]</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这段代码本身并不复杂，但体现了一个很重要的工程思想：原始图文混合内容并不能直接作为训练数据使用，必须先经过结构化整理，才能进入后续的指令微调流程。</p>
+<hr />
+<h3 id="27">2.7 常见数据格式设计<a class="headerlink" href="#27" title="Permanent link">&para;</a></h3>
+<p>在工程实践中，我们通常把前面的思想统一映射为几类标准数据格式。</p>
+<h4 id="271-vqa">2.7.1 标准 VQA 数据<a class="headerlink" href="#271-vqa" title="Permanent link">&para;</a></h4>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">&quot;messages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;image&gt; Are regions of the brain infarcted?&quot;</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Yes&quot;</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">  </span><span class="p">],</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">  </span><span class="nt">&quot;images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ct_001.jpg&quot;</span><span class="p">]</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这种形式适合基础多模态对齐训练，但对推理路径的约束较弱。</p>
+<hr />
+<h4 id="272-cot">2.7.2 带多模态 CoT 的指令数据<a class="headerlink" href="#272-cot" title="Permanent link">&para;</a></h4>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">&quot;messages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;image&gt; Are regions of the brain infarcted?&quot;</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Reasoning: The CT image shows a hypodense region in the basal ganglia, which is a typical imaging feature of ischemic infarction.\nAnswer: Yes&quot;</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">  </span><span class="p">],</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">  </span><span class="nt">&quot;images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ct_001.jpg&quot;</span><span class="p">]</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这种格式通过显式推理过程，迫使模型将回答建立在视觉证据之上。</p>
+<hr />
+<h4 id="273">2.7.3 交错图文样本<a class="headerlink" href="#273" title="Permanent link">&para;</a></h4>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">&quot;messages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;image&gt; Axial CT slice.\n&lt;image&gt; Coronal CT slice.\nQuestion: Does the gallbladder appear distended?&quot;</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">      </span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Answer: Yes&quot;</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="w">  </span><span class="p">],</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="w">  </span><span class="nt">&quot;images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ct_axial.jpg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ct_coronal.jpg&quot;</span><span class="p">]</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这种格式适用于多视角、多阶段视觉理解任务，也为后续复杂多模态推理打下基础。</p>
+<hr />
+<h2 id="3-lazyllm-img-ppl">3 用 LazyLLM 玩转医学多模态推理增强（Img + PPL）<a class="headerlink" href="#3-lazyllm-img-ppl" title="Permanent link">&para;</a></h2>
+<p>在真实医学场景中，一个典型难题是：</p>
+<ul>
+<li>小模型成本低，但专业能力不够稳定</li>
+<li>大模型能力强，但推理与部署成本较高</li>
+</ul>
+<p>因此，一个非常自然的思路是：</p>
+<blockquote>
+<p>用大模型生成高质量训练数据，再用这些数据去提升小模型。</p>
+</blockquote>
+<p>本实验的核心目标就是：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Qwen2.5-VL-32B-Instruct 生成增强训练数据
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>            ↓
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>Qwen2.5-VL-3B-Instruct 执行多模态 SFT
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>            ↓
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>提升医学影像任务预测能力
+</span></code></pre></div>
+<hr />
+<h3 id="31">3.1 数据集简介<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>本实验使用医学影像 VQA 数据集：</p>
+<ul>
+<li><a href="https://huggingface.co/datasets/flaviagiammarino/vqa-rad">VQA-RAD</a></li>
+</ul>
+<p><img alt="VQA-RAD数据集示例图" src="../assets/exp_dataset.png" /></p>
+<p>该数据集面向放射影像问答场景，每条样本通常包含一张医学图像、一个问题和一个标准答案。</p>
+<h4 id="311">3.1.1 数据结构<a class="headerlink" href="#311" title="Permanent link">&para;</a></h4>
+<p><img alt="医学视觉问答数据结构示意图" src="../assets/ds_example.png" /></p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p">{</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">&quot;image&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;PIL.Image&gt;&quot;</span><span class="p">,</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;are regions of the brain infarcted?&quot;</span><span class="p">,</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这里的 <code>image</code> 在加载后是内存中的 <code>PIL.Image</code> 对象，实际训练前需要先保存为本地文件。</p>
+<h4 id="312">3.1.2 数据规模<a class="headerlink" href="#312" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Split</th>
+<th>数量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Train</td>
+<td>1793</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>451</td>
+</tr>
+</tbody>
+</table>
+<p>这是一个相对小规模但非常适合教学实验的数据集：规模不大，便于复现；任务明确，便于验证增强前后的差异。</p>
+<hr />
+<h3 id="32-pipeline">3.2 数据处理与增强 Pipeline<a class="headerlink" href="#32-pipeline" title="Permanent link">&para;</a></h3>
+<p>本实验的核心思想并不是直接拿原始 <code>question -&gt; answer</code> 样本去训练，而是先通过更强的 VLM 生成带有推理过程的增强数据，再将增强后的结果用于 SFT。</p>
+<p>整个流程可以概括为：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>原始 VQA-RAD
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    ↓
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>保存图片并转换为 instruction/input/output
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>    ↓
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>使用 img2qa pipeline 生成 reasoning-enhanced data
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>    ↓
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>直接用于 VLM SFT
+</span></code></pre></div>
+<hr />
+<h4 id="321">3.2.1 数据下载与格式转换<a class="headerlink" href="#321" title="Permanent link">&para;</a></h4>
+<p>脚本首先加载 VQA-RAD 数据集：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;flaviagiammarino/vqa-rad&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>随后将每条样本转换为统一格式：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="p">{</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;question&quot;</span><span class="p">,</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">,</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;answer&quot;</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>对应的核心代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">prepare_dataset</span><span class="p">():</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;flaviagiammarino/vqa-rad&quot;</span><span class="p">)</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">process_split</span><span class="p">(</span><span class="n">split_name</span><span class="p">,</span> <span class="n">save_path</span><span class="p">):</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>        <span class="n">data_out</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>        <span class="n">split</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">split_name</span><span class="p">]</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">split</span><span class="p">):</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>            <span class="n">img</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a>            <span class="n">question</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;question&quot;</span><span class="p">]</span>
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>            <span class="n">answer</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a>
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>            <span class="n">img_path</span> <span class="o">=</span> <span class="n">IMAGE_DIR</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">split_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.jpg&quot;</span>
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a>            <span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a>
+</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a>            <span class="n">data_out</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a>                <span class="s2">&quot;instruction&quot;</span><span class="p">:</span> <span class="n">question</span><span class="p">,</span>
+</span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a>                <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">img_path</span><span class="p">),</span>
+</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a>                <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">answer</span>
+</span><span id="__span-22-20"><a id="__codelineno-22-20" name="__codelineno-22-20" href="#__codelineno-22-20"></a>            <span class="p">})</span>
+</span></code></pre></div>
+<p>这一步完成了三件事：</p>
+<ul>
+<li>把 <code>PIL.Image</code> 保存到本地，便于训练和评测复用</li>
+<li>统一图像路径字段为 <code>input</code></li>
+<li>把问答样本转成更适合 SFT 的结构化格式</li>
+</ul>
+<hr />
+<h4 id="322">3.2.2 图片保存与预处理<a class="headerlink" href="#322" title="Permanent link">&para;</a></h4>
+<p>在一键脚本中，图像会先落盘，再交给后续 <code>img2qa</code> 流水线统一处理。这样做有几个工程层面的好处：</p>
+<ul>
+<li>图像文件可以在训练、评测和调试中重复使用</li>
+<li>可以对所有图像施加统一的缩放规则</li>
+<li>有利于控制显存占用</li>
+<li>可以提升多模态训练的稳定性</li>
+</ul>
+<p>本实验中，在流水线里统一将图片缩放到 <strong>336 × 336</strong>。这个尺寸一方面足以保留多数影像的主要结构信息，另一方面也有助于控制推理与训练成本。</p>
+<hr />
+<h4 id="323">3.2.3 生成增强数据<a class="headerlink" href="#323" title="Permanent link">&para;</a></h4>
+<p>增强阶段的核心算子是 <code>build_img2qa_pipeline</code>。它会根据图片和问题，生成带推理过程的增强答案，并直接写回训练集。</p>
+<p>示例形式如下：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="p">{</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">  </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Is the mass hyperintense or hypointense?&quot;</span><span class="p">,</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Reasoning: ... Therefore, hyperintense.&quot;</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>对应的关键代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">model</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="s2">&quot;Qwen2.5-VL-32B-Instruct&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">deploy_method</span><span class="p">(</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>    <span class="n">lazyllm</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vllm</span><span class="p">,</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    <span class="n">openai_api</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="p">)</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="n">ppl</span> <span class="o">=</span> <span class="n">build_img2qa_pipeline</span><span class="p">(</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>    <span class="n">gen_prompt</span><span class="o">=</span><span class="n">gen_prompt</span><span class="p">,</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>    <span class="n">image_key</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span>
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a>    <span class="n">context_key</span><span class="o">=</span><span class="s1">&#39;instruction&#39;</span><span class="p">,</span>
+</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>    <span class="n">img_resize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a>    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">336</span><span class="p">,</span> <span class="mi">336</span><span class="p">)</span>
+</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>这段代码体现了几个重要设计：</p>
+<ul>
+<li>使用 <code>Qwen2.5-VL-32B-Instruct</code> 作为教师模型生成增强数据</li>
+<li>用 <code>image_key='input'</code> 指明图像路径字段</li>
+<li>用 <code>context_key='instruction'</code> 指明问题文本字段</li>
+<li>开启 <code>img_resize=True</code>，并统一到 <code>size=(336, 336)</code></li>
+</ul>
+<p>增强数据的价值在于，它不再只给出短答案，而是加入了从视觉观察到结论的中间推理，训练信号比原始 VQA 更丰富。</p>
+<hr />
+<h4 id="324-prompt">3.2.4 增强 Prompt 设计<a class="headerlink" href="#324-prompt" title="Permanent link">&para;</a></h4>
+<p>本实验中，增强质量高度依赖教师模型的 prompt。脚本中的 <code>gen_prompt</code> 明确要求模型不要简单重复答案，而是重建通向答案的推理过程。</p>
+<p>其设计目标主要有三点：</p>
+<ol>
+<li>强制模型先做视觉观察，再做逻辑整合</li>
+<li>把最终短答案嵌入完整解释之中</li>
+<li>避免只输出 <code>Yes / No</code> 这种信息量过低的结果</li>
+</ol>
+<p>从训练角度看，这相当于把原本稀疏的监督信号扩展为更丰富的 reasoning-enhanced supervision，使学生模型更容易学到“为什么这样答”，而不只是“答案是什么”。</p>
+<hr />
+<h4 id="325-sft">3.2.5 直接进入 SFT 训练<a class="headerlink" href="#325-sft" title="Permanent link">&para;</a></h4>
+<p>脚本不会额外执行质量评分过滤，也不会再做一次格式转换，而是直接基于训练集中的以下字段进入 VLM 微调：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;question&quot;</span><span class="p">,</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">,</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reasoning or answer&quot;</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这种设计使得整个流程非常简洁：增强完的数据就是训练数据。但它也意味着，增强质量更依赖教师模型本身。如果教师生成内容存在系统性偏差，学生模型也会继承这些偏差。</p>
+<hr />
+<h3 id="33-sft">3.3 模型微调（SFT）<a class="headerlink" href="#33-sft" title="Permanent link">&para;</a></h3>
+<p>本实验中用于微调的学生模型是 <code>Qwen2.5-VL-3B-Instruct</code>。一键启动脚本中的完整模型构建代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_sft_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">):</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>    <span class="k">return</span> <span class="p">(</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>        <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;vlm&#39;</span><span class="p">,</span> <span class="n">target_path</span><span class="o">=</span><span class="n">BASE_DIR</span><span class="p">)</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>        <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&quot;finetune&quot;</span><span class="p">)</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>        <span class="o">.</span><span class="n">trainset</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">TRAIN_JSON</span><span class="p">))</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>        <span class="o">.</span><span class="n">finetune_method</span><span class="p">(</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>            <span class="p">(</span><span class="n">finetune</span><span class="o">.</span><span class="n">llamafactory</span><span class="p">,</span> <span class="p">{</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>                <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">1e-5</span><span class="p">,</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>                <span class="s2">&quot;cutoff_len&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>                <span class="s2">&quot;max_samples&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>                <span class="s2">&quot;preprocessing_num_workers&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>                <span class="s2">&quot;val_size&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>                <span class="s2">&quot;per_device_train_batch_size&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>                <span class="s2">&quot;num_train_epochs&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a>                <span class="s2">&quot;gradient_accumulation_steps&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a>                <span class="s2">&quot;overwrite_cache&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17" href="#__codelineno-26-17"></a>            <span class="p">})</span>
+</span><span id="__span-26-18"><a id="__codelineno-26-18" name="__codelineno-26-18" href="#__codelineno-26-18"></a>        <span class="p">)</span>
+</span><span id="__span-26-19"><a id="__codelineno-26-19" name="__codelineno-26-19" href="#__codelineno-26-19"></a>        <span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="s2">&quot;You are a medical assistant, answer the question, answer no if you are not sure about the result.&quot;</span><span class="p">,</span> <span class="n">drop_builtin_system</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span id="__span-26-20"><a id="__codelineno-26-20" name="__codelineno-26-20" href="#__codelineno-26-20"></a>    <span class="p">)</span>
+</span></code></pre></div>
+<p>这里的核心参数含义如下：</p>
+<ul>
+<li><code>learning_rate = 1e-5</code>：学习率，控制参数更新步长。由于是小数据集上的多模态微调，设置较小学习率更稳妥，可减少对原始能力的破坏。</li>
+<li><code>cutoff_len = 1024</code>：最大上下文长度，限制单条样本可参与训练的 token 数量。</li>
+<li><code>max_samples = 10000</code>：训练时允许使用的最大样本数。由于当前训练集不到 2000 条，因此这一参数在本实验中更像是上限保护。</li>
+<li><code>preprocessing_num_workers = 1</code>：数据预处理进程数。小数据实验中设置为 1 更便于稳定复现。</li>
+<li><code>val_size = 0.1</code>：从训练集划出 10% 用作验证集。</li>
+<li><code>per_device_train_batch_size = 12</code>：每张设备上的 batch size。</li>
+<li><code>num_train_epochs = 3.0</code>：完整训练 3 个 epoch。</li>
+<li><code>gradient_accumulation_steps = 10</code>：梯度累积步数，用于在显存有限时增大等效 batch size。</li>
+<li><code>overwrite_cache = False</code>：不覆盖预处理缓存，便于重复运行时复用缓存结果。</li>
+</ul>
+<p>其中，一个常被忽略但很重要的量是<strong>等效 batch size</strong>：</p>
+<div class="arithmatex">\[
+\text{Effective Batch Size} = B \times G
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(B\)</span> 表示 <code>per_device_train_batch_size</code></li>
+<li><span class="arithmatex">\(G\)</span> 表示 <code>gradient_accumulation_steps</code></li>
+<li><span class="arithmatex">\(\text{Effective Batch Size}\)</span> 表示单设备上的等效 batch size</li>
+</ul>
+<p>在本实验中：</p>
+<div class="arithmatex">\[
+\text{Effective Batch Size} = 12 \times 10 = 120
+\]</div>
+<p>这意味着尽管单步只处理 12 条样本，但通过梯度累积，模型最终等效于以 120 条样本的规模更新一次参数，有助于提升小数据训练时的稳定性。</p>
+<p><img alt="VLM训练损失曲线图" src="../assets/training_loss.png" /></p>
+<p>从整体配置看，这是一套偏保守但比较稳妥的小数据 VLM 微调参数组合：学习率较低、epoch 不高、梯度累积较大，更关注稳定适应而不是激进更新。</p>
+<hr />
+<h3 id="34">3.4 自动评测方法<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<p>完成微调后，实验分别对：</p>
+<ul>
+<li>原始 <code>Qwen2.5-VL-3B-Instruct</code> 基座模型</li>
+<li>SFT 后的 <code>Qwen2.5-VL-3B-Instruct</code></li>
+</ul>
+<p>在同一测试集上执行推理，并用更强的文本模型进行自动评分。</p>
+<p>评分规则非常直接：</p>
+<ul>
+<li>如果模型预测与标准答案语义一致，记为 1</li>
+<li>否则记为 0</li>
+</ul>
+<p>自动评分器的核心实现如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">scorer</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>    <span class="n">lazyllm</span><span class="o">.</span><span class="n">TrainableModule</span><span class="p">(</span><span class="s2">&quot;qwen3-14b&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">deploy_method</span><span class="p">(</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>        <span class="n">lazyllm</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vllm</span><span class="p">,</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>        <span class="n">openai_api</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>    <span class="p">)</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="s2">Task: Accuracy Check.</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="s2">Judge if the &quot;Prediction&quot; logically supports and includes the &quot;Standard Answer&quot;.</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="s2">1 = Correct &amp; Consistent</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="s2">0 = Incorrect or Irrelevant</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="s2">Only output JSON: {&quot;score&quot;: 0 or 1}</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a>    <span class="o">.</span><span class="n">formatter</span><span class="p">(</span><span class="n">JsonFormatter</span><span class="p">())</span>
+</span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a>    <span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="__span-27-16"><a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>这种评测方式本质上是在近似计算：</p>
+<div class="arithmatex">\[
+\text{Accuracy} = \frac{N_{\text{correct}}}{N}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\(N_{\text{correct}}\)</span> 表示得分为 1 的样本数</li>
+<li><span class="arithmatex">\(N\)</span> 表示测试样本总数</li>
+<li><span class="arithmatex">\(\text{Accuracy}\)</span> 表示测试集上的语义一致性准确率</li>
+</ul>
+<p>由于医学 VQA 中很多答案较短，直接做字符串匹配容易过于严格，因此这里采用 LLM 评审方式来判断语义一致性，通常比字面匹配更合理。</p>
+<hr />
+<h3 id="35">3.5 实验结果<a class="headerlink" href="#35" title="Permanent link">&para;</a></h3>
+<p>实验输出如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="o">===</span> <span class="n">infer</span> <span class="p">(</span><span class="n">infer_score</span><span class="o">.</span><span class="n">json</span><span class="p">)</span> <span class="o">===</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>  <span class="n">测试总数</span><span class="p">:</span>  <span class="mi">451</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>  <span class="mi">1</span> <span class="n">的数量</span><span class="p">:</span> <span class="mi">197</span>  <span class="p">(</span><span class="mf">43.68</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>  <span class="mi">0</span> <span class="n">的数量</span><span class="p">:</span> <span class="mi">254</span>  <span class="p">(</span><span class="mf">56.32</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>  <span class="n">最终得分</span><span class="p">:</span> <span class="p">(</span><span class="mf">43.68</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="o">===</span> <span class="n">sft</span> <span class="p">(</span><span class="n">sft_score</span><span class="o">.</span><span class="n">json</span><span class="p">)</span> <span class="o">===</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>  <span class="n">测试总数</span><span class="p">:</span>  <span class="mi">451</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>  <span class="mi">1</span> <span class="n">的数量</span><span class="p">:</span> <span class="mi">209</span>  <span class="p">(</span><span class="mf">46.34</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>  <span class="mi">0</span> <span class="n">的数量</span><span class="p">:</span> <span class="mi">242</span>  <span class="p">(</span><span class="mf">53.66</span><span class="o">%</span><span class="p">)</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>  <span class="n">最终得分</span><span class="p">:</span> <span class="p">(</span><span class="mf">46.34</span><span class="o">%</span><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="图像困惑度实验结果图" src="../assets/imgpplres.png" /></p>
+<h4 id="351">3.5.1 定量结果<a class="headerlink" href="#351" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>总数</th>
+<th>正确</th>
+<th>错误</th>
+<th>准确率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Infer（微调前）</td>
+<td>451</td>
+<td>197</td>
+<td>254</td>
+<td>43.68%</td>
+</tr>
+<tr>
+<td>SFT（微调后）</td>
+<td>451</td>
+<td>209</td>
+<td>242</td>
+<td>46.34%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="352">3.5.2 提升分析<a class="headerlink" href="#352" title="Permanent link">&para;</a></h4>
+<p>从结果上看，准确率由 <strong>43.68%</strong> 提升到 <strong>46.34%</strong>，提升了 <strong>2.66 个百分点</strong>。对应到样本层面：</p>
+<ul>
+<li>正确样本数增加了 12 条</li>
+<li>错误样本数减少了 12 条</li>
+</ul>
+<p>这个提升幅度并不算大，但在当前实验设置下是合理的，原因主要有以下几点：</p>
+<ol>
+<li>数据集规模较小，训练上限受限</li>
+<li>学生模型本身只有 3B 规模，医学专业视觉能力有限</li>
+<li>增强数据虽然更丰富，但并没有再做额外质量过滤</li>
+</ol>
+<p>因此，这一结果更适合被理解为：</p>
+<blockquote>
+<p>使用教师模型生成 reasoning-enhanced 数据，能够让小型 VLM 在医学 VQA 上获得可观测但有限的增益。</p>
+</blockquote>
+<hr />
+<h3 id="36">3.6 结果对比示例<a class="headerlink" href="#36" title="Permanent link">&para;</a></h3>
+<p>下面给出一个更直观的案例。</p>
+<p><strong>微调前，基模型错误地按常识回答“肾的位置”，忽略了图像中其实看不到肾：</strong></p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="p">{</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;where are the kidney?&quot;</span><span class="p">,</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/vqa_rad_simple/images/test_4.jpg&quot;</span><span class="p">,</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;not seen here&quot;</span><span class="p">,</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="w">  </span><span class="nt">&quot;prediction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;In this CT scan of the abdomen, the kidneys are located in the lower back region, on either side of the vertebral column. The right kidney is typically positioned higher than the left due to the liver between them.&quot;</span><span class="p">,</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="w">  </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong>微调后，模型能够更贴近图像本身作答，判断图片中没有看到肾：</strong></p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="p">{</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;where are the kidney?&quot;</span><span class="p">,</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/vqa_rad_simple/images/test_4.jpg&quot;</span><span class="p">,</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;not seen here&quot;</span><span class="p">,</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="w">  </span><span class="nt">&quot;prediction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;The kidneys are not visible in this CT scan image provided.&quot;</span><span class="p">,</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="w">  </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这个例子非常典型。微调前的模型更依赖语言常识，回答的是“肾通常在哪里”；微调后的模型则更依赖当前图像证据，回答的是“这张图里是否看到了肾”。这正是多模态增强训练想要达到的效果。</p>
+<hr />
+<h3 id="37">3.7 总结<a class="headerlink" href="#37" title="Permanent link">&para;</a></h3>
+<p>本实验展示了一个典型的多模态能力增强范式：</p>
+<ol>
+<li>使用专业数据集构建基础 VQA 样本</li>
+<li>用更强的视觉语言模型生成带推理过程的增强训练数据</li>
+<li>用增强数据对较小的 VLM 做 SFT</li>
+<li>用统一测试集和自动评分器比较增强前后的效果</li>
+</ol>
+<p>从结果看，模型在医学影像任务上的预测能力获得了小幅提升。虽然提升幅度有限，但它验证了一个重要结论：</p>
+<blockquote>
+<p><strong>高质量教师数据可以在不扩大学生模型规模的情况下，帮助其更稳定地依据视觉证据作答。</strong></p>
+</blockquote>
+<p>本章涉及的完整代码位于：</p>
+<ul>
+<li><a href="../code/imgppl.py">代码链接</a></li>
+</ul>
+<p>这一思路不仅适用于 VQA-RAD，也可以迁移到病理影像、文档理解、图表推理等其他多模态垂直任务中。下一步若希望继续提升效果，可以从三个方向入手：</p>
+<ul>
+<li>对增强样本增加质量过滤与人工抽检</li>
+<li>引入更强或更贴近领域的教师模型</li>
+<li>在训练目标中显式区分推理文本与最终答案</li>
+</ul>
+<h2 id="_1">参考文献<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p><a href="https://research.google/blog/rewriting-image-captions-for-visual-question-answering-data-creation/">Rewriting Image Captions for Visual Question Answering Data Creation</a></p>
+<p><a href="https://blog.csdn.net/m0_38097087/article/details/149329087">思维链COT（Chain-of-Thought）全解析：原理、范式、写法与实战案例</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../chapter13/13/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第13课时：基于 LazyLLM 的微调实战">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第13课时：基于 LazyLLM 的微调实战
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../chapter15/15/" class="md-footer__link md-footer__link--next" aria-label="Next: 第15课时：对齐算法原理 (RLHF &amp; GRPO)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                第15课时：对齐算法原理 (RLHF & GRPO)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/LazyAGI/LazyLLM" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "navigation.footer", "navigation.top", "search.highlight", "search.suggest", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,3490 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="End-to-end LLM training and data engineering course built on LazyLLM.">
+      
+      
+        <meta name="author" content="LazyLLM Community">
+      
+      
+      
+        <link rel="prev" href="../../chapter20/20/">
+      
+      
+        <link rel="next" href="../../chapter22/22/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://img.icons8.com/?size=100&id=121346&format=png&color=000000">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第21课时：长上下文能力增强 - From Data to LLM</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="data:text/css,.md-grid{max-width:90%25!important}">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#21" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="From Data to LLM" class="md-header__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            From Data to LLM
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第21课时：长上下文能力增强
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  课程简介
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../outline/" class="md-tabs__link">
+          
+  
+  
+  课程内容
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="From Data to LLM" class="md-nav__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    From Data to LLM
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程体系
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程内容
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程内容
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程大纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一部分：大模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第一部分：大模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter1/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1课时：Transformer 核心与 Self-Attention 深度剖析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter2/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2课时：LLM 训练范式与数据工程全景
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二部分：系统工程基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第二部分：系统工程基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter3/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3课时：分布式训练技术概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter4/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4课时：模型部署与推理加速
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter5/5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter6/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6课时：基于 LazyLLM 的全流程实践
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三部分：预训练数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第三部分：预训练数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter7/7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7课时：预训练原理、策略与评测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter8/8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8课时：预训练数据构建全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter9/9/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9课时：基于 LazyLLM 的预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter10/10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10课时：多模态 LLM 架构与预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四部分：微调数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第四部分：微调数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter11/11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter12/12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12课时：通用指令数据构建、合成与蒸馏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter13/13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13课时：基于 LazyLLM 的微调实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter14/14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五部分：对齐数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第五部分：对齐数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter15/15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter16/16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16课时：偏好数据构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter17/17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17课时：模型风险、合规与伦理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter18/18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18课时：基于 LazyLLM 的对齐实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六部分：特定能力数据
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第六部分：特定能力数据
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter19/19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19课时：推理与数学能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter20/20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20课时：代码能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 长上下文问题与能力边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 长文本数据构建：来源、组织与质量控制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 长文本数据构建：来源、组织与质量控制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 典型长文本来源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 长文本数据组织策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 数据质量控制要点
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-needle-in-a-haystack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 合成长数据：Needle In A Haystack 与自动化构造
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 合成长数据：Needle In A Haystack 与自动化构造">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 “大海捞针”问题本质
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 合成数据构造方法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 样本格式与可分析性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 长上下文建模与评测方法
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 长上下文建模与评测方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-rope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 长窗口建模：RoPE 扩展与训练策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 长序列计算代价与 KV Cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-flash-ring-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 显存友好注意力：分块、Flash 与 Ring Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 长窗口训练技巧与评测体系
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 长上下文能力的现实边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-lazyllm-squad-20-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. LazyLLM 实战与评测：SQuAD 2.0 长上下文 Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. LazyLLM 实战与评测：SQuAD 2.0 长上下文 Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 任务目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 数据集简介
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 数据集简介">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#521" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2.1 数据来源与任务性质
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#522" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2.2 数据规模与关键配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#523" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2.3 数据中间文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 数据结构与字段说明
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 数据结构与字段说明">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#531-squad_rawjsonl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.1 原始样本（squad_raw.jsonl）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#532-squad_ppl_longjsonl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.2 长上下文样本（squad_ppl_long.jsonl）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#533" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.3 训练 / 评测格式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 数据处理流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 数据处理流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#541" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.1 流程概览
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#542-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.2 核心函数 1：原始样本过滤与去重
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#543-2pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.3 核心函数 2：pipeline 调用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#544-3sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.4 核心函数 3：SFT 映射与数据划分
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#545-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.5 核心函数 4：数据准备主流程编排
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 模型训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 效果评测
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 实验结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter22/22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22课时：结构化输出与格式对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter23/23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23课时：Agent 能力增强 (Tools & Planning)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter24/24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24课时：行业领域模型实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七部分：RAG 数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第七部分：RAG 数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter25/25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter26/26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26课时：Embedding 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter27/27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27课时：Reranker 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter28/28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 长上下文问题与能力边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 长文本数据构建：来源、组织与质量控制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 长文本数据构建：来源、组织与质量控制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 典型长文本来源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 长文本数据组织策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 数据质量控制要点
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-needle-in-a-haystack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 合成长数据：Needle In A Haystack 与自动化构造
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 合成长数据：Needle In A Haystack 与自动化构造">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 “大海捞针”问题本质
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 合成数据构造方法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 样本格式与可分析性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 长上下文建模与评测方法
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 长上下文建模与评测方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-rope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 长窗口建模：RoPE 扩展与训练策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 长序列计算代价与 KV Cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-flash-ring-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 显存友好注意力：分块、Flash 与 Ring Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 长窗口训练技巧与评测体系
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 长上下文能力的现实边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-lazyllm-squad-20-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. LazyLLM 实战与评测：SQuAD 2.0 长上下文 Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. LazyLLM 实战与评测：SQuAD 2.0 长上下文 Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 任务目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 数据集简介
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2 数据集简介">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#521" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2.1 数据来源与任务性质
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#522" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2.2 数据规模与关键配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#523" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2.3 数据中间文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 数据结构与字段说明
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 数据结构与字段说明">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#531-squad_rawjsonl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.1 原始样本（squad_raw.jsonl）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#532-squad_ppl_longjsonl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.2 长上下文样本（squad_ppl_long.jsonl）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#533" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3.3 训练 / 评测格式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 数据处理流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 数据处理流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#541" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.1 流程概览
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#542-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.2 核心函数 1：原始样本过滤与去重
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#543-2pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.3 核心函数 2：pipeline 调用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#544-3sft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.4 核心函数 3：SFT 映射与数据划分
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#545-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4.5 核心函数 4：数据准备主流程编排
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 模型训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 效果评测
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 实验结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="21">第21课时：长上下文能力增强<a class="headerlink" href="#21" title="Permanent link">&para;</a></h1>
+<p>想象一下，你把一份几十页的文档丢给模型，它却像赶时间一样只看了前两段就开始作答。本课时就来解决这个“读得多、找不准”的经典问题：我们会一起拆解<strong>如何构建长文本数据</strong>、<strong>如何合成“针扎大海”类训练样本</strong>、以及<strong>如何在模型与系统层面提升长上下文处理能力并完成评测</strong>。整节内容从理论一路走到工程实操，读完就能直接接入后续实验脚本开跑。</p>
+<hr />
+<h2 id="1">1. 长上下文问题与能力边界<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>在日常使用中，人们往往习惯用几句话、一个段落来与模型交互。但一旦进入真实业务场景，文本的考虑单位就不再是“一句话”，而是整篇文档，甚至是一组彼此关联的文档。所谓<strong>长上下文问题</strong>，正是指模型在面对这类超出常规输入规模的文本时，是否还能保持稳定理解与准确推理的能力。</p>
+<p>从技术角度看，长上下文通常有两种不同的衡量方式。一种是 <strong>token 级长度</strong>，即模型在一次前向计算中需要处理的 token 数量。当输入从几百 token 扩展到几千、上万甚至更高时，模型在计算和表示上的压力会快速上升；对于标准自注意力而言，其主要计算与显存开销通常近似呈二次增长。另一种是 <strong>文档级长度</strong>，强调的是语义连续性和结构复杂度。即便 token 数量不极端，一份包含多章节、多主题、多层引用关系的文档，同样会对模型的理解能力提出更高要求。</p>
+<p>与短上下文任务相比，长上下文问题的差异并不只体现在“文本更长”。在短文本场景中，关键信息往往集中，推理路径相对直接，模型即使出现轻微偏差，也不容易被放大。而在长文本中，信息呈现出明显的稀疏性：大量内容只是背景、铺垫或干扰，真正有价值的线索可能只占极小比例。这意味着模型需要具备更强的筛选能力，而不仅是表面上的语言流畅度。更重要的是，长上下文任务通常隐含着时间或位置依赖关系。前文中的某个定义，可能在几十页之后才再次被引用；一条关键结论，可能需要结合多个分散段落才能完整还原。如果模型无法正确理解这些跨距离关系，即使“读完了全文”，输出结果依然可能南辕北辙。</p>
+<p>围绕这些特性，长上下文建模面临着几类典型挑战。</p>
+<p>最常被提及的一点，是<strong>位置信息的外推失效</strong>。许多模型在训练阶段只接触过有限长度的文本，一旦输入长度超出训练分布，位置编码的表达能力就会迅速下降。模型可能仍然生成看似合理的文本，但对“信息出现在什么位置”这一问题的判断已经不再可靠，跨段落引用错误也随之增多。</p>
+<p>另一个常见问题是<strong>注意力稀释</strong>。自注意力机制在理论上可以关注任意位置，但当序列长度不断增加时，注意力分配会变得越来越分散。模型很容易被局部上下文牵引，反复围绕近期内容展开，而忽略更早出现却至关重要的信息。这种现象在“查找某一具体事实”或“定位隐藏线索”的任务中尤为明显。</p>
+<p>紧随其后的，是<strong>关键信息遗忘</strong>的问题。即便模型在早期读到了正确内容，也未必能在生成阶段将其有效保留下来。长文本中信息密度不均、主题频繁切换，很容易打断模型的内部表示，使得早期线索逐渐被后续内容覆盖。这种遗忘并非简单的记忆不足，而是表示竞争的结果。</p>
+<p>正因为这些挑战的存在，长上下文问题并不能通过“增大输入长度”一劳永逸地解决。它要求在数据构造、模型结构、训练策略和评测方式等多个层面进行系统性的设计。本节的目的，就是为后续方法与实践提供一个清晰的背景：当文本变得足够长时，模型究竟是在与哪些困难正面交锋。</p>
+<hr />
+<h2 id="2">2. 长文本数据构建：来源、组织与质量控制<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21_1">2.1 典型长文本来源<a class="headerlink" href="#21_1" title="Permanent link">&para;</a></h3>
+<p>长上下文能力并不是凭空训练出来的，它高度依赖于模型在预训练或微调阶段所接触到的真实长文本数据。从来源上看，这类数据往往具有篇幅长、结构复杂、信息分布不均的共同特征，同时在语言风格和逻辑组织上也与日常对话存在明显差异。</p>
+<p>下面从几类最具代表性的文本来源出发，梳理长文本数据在实践中的主要形态，以及业界常用的开源数据资源。</p>
+<p><strong>书籍与章节级文本</strong></p>
+<p>这是最早被用于长上下文建模的一类数据。与新闻或百科条目相比，书籍文本天然包含跨章节的长期依赖：人物关系、核心概念和叙事线索往往在数万字范围内逐步展开。模型若想真正“读懂”一本书，必须具备持续追踪语义状态的能力。
+常见的开源来源包括：</p>
+<ul>
+<li><a href="https://huggingface.co/datasets/common-pile/project_gutenberg">Project Gutenberg</a>：该数据集收录了超过 70,000 本英文公共领域书籍（可免费使用），提供大量英文公共版权书籍，格式规范、文本干净，适合直接用于长上下文预训练或合成数据构造。</li>
+<li><a href="https://huggingface.co/datasets/rojagtap/bookcorpus">BookCorpusOpen (via Hugging Face)</a>：这是原始经典 BookCorpus 的开放版本，包含约 7,000 本英文小说文本（平均每个样本较长、跨章节）。BookCorpus 最早在 2015 年被引入，用于语言建模任务，可捕捉故事线索与全局上下文依赖。虽然原始 BookCorpus 的授权与分发存在争议，但 bookcorpusopen 则是经过整理的公开版本，适合研究与实验。数据结构如下：</li>
+</ul>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;i wish i had a better answer to that question .....&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><a href="https://huggingface.co/datasets/emozilla/pg19">PG-19 (via Hugging Face)</a>：
+一个经典的书籍级长文本基准数据集，从 Project Gutenberg 图书馆提取了大量英文书籍，这些书籍发布于 1919 年之前，因此属于公共领域。该数据集的平均文档长度远超传统语料，可以作为训练模型处理整本书或章节级上下文的评估集。数据切分为 <code>train/validation/test</code>，同时包含元数据如标题和出版年份。数据结构如下：</li>
+</ul>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;short_book_title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;The Bible Both Testaments King James Version&quot;</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;publication_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1611</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://www.gutenberg.org/ebooks/10&quot;</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\n\n\n\n\n\n\n\n\n\n\n\n\n\nThe Old Testament of the King James Version.......&quot;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><a href="https://github.com/r-seny/narrativexl">NarrativeXL</a>：一个面向超长上下文阅读理解的大规模数据集，规模接近百万级（共 990,595 个问题），在同类数据集中具有显著优势。其平均文档长度超过 5 万字，远超传统阅读理解任务，对模型的长上下文建模与信息保持能力提出了更高要求。更重要的是，NarrativeXL 中的大多数问题都标注了明确的“保留需求”（retention requirement），用于指示回答问题所必须依赖的长期记忆信息，使该数据集不仅可用于阅读理解训练，也非常适合评估和分析大模型在长期记忆与长距离依赖场景下的表现。</li>
+</ul>
+<p><strong>财报、年报与招股说明书</strong></p>
+<p>金融文本是另一类极具代表性的长文档数据。财报与年报往往由多个章节组成，既包含定量表述（数字、指标），也包含大量解释性文字。关键信息分布分散，表达方式高度非结构化，非常适合用于训练“长文本 + 结构化抽取”能力。常见的开源来源包括：</p>
+<ul>
+<li>
+<p><a href="https://www.sec.gov/edgar/search-and-access">SEC EDGAR</a>：这是美国证券交易委员会（SEC）公开的官方披露系统，几乎涵盖所有美国上市公司的定期财务报告。其中 10-K 为年度报告，篇幅通常在数万到十几万词不等；10-Q 为季度报告，结构与 10-K 相似但篇幅略短。这些文档具有高度固定的章节结构（如 Business, Risk Factors, MD&amp;A, Financial Statements），但具体表述随公司和年份变化明显，非常适合用于训练模型在长文档中定位字段、跨章节整合信息的能力。EDGAR 原始数据以 HTML、TXT 等形式提供，适合做文档解析、结构化抽取与长上下文问答等任务。</p>
+</li>
+<li>
+<p><a href="https://www.selectdataset.com/dataset/ab85b9f726ba3fb5f2bd6a1e5bc093d4">SEC 10-K/10-Q 年报/季报数据集（非官方整理）</a>：该第三方汇总数据集通过爬虫和 EDGAR 提供的索引构建，将 1993–2024 年的 10-K 年度报告 按年份整理成 Parquet 文件存储格式。每条记录一般包括完整报文文本、年份、唯一标识符和统计信息，非常适合 NLP 和长文本任务使用。可作为真实长文档抽取任务的主训练语料，与结构化 XBRL 数据一并使用。</p>
+</li>
+<li>
+<p><a href="https://huggingface.co/datasets/winterForestStump/10-K_sec_filings">winterForestStump/10-K_sec_filings</a>：这个数据集收录了 自 1999 年以来约 93,500 份 SEC 10-K 年度报告，内容主要来自美国证券交易委员会（SEC）的 EDGAR 系统。每条记录都包含完整的报文文本及若干财务和披露字段（如公司名称、各部分章节内容等）。这种年报级别的数据本质上是长文档（往往超过几万词），非常适合测试模型在长上下文下的信息定位、跨章节推理与结构化抽取能力。</p>
+</li>
+</ul>
+<p><img alt="SEC 10-K 年报长文档数据集示意图" src="../assets/10-K_sec_filings.png" /></p>
+<ul>
+<li><a href="https://download.companieshouse.gov.uk/en_output.html">UK Companies House Annual Reports（英国公司年报公开数据）</a>：英国 Companies House 向公众开放了公司注册信息与年度财务披露数据，包括 Annual Accounts（年度财务报表） 和 Directors’ Report 等内容。相较于 SEC 报告，这些年报在语言风格和披露重点上更偏向英式财务与合规表达，但同样具备长篇幅、强结构、多章节等特征。原始数据通常以 XML、PDF 或 iXBRL 形式提供，适合用于多格式解析、跨国家财报文本建模，以及训练模型在不同监管体系下处理长上下文财务文档的能力，尤其适合作为 EDGAR 体系之外的补充对照数据集。</li>
+</ul>
+<p><strong>法律条文与判决文书</strong></p>
+<p>法律文本通常篇幅冗长、结构严谨且高度依赖上下文。单份判决往往同时包含案件事实、证据陈述、法律条文引用、历史判例比对以及最终裁决结论。信息分散在多个章节中，逻辑链条跨越全文，非常考验模型在长上下文中的一致性维护、引用定位以及跨段推理能力，是检验大模型长文档理解能力的经典数据类型。常见的开源来源包括：</p>
+<ul>
+<li><a href="https://case.law/">CaseLaw Access Project (CAP)</a>：CAP 是由哈佛法学院主导的美国判决文书开放项目，收录了 1600 年至 2018 年间超过 600 万份美国法院判决全文。单篇文书通常包含案件背景、法律争议点、引用判例以及裁决结论，文本结构高度规范但表述差异明显。该数据非常适合用于长上下文法律问答、裁判理由抽取、引用链分析以及跨段落法律推理任务，是研究法律大模型的重要基础语料来源。</li>
+<li><a href="https://huggingface.co/datasets/ecthr_cases">European Court of Human Rights (ECHR)</a>：该数据集整理了欧洲人权法院（ECHR）的判决文书全文，每个样本通常包含案件事实、相关法律条款、法院分析过程以及最终裁决。判决篇幅较长，且论证过程高度依赖前文事实与法律依据，常被用于研究 法律推理、长文档问答以及段落级责任判断任务。其结构清晰、逻辑严密，非常适合训练模型在长文本中保持推理一致性。</li>
+<li><a href="https://huggingface.co/datasets/lex_glue">LexGLUE</a>：LexGLUE 是一个面向法律 NLP 的综合基准，虽然其中部分任务为中短文本，但其 ECtHR、EUR-LEX 等子集来源于真实判决与法规原文，在实践中常被重新拼接为长文档样本。该数据集强调法律语言的精确性与逻辑约束，非常适合与完整判决文本结合，构造长上下文的法律抽取、分类与推理训练任务。</li>
+<li><a href="https://huggingface.co/datasets/pile-of-law/pile-of-law">Pile of Law</a>：Pile of Law 是 The Pile 数据集的法律领域子集扩展，专注于收集和整理高质量的法律文本资源，内容涵盖美国法院判决、联邦与州法规、合同文本以及各类行政与监管文件等多种法律文书类型。该数据集中的样本普遍以长文档级别存在，文本结构严谨、篇幅较长，包含大量跨段落引用与条款依赖关系，对模型的长上下文理解与信息整合能力提出了较高要求。在当前 Hugging Face 可获取的数据集中，Pile of Law 被认为是最接近 CAP（Case-and-Paragraph）风格的法律长文本数据集之一，常用于法律领域的大模型预训练、长文档建模与检索增强研究。</li>
+</ul>
+<p><strong>技术文档与规范说明</strong></p>
+<p>技术规范类文档往往强调前后一致性与术语稳定性，一个概念可能在前文定义，在后文多次引用。这类数据对于训练模型的“定义记忆”和跨章节引用能力非常关键。
+常见的开源来源包括：</p>
+<ul>
+<li><a href="https://www.rfc-editor.org/retrieve/bulk">RFC 文档全集</a>：RFC 文档是互联网协议和标准的官方技术规范，单篇文档通常包含背景说明、术语定义、协议细节、安全分析与实现建议等多个章节，逻辑结构极为严谨。大量 RFC 文档长度达到数万字，是典型的长上下文技术文本。该数据非常适合用于协议理解、跨章节引用定位、技术问答以及规范一致性检查等任务。</li>
+</ul>
+<p><img alt="RFC 技术规范长文档示意图" src="../assets/rfc.png" /></p>
+<ul>
+<li><a href="https://huggingface.co/datasets/arxiv_pubmed">arXiv 论文全文</a>：该数据集收录了 arXiv 上的大量学术论文全文，涵盖计算机科学、物理、数学等多个领域。每篇论文通常包含摘要、引言、相关工作、方法、实验与结论等完整结构，篇幅长且信息密集。该数据集广泛用于 长上下文学术问答、章节级信息抽取、方法与结论对齐等任务，是研究模型学术阅读能力的重要语料。</li>
+<li><a href="https://huggingface.co/datasets/allenai/s2orc">S2ORC（Semantic Scholar Open Research Corpus）</a>：S2ORC 是由 AllenAI 发布的大规模学术论文语料库，包含数百万篇论文的全文与结构化元数据。论文被拆分为章节、段落和句子，同时保留原始结构信息，非常适合构造 超长文档理解、跨章节引用分析以及多段落联合推理任务。该数据集常用于训练具备文档级理解能力的学术型大模型。</li>
+</ul>
+<p><strong>技术日志与系统运行记录</strong></p>
+<p>日志数据通常呈现为时间序列形式，单条日志信息量有限，但长时间窗口下会累积成极长文本。关键异常往往只在某个时间点短暂出现，非常接近 Needle in a Haystack 的真实场景。
+常见的开源来源包括：</p>
+<ul>
+<li><a href="https://github.com/logpai/loghub">LogHub</a>：LogHub 汇总了来自分布式系统、数据库、操作系统等多个真实环境的日志数据，覆盖 HDFS、Spark、Zookeeper 等典型系统。日志文件往往包含数十万到上百万行记录，时间跨度长、事件类型复杂。该数据集常用于异常检测、根因分析以及长序列上下文建模，是系统日志领域的经典开源资源。</li>
+</ul>
+<p><img alt="LogHub 系统日志长序列数据示意图" src="../assets/loghub.png" /></p>
+<ul>
+<li><a href="https://huggingface.co/datasets/logpai/hdfs">HDFS Log Dataset</a>：这是一个经典的分布式文件系统日志数据集，记录了 Hadoop HDFS 在真实运行过程中的日志信息。单个样本通常对应长时间运行产生的日志序列，包含大量正常与异常事件。该数据集广泛用于 长序列异常检测、日志模式学习以及上下文关联分析，非常适合构造长上下文理解与事件定位任务。</li>
+<li><a href="https://huggingface.co/datasets/logpai/bgl">BGL（Blue Gene/L）</a>：BGL 数据集来源于 IBM Blue Gene/L 超级计算机的真实运行日志，覆盖数月的系统运行记录。日志规模巨大，异常事件稀疏且分布不均，是典型的高噪声长上下文数据。该数据集常用于研究模型在超长文本中发现稀有事件、保持时间一致性以及进行复杂状态推理的能力。</li>
+</ul>
+<p>从这些数据可以看出，<strong>长文本并不是单一形态的问题</strong>。叙事型文本、制度性文本、技术文档和日志记录，各自考验模型的不同能力侧面。在实践中，往往需要混合多种长文本来源，才能让模型形成稳定、通用的长上下文理解能力。这些数据来源虽然领域各异，但都共享一个特点：<strong>真正重要的信息往往并不显眼</strong>。它们或被掩埋在大量背景描述中，或依赖跨段落、跨章节的关联才能被完整理解。正因如此，长文本数据不仅是“更长的文本”，而是对模型理解深度、记忆能力和信息筛选能力的综合考验。后续在构造训练数据和评测任务时，正是围绕这些真实文本形态，才能更准确地判断模型是否具备可靠的长上下文能力。</p>
+<h3 id="22">2.2 长文本数据组织策略<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<p>仅有数据来源还不够，组织方式直接影响训练有效性。常见策略包括：</p>
+<ul>
+<li>章节级切分后重组，保留跨段依赖。</li>
+<li>关键段与干扰段混排，显式提高检索难度。</li>
+<li>保留位置、章节、长度、难度等元信息，支持后续误差分析。</li>
+</ul>
+<p>可用信息密度指标描述关键线索稀疏程度：</p>
+<div class="arithmatex">\[
+\text{Information Density} = \frac{\text{Key Tokens}}{\text{Total Tokens}}
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(\text{Key Tokens}\)</span>：任务真正依赖的关键信息 token 数。</li>
+<li><span class="arithmatex">\(\text{Total Tokens}\)</span>：输入总 token 数。</li>
+</ul>
+<p>当该比例很低时，模型需要更强的检索与抑噪能力。</p>
+<h3 id="23">2.3 数据质量控制要点<a class="headerlink" href="#23" title="Permanent link">&para;</a></h3>
+<p>长数据构建建议至少做三类质量控制：</p>
+<ol>
+<li><strong>字段有效性</strong>：非空且可解析。</li>
+<li><strong>去重控制</strong>：避免数据重复采样引入过拟合。</li>
+<li><strong>可回答性检查</strong>：答案应可由上下文直接推断，降低监督噪声。</li>
+</ol>
+<p>这些规则直接决定微调是在“学习能力”还是“学习噪声”。</p>
+<hr />
+<h2 id="3-needle-in-a-haystack">3. 合成长数据：Needle In A Haystack 与自动化构造<a class="headerlink" href="#3-needle-in-a-haystack" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 “大海捞针”问题本质<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>Needle In A Haystack 的核心不是“长”，而是<strong>信息极度不均匀</strong>：大量文本是背景，决定答案的关键线索（needle）很少、且位置不固定。</p>
+<p>标准评测流程通常是：</p>
+<ol>
+<li>准备长背景文本。</li>
+<li>在某个位置插入可验证关键事实。</li>
+<li>提一个只能依赖该事实回答的问题。</li>
+</ol>
+<p>命中率可定义为：</p>
+<div class="arithmatex">\[
+\text{HitRate} = \frac{N_{\text{correct}}}{N_{\text{total}}}
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(N_{\text{correct}}\)</span>：正确命中 needle 的样本数。</li>
+<li><span class="arithmatex">\(N_{\text{total}}\)</span>：测试样本总数。</li>
+</ul>
+<p>这类测试的价值在于，它能快速暴露模型是否真正“读到并保留了远程关键信息”。</p>
+<h3 id="32">3.2 合成数据构造方法<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<p>合成长数据的关键步骤包括：</p>
+<ul>
+<li><strong>needle 注入</strong>：插入唯一可验证事实。</li>
+<li><strong>位置打散</strong>：关键事实随机放在前/中/后位置。</li>
+<li><strong>干扰增强</strong>：加入语义相近但事实不同的伪线索。</li>
+<li><strong>问题模板化生成</strong>：自动批量构造问答样本。</li>
+</ul>
+<p>可用如下密度公式近似描述任务难度：</p>
+<div class="arithmatex">\[
+\text{Information Density} = \frac{\text{Needle Tokens}}{\text{Total Tokens}} \ll 1
+\]</div>
+<p>公式含义：该指标衡量长文档中“真正有用信息”的占比，值越小表示干扰越强、检索难度越高。</p>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(\text{Needle Tokens}\)</span>：关键事实（needle）对应的 token 数。</li>
+<li><span class="arithmatex">\(\text{Total Tokens}\)</span>：整段输入文本的 token 总数。</li>
+</ul>
+<p>下面给出简化伪代码：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">inject_needle</span><span class="p">(</span><span class="n">background_paragraphs</span><span class="p">,</span> <span class="n">needle_sentence</span><span class="p">):</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">idx</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">background_paragraphs</span><span class="p">))</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="k">return</span> <span class="p">(</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">background_paragraphs</span><span class="p">[:</span><span class="n">idx</span><span class="p">]</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="o">+</span> <span class="p">[</span><span class="n">needle_sentence</span><span class="p">]</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="o">+</span> <span class="n">background_paragraphs</span><span class="p">[</span><span class="n">idx</span><span class="p">:]</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="p">)</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">def</span><span class="w"> </span><span class="nf">generate_question</span><span class="p">(</span><span class="n">needle</span><span class="p">):</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="k">if</span> <span class="s1">&#39;分钟&#39;</span> <span class="ow">in</span> <span class="n">needle</span><span class="p">:</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        <span class="k">return</span> <span class="s1">&#39;该文档中提到的最长一次中断持续了多长时间？&#39;</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="k">return</span> <span class="s1">&#39;文档中记录的关键事件是什么？&#39;</span>
+</span></code></pre></div>
+<h3 id="33">3.3 样本格式与可分析性<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>推荐在样本中保留可分析元信息（needle 位置、文档长度、难度），便于按位置分桶评测。典型格式：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;longctx_00123&quot;</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;请根据以下文档回答问题，仅使用文档中的信息。&quot;</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;LONG_DOCUMENT_TEXT&gt;&quot;</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;该系统历史上最长的一次服务中断持续了多久？&quot;</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;47 分钟&quot;</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">&quot;needle_position&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;near_end&quot;</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="nt">&quot;document_length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">14832</span><span class="p">,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="nt">&quot;difficulty&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;medium&quot;</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>这种结构有两个直接收益：一是可追踪位置敏感性，二是可按难度做误差归因，避免只看总体平均分。</p>
+<hr />
+<h2 id="4">4. 长上下文建模与评测方法<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-rope">4.1 长窗口建模：RoPE 扩展与训练策略<a class="headerlink" href="#41-rope" title="Permanent link">&para;</a></h3>
+<p>长上下文建模的关键瓶颈之一是位置编码。以 RoPE 为例，其核心思想是对 <span class="arithmatex">\(Q, K\)</span> 施加与位置相关的旋转变换：</p>
+<div class="arithmatex">\[
+\text{RoPE}(q_i) = q_i R(i), \quad \text{RoPE}(k_j) = k_j R(j)
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(q_i, k_j\)</span>：第 <span class="arithmatex">\(i/j\)</span> 个位置的 Query/Key 向量。</li>
+<li><span class="arithmatex">\(R(i)\)</span>：由位置 <span class="arithmatex">\(i\)</span> 决定的旋转矩阵。</li>
+</ul>
+<p>当推理长度超出训练分布时，常见扩展路线包括：</p>
+<ul>
+<li><strong>Linear Scaling</strong>：等比例压缩位置索引，实现简单但远距区分度下降。</li>
+<li><strong>NTK Scaling</strong>：按频率维度做更细粒度缩放，长距稳定性更好但调参敏感。</li>
+<li><strong>YaRN</strong>：分段缩放并平滑过渡，兼顾短文本能力和超长可用性。</li>
+</ul>
+<p>训练层面通常建议“继续预训练 + 指令微调”或高质量长样本 SFT，并用长短样本混合采样，避免模型只偏向某一长度分布。</p>
+<h3 id="42-kv-cache">4.2 长序列计算代价与 KV Cache<a class="headerlink" href="#42-kv-cache" title="Permanent link">&para;</a></h3>
+<p>标准自注意力为：</p>
+<div class="arithmatex">\[
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+\]</div>
+<p>公式含义：先计算 Query 与 Key 的相关性分数，再经 softmax 归一化得到注意力权重，最后对 Value 做加权求和，得到当前位置的上下文表示。</p>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(Q\)</span>：Query 矩阵，表示当前位置要“检索什么”。</li>
+<li><span class="arithmatex">\(K\)</span>：Key 矩阵，表示各位置可被匹配的特征。</li>
+<li><span class="arithmatex">\(V\)</span>：Value 矩阵，表示各位置可被聚合的内容。</li>
+<li><span class="arithmatex">\(d_k\)</span>：单头 Key 向量维度，用于缩放分数防止数值过大。</li>
+</ul>
+<p>其中 <span class="arithmatex">\(QK^\top \in \mathbb{R}^{N \times N}\)</span>，因此计算与显存随序列长度呈二次增长：</p>
+<div class="arithmatex">\[
+\text{Complexity} = O(N^2 \cdot d)
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(N\)</span>：序列长度。</li>
+<li><span class="arithmatex">\(d\)</span>：隐藏维度。</li>
+<li><span class="arithmatex">\(d_k\)</span>：单头维度。</li>
+</ul>
+<p>训练阶段还需保存中间激活用于反向传播，显存压力会进一步放大。推理阶段可通过 KV Cache 避免反复重算历史 token 的 <span class="arithmatex">\(K, V\)</span>，即在第 <span class="arithmatex">\(t\)</span> 步只计算当前 Query 与历史缓存交互：</p>
+<div class="arithmatex">\[
+\text{Attention}(Q_t, K_{1:t}, V_{1:t})
+\]</div>
+<p>公式含义：在第 <span class="arithmatex">\(t\)</span> 个生成步，只用当前 token 的 Query 与历史累计的 Key/Value 交互，从而减少重复计算。</p>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(Q_t\)</span>：第 <span class="arithmatex">\(t\)</span> 步当前 token 的 Query。</li>
+<li><span class="arithmatex">\(K_{1:t}\)</span>：从第 1 到第 <span class="arithmatex">\(t\)</span> 个位置的 Key 缓存。</li>
+<li><span class="arithmatex">\(V_{1:t}\)</span>：从第 1 到第 <span class="arithmatex">\(t\)</span> 个位置的 Value 缓存。</li>
+</ul>
+<p>这能显著降低重复计算，是长文本推理落地的关键工程优化。</p>
+<h3 id="43-flash-ring-attention">4.3 显存友好注意力：分块、Flash 与 Ring Attention<a class="headerlink" href="#43-flash-ring-attention" title="Permanent link">&para;</a></h3>
+<p>上一节的复杂度分析针对<strong>数学形式</strong>；工程上还要解决<strong>单卡显存带宽与容量</strong>以及<strong>多卡如何切分长序列</strong>的问题。下列方法与 RoPE 外推、数据构造等正交，常组合使用。</p>
+<p><strong>FlashAttention（及 FlashAttention-2 等分块实现）</strong><br />
+将注意力按块（tile）在 GPU 片上存储中完成 softmax 与加权，尽量减少对高带宽显存（HBM）的反复读写。其<strong>输出与标准注意力一致</strong>（在数值误差范围内），但能在相同硬件上支撑<strong>更长的有效序列</strong>或更大 batch，是大模型训练与推理中的事实标准组件之一。</p>
+<p><strong>Ring Attention（环形注意力）</strong><br />
+面向<strong>极长序列训练</strong>：将 <span class="arithmatex">\(Q,K,V\)</span> 在<strong>序列维</strong>上切分到多张 GPU，各卡只常驻本段的 <span class="arithmatex">\(Q\)</span> 与对应的 <span class="arithmatex">\(K,V\)</span> 子块；通过<strong>环形通信</strong>依次把各段的 <span class="arithmatex">\(K,V\)</span> 绕环传递，使每张卡在本地完成分块注意力并累加贡献，从而在<strong>不显式构造完整 <span class="arithmatex">\(N\times N\)</span> 分数矩阵驻留单卡</strong>的前提下完成全局注意力。常与上述分块/Flash 思路结合，用于<strong>序列并行</strong>场景（与 Tensor Parallel、Pipeline Parallel 解决的是不同维度）。同类思路还包括按块切分的分布式注意力变体，具体实现因框架而异。</p>
+<p><strong>其他常见补充（仅列名目）</strong><br />
+- <strong>稀疏或局部注意力</strong>（滑动窗口、稀释全局 token 等）：以结构先验换复杂度，适合特定架构。<br />
+- <strong>推理侧 KV 管理</strong>（如分页式 KV Cache）：在<strong>不改动注意力公式</strong>的前提下提高显存利用率与吞吐，与 Ring Attention 面向的「训练期跨卡切序列」问题相邻但侧重不同。</p>
+<p>理解这些层次有助于阅读开源训练栈：RoPE/数据决定「模型敢看多长」，Flash/Ring 等决定「在既定长度下<strong>能不能在现有集群上跑得动</strong>」。</p>
+<h3 id="44">4.4 长窗口训练技巧与评测体系<a class="headerlink" href="#44" title="Permanent link">&para;</a></h3>
+<p>长窗口模型并不意味着只喂超长样本。实践中常采用短/中/长样本混合训练，兼顾短文本流畅性与长距离推理稳定性。</p>
+<p>同时，可通过位置打散或位置加权损失缓解“前文偏置”：</p>
+<div class="arithmatex">\[
+\mathcal{L} = \sum_{t=1}^{T} w_t \cdot \ell_t, \quad
+w_t = 1 + \lambda \cdot \frac{t}{T}
+\]</div>
+<p>公式含义：通过给不同位置的 token 损失分配不同权重，让模型在训练时更关注后半段信息，缓解“只盯前文”的偏置。</p>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(\ell_t\)</span>：第 <span class="arithmatex">\(t\)</span> 个 token 的单步损失。</li>
+<li><span class="arithmatex">\(w_t\)</span>：位置相关权重。</li>
+<li><span class="arithmatex">\(\lambda\)</span>：权重增长系数。</li>
+<li><span class="arithmatex">\(T\)</span>：序列长度。</li>
+</ul>
+<p>评测建议至少覆盖三类：</p>
+<ol>
+<li><strong>Needle 命中测试</strong>：定位与检索能力。</li>
+<li><strong>Long QA</strong>：跨段整合与一致性推理能力。</li>
+<li><strong>位置稳定性测试</strong>：同问题在不同位置下的性能波动。</li>
+</ol>
+<p>位置稳定性可用方差衡量：</p>
+<div class="arithmatex">\[
+\text{Var}(S) = \frac{1}{n}\sum_{i=1}^{n}(s_i-\bar{s})^2
+\]</div>
+<p>公式含义：衡量同一任务在不同信息位置下的得分波动，方差越小表示模型越稳定、位置鲁棒性越好。</p>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(s_i\)</span>：needle 位于第 <span class="arithmatex">\(i\)</span> 个位置时的得分。</li>
+<li><span class="arithmatex">\(\bar{s}\)</span>：各位置得分均值。</li>
+<li><span class="arithmatex">\(n\)</span>：位置采样数。</li>
+</ul>
+<p>方差越小，说明模型对位置信息越鲁棒。实际系统里，稳定性通常比单点高分更关键。</p>
+<h3 id="45">4.5 长上下文能力的现实边界<a class="headerlink" href="#45" title="Permanent link">&para;</a></h3>
+<p>长上下文并不是“窗口越大越好”，而是“任务需要多长、系统愿意付出多少成本”的平衡。现实边界主要来自三点：</p>
+<ol>
+<li><strong>资源成本非线性增长</strong>：长序列会显著放大显存、训练时长与实验成本。</li>
+<li><strong>有效信息密度下降</strong>：长度增加不等于有效信息同步增加，收益可能递减。</li>
+<li><strong>外推稳定性风险</strong>：超出训练分布后，位置表示与注意力行为可能退化。</li>
+</ol>
+<p>因此，成熟系统通常采用“有限但高效的记忆”策略：合理窗口上限 + 上下文组织策略 + 信息选择机制，而不是盲目堆长度。</p>
+<hr />
+<h2 id="5-lazyllm-squad-20-pipeline">5. LazyLLM 实战与评测：SQuAD 2.0 长上下文 Pipeline<a class="headerlink" href="#5-lazyllm-squad-20-pipeline" title="Permanent link">&para;</a></h2>
+<p>这一章是整节课最“能跑起来”的部分。前面我们讨论了长上下文为什么难、数据怎么构造、评测怎么做；这里把这些理论真正落在一个可复现实验上：<a href="../code/run_squad_ppl.py"><code>./code/run_squad_ppl.py</code></a>。你可以把它理解为一条完整的工程链路，从短文本出发，经过可控扩写与长上下文重组，最后进入 LoRA-SFT 微调与对比评测。</p>
+<h3 id="51">5.1 任务目标<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<p>本实验以 SQuAD 2.0 为基础数据源，构建“短上下文 QA -&gt; 长上下文 QA -&gt; SFT 微调”的完整链路。核心思路不是直接在原始短 context 上微调，而是先通过 LazyLLM 的 <code>build_long_context_pipeline</code> 完成上下文扩写与重组，再在长上下文样本上做 LoRA-SFT，从而提升模型在长文本问答场景中的信息定位与整合能力。</p>
+<h3 id="52">5.2 数据集简介<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<h4 id="521">5.2.1 数据来源与任务性质<a class="headerlink" href="#521" title="Permanent link">&para;</a></h4>
+<ul>
+<li>数据集：<a href="https://huggingface.co/datasets/rajpurkar/squad_v2">SQuAD 2.0</a>（脚本优先加载 <code>squad_v2</code>，失败回退 <code>rajpurkar/squad_v2</code>）。</li>
+<li>原始特点：单条样本上下文较短，属于经典短文本阅读理解任务。</li>
+<li>本实验定位：通过 pipeline 人工构造长上下文训练样本，使训练目标与长上下文应用场景对齐。</li>
+</ul>
+<h4 id="522">5.2.2 数据规模与关键配置<a class="headerlink" href="#522" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原始采样上限</td>
+<td>SOURCE_LOAD_LIMIT = 4000</td>
+</tr>
+<tr>
+<td>训练样本数</td>
+<td>TRAIN_SAMPLES = 3000</td>
+</tr>
+<tr>
+<td>评测样本数</td>
+<td>EVAL_SAMPLES = 200</td>
+</tr>
+<tr>
+<td>训练窗口</td>
+<td>TRAIN_CONTEXT_WINDOW = 8192</td>
+</tr>
+<tr>
+<td>pipeline 扩写模型</td>
+<td>qwen2.5-32b-instruct</td>
+</tr>
+</tbody>
+</table>
+<h4 id="523">5.2.3 数据中间文件<a class="headerlink" href="#523" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data/squad_raw.jsonl</code></td>
+<td>进入 pipeline 前的原始样本（去重 + 过滤后）</td>
+</tr>
+<tr>
+<td><code>data/squad_ppl_long.jsonl</code></td>
+<td>pipeline 产出的长上下文样本</td>
+</tr>
+<tr>
+<td><code>data/squad_ppl_train.json</code></td>
+<td>SFT 训练集（Alpaca 格式）</td>
+</tr>
+<tr>
+<td><code>data/squad_ppl_eval.jsonl</code></td>
+<td>评测集（保留多参考答案字段）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53">5.3 数据结构与字段说明<a class="headerlink" href="#53" title="Permanent link">&para;</a></h3>
+<h4 id="531-squad_rawjsonl">5.3.1 原始样本（<code>squad_raw.jsonl</code>）<a class="headerlink" href="#531-squad_rawjsonl" title="Permanent link">&para;</a></h4>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Beyoncé Giselle Knowles-Carter (/biːˈjɒnseɪ/ bee-YON-say) (born September 4, 1981) is an American singer, songwriter, record producer and actress. Born and raised in Houston, Texas, she performed in various singing and dancing competitions as a child, and rose to fame in the late 1990s as lead singer of R&amp;B girl-group Destiny&#39;s Child. Managed by her father, Mathew Knowles, the group became one of the world&#39;s best-selling girl groups of all time. Their hiatus saw the release of Beyoncé&#39;s debut album, Dangerously in Love (2003), which established her as a solo artist worldwide, earned five Grammy Awards and featured the Billboard Hot 100 number-one singles \&quot;Crazy in Love\&quot; and \&quot;Baby Boy\&quot;.&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;When did Beyonce start becoming popular?&quot;</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;in the late 1990s&quot;</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">&quot;gold_answers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="s2">&quot;in the late 1990s&quot;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><code>context</code>：原始短上下文段落。</li>
+<li><code>question</code>：问题。</li>
+<li><code>answer</code>：主监督答案（首答案）。</li>
+<li><code>gold_answers</code>：多参考答案集合，用于评测时“取最优分”。</li>
+</ul>
+<h4 id="532-squad_ppl_longjsonl">5.3.2 长上下文样本（<code>squad_ppl_long.jsonl</code>）<a class="headerlink" href="#532-squad_ppl_longjsonl" title="Permanent link">&para;</a></h4>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LeToya Luckett and Roberson became unhappy with Mathew&#39;s managing of the band and eventually were replaced by Farrah Franklin and Michelle Williams. Beyoncé experienced depression following the split with Luckett and Roberson after being publicly blamed by the media, critics, and blogs for its cause. Her long-standing boyfriend left her at this time. The depression was so severe it lasted for a couple of years, during which she occasionally kept herself in her bedroom for days and refused to eat anything. Beyoncé stated that she struggled to speak about her depression because Destiny&#39;s Child had just won their first Grammy Award and she feared no one would take her seriously. Beyoncé would later speak of her mother as the person who helped her fight it. Franklin was dismissed, leaving just Beyoncé, Rowland, and Williams.&quot;</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;long_context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;The nickel-hydrogen battery,....（省略）during this period.&quot;</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;What mental health issue did Beyonce go through?&quot;</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;depression&quot;</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">&quot;gold_answers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="s2">&quot;depression&quot;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><code>context</code>：原有的上下文（即正例段）。</li>
+<li><code>long_context</code>：扩写并拼接后的长文本（含正例段与干扰段）。</li>
+<li><code>question</code> / <code>answer</code>：保持与原样本语义一致。</li>
+<li><code>gold_answers</code>：从原始样本回填，保证评测一致性。</li>
+</ul>
+<h4 id="533">5.3.3 训练 / 评测格式<a class="headerlink" href="#533" title="Permanent link">&para;</a></h4>
+<p><code>squad_ppl_train.json</code>：只保留 <code>instruction/input/output</code>，用于训练。</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a reading comprehension assistant. Read the following document carefully and answer the question based solely on the information provided in the document. Give a concise and accurate answer.&quot;</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Document:\nSeason three of American Idol ...（省略） did Schwarzenegger hold a special election?&quot;</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;November&quot;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><code>squad_ppl_eval.jsonl</code>：保留 <code>gold_answers/question</code>，用于评测与误差分析。</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;instruction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a reading comprehension assistant. Read the following document carefully and answer the question based solely on ...（省略） game, its cup successes, and its passionate rivalry with Portsmouth F.C. all contribute to its unique identity and enduring appeal.\n\nQuestion: How many people are admitted to HHC institutions annually?&quot;</span><span class="p">,</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;225,000&quot;</span><span class="p">,</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">&quot;gold_answers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="s2">&quot;225,000&quot;</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="p">],</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;How many people are admitted to HHC institutions annually?&quot;</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="54">5.4 数据处理流程<a class="headerlink" href="#54" title="Permanent link">&para;</a></h3>
+<h4 id="541">5.4.1 流程概览<a class="headerlink" href="#541" title="Permanent link">&para;</a></h4>
+<ol>
+<li>从 SQuAD 2.0 读取样本。</li>
+<li>过滤空字段、按 <code>context</code> 去重、取前 4000 条并落盘。</li>
+<li>用 32B 模型做 context 扩写，再重组为长上下文。</li>
+<li>映射为 SFT 格式，随机打散后取前 3000 条作为训练候选，再从其中抽样 200 条作评测。</li>
+</ol>
+<p>这条链路的关键是：先把样本难度从“短文本定位”提升到“长文本检索 + 理解”，再进行微调。</p>
+<h4 id="542-1">5.4.2 核心函数 1：原始样本过滤与去重<a class="headerlink" href="#542-1" title="Permanent link">&para;</a></h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_context_dedup_key</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">_load_squad_raw</span><span class="p">(</span><span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">records</span><span class="p">,</span> <span class="n">seen_ctx</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">set</span><span class="p">()</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>            <span class="k">break</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="n">answers</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;answers&#39;</span><span class="p">,</span> <span class="p">{})</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>        <span class="n">answer_texts</span> <span class="o">=</span> <span class="n">answers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">answers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">answer_texts</span><span class="p">:</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>            <span class="k">continue</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>        <span class="n">rec</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>            <span class="s1">&#39;context&#39;</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;context&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>            <span class="s1">&#39;question&#39;</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>            <span class="s1">&#39;answer&#39;</span><span class="p">:</span> <span class="n">answer_texts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>            <span class="s1">&#39;gold_answers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">answer_texts</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">strip</span><span class="p">()],</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>        <span class="p">}</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;context&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">]:</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>            <span class="k">continue</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>        <span class="n">key</span> <span class="o">=</span> <span class="n">_context_dedup_key</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;context&#39;</span><span class="p">])</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen_ctx</span><span class="p">:</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>            <span class="k">continue</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>        <span class="n">seen_ctx</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>        <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+</span></code></pre></div>
+<p>这一步保证 pipeline 输入“有效且不重复”，避免同一 <code>context</code> 重复扩写造成样本冗余和训练偏置。</p>
+<h4 id="543-2pipeline">5.4.3 核心函数 2：pipeline 调用<a class="headerlink" href="#543-2pipeline" title="Permanent link">&para;</a></h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">ppl</span> <span class="o">=</span> <span class="n">build_long_context_pipeline</span><span class="p">(</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">context_key</span><span class="o">=</span><span class="s1">&#39;context&#39;</span><span class="p">,</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">question_key</span><span class="o">=</span><span class="s1">&#39;question&#39;</span><span class="p">,</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">answer_key</span><span class="o">=</span><span class="s1">&#39;answer&#39;</span><span class="p">,</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">expanded_key</span><span class="o">=</span><span class="s1">&#39;expanded_context&#39;</span><span class="p">,</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">long_context_key</span><span class="o">=</span><span class="s1">&#39;long_context&#39;</span><span class="p">,</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="n">expansion_prompt</span><span class="o">=</span><span class="n">PPL_EXPANSION_PROMPT</span><span class="p">,</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="n">num_distractors</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="n">passage_sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">,</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="p">)</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">results</span> <span class="o">=</span> <span class="n">ppl</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+</span></code></pre></div>
+<p>这里使用了 LazyLLM 中的 <code>build_long_context_pipeline</code>，通过显式传入 <code>expansion_prompt</code> 约束扩写质量和目标长度（700-1100 词），减少“幻觉扩写”对训练信号的污染。</p>
+<h4 id="544-3sft">5.4.4 核心函数 3：SFT 映射与数据划分<a class="headerlink" href="#544-3sft" title="Permanent link">&para;</a></h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_to_sft</span><span class="p">(</span><span class="n">rec</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">long_ctx</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;long_context&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">question</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;question&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">answer</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;answer&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">long_ctx</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">question</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">answer</span><span class="p">:</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>        <span class="k">return</span> <span class="kc">None</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">context_block</span> <span class="o">=</span> <span class="n">CONTEXT_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">long_ctx</span><span class="p">,</span> <span class="n">question</span><span class="o">=</span><span class="n">question</span><span class="p">)</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">return</span> <span class="p">{</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="s1">&#39;instruction&#39;</span><span class="p">:</span> <span class="n">INSTRUCTION</span><span class="p">,</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>        <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="n">context_block</span><span class="p">,</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>        <span class="s1">&#39;output&#39;</span><span class="p">:</span> <span class="n">answer</span><span class="p">,</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>        <span class="s1">&#39;gold_answers&#39;</span><span class="p">:</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gold_answers&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">answer</span><span class="p">]),</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>        <span class="s1">&#39;question&#39;</span><span class="p">:</span> <span class="n">question</span><span class="p">,</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>    <span class="p">}</span>
+</span></code></pre></div>
+<p><code>_to_sft</code> 负责统一训练输入模板；后续固定随机种子做打散与抽样，使当前脚本的数据处理流程可复现。</p>
+<h4 id="545-4">5.4.5 核心函数 4：数据准备主流程编排<a class="headerlink" href="#545-4" title="Permanent link">&para;</a></h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">prepare_dataset</span><span class="p">():</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">TRAIN_JSON_PATH</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">EVAL_JSONL_PATH</span><span class="p">):</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;训练集与评测集已存在，跳过生成&#39;</span><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>        <span class="k">return</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">PPL_JSONL_PATH</span><span class="p">):</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;长上下文数据已存在，直接加载: </span><span class="si">{</span><span class="n">PPL_JSONL_PATH</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>        <span class="n">records</span> <span class="o">=</span> <span class="n">_load_ppl_records</span><span class="p">()</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>        <span class="n">raw</span> <span class="o">=</span> <span class="n">_load_squad_raw</span><span class="p">(</span><span class="n">SOURCE_LOAD_LIMIT</span><span class="p">)</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">:</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;无有效原始数据，退出&#39;</span><span class="p">)</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>            <span class="k">return</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>        <span class="n">records</span> <span class="o">=</span> <span class="n">_run_long_context_pipeline</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">records</span><span class="p">:</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;无有效长上下文记录，退出&#39;</span><span class="p">)</span>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>        <span class="k">return</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">_to_sft</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">]</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>    <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a>
+</span><span id="__span-11-26"><a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>    <span class="n">train_list</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[:</span><span class="n">TRAIN_SAMPLES</span><span class="p">]</span>
+</span><span id="__span-11-27"><a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a>    <span class="n">eval_indices</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+</span><span id="__span-11-28"><a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>        <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_list</span><span class="p">)),</span> <span class="nb">min</span><span class="p">(</span><span class="n">EVAL_SAMPLES</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_list</span><span class="p">))</span>
+</span><span id="__span-11-29"><a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a>    <span class="p">)</span>
+</span><span id="__span-11-30"><a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a>    <span class="n">eval_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">train_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">eval_indices</span><span class="p">)]</span>
+</span></code></pre></div>
+<p>这段代码把“是否重复处理数据”的工程细节明确落地：优先复用已落盘数据，只有缺文件时才重新跑 pipeline；随后统一做 SFT 映射、随机打散与固定随机种子抽样，保证流程可复现。</p>
+<h3 id="55">5.5 模型训练<a class="headerlink" href="#55" title="Permanent link">&para;</a></h3>
+<ul>
+<li>基座：Qwen2.5-7B-Instruct</li>
+<li>方式：LLaMA-Factory + LoRA-SFT</li>
+<li>上下文窗口：8192</li>
+</ul>
+<p>关键训练代码：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">model</span><span class="o">.</span><span class="n">finetune_method</span><span class="p">((</span><span class="n">finetune</span><span class="o">.</span><span class="n">llamafactory</span><span class="p">,</span> <span class="p">{</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="s1">&#39;stage&#39;</span><span class="p">:</span> <span class="s1">&#39;sft&#39;</span><span class="p">,</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="s1">&#39;finetuning_type&#39;</span><span class="p">:</span> <span class="s1">&#39;lora&#39;</span><span class="p">,</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="s1">&#39;lora_rank&#39;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="s1">&#39;lora_alpha&#39;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="s1">&#39;learning_rate&#39;</span><span class="p">:</span> <span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="s1">&#39;cutoff_len&#39;</span><span class="p">:</span> <span class="n">TRAIN_CONTEXT_WINDOW</span><span class="p">,</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="s1">&#39;val_size&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="s1">&#39;per_device_train_batch_size&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="s1">&#39;gradient_accumulation_steps&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="s1">&#39;num_train_epochs&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    <span class="s1">&#39;lr_scheduler_type&#39;</span><span class="p">:</span> <span class="s1">&#39;cosine&#39;</span><span class="p">,</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    <span class="s1">&#39;warmup_ratio&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>    <span class="s1">&#39;save_steps&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    <span class="s1">&#39;logging_steps&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>    <span class="s1">&#39;save_strategy&#39;</span><span class="p">:</span> <span class="s1">&#39;steps&#39;</span><span class="p">,</span>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>    <span class="s1">&#39;save_total_limit&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>    <span class="s1">&#39;launcher&#39;</span><span class="p">:</span> <span class="n">launchers</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngpus</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="p">}))</span>
+</span></code></pre></div>
+<p>参数说明：</p>
+<ul>
+<li><code>stage='sft'</code>：采用监督微调阶段，目标是学习“长上下文 + 问题 -&gt; 答案”的映射。</li>
+<li><code>finetuning_type='lora'</code>：参数高效微调，仅训练低秩适配层，降低显存与训练成本。</li>
+<li><code>lora_rank=16</code>：LoRA 低秩矩阵维度，控制可学习容量；数值越大容量越高、开销也更高。</li>
+<li><code>lora_alpha=32</code>：LoRA 缩放系数，配合 rank 调整更新强度。</li>
+<li><code>learning_rate=1e-4</code>：优化步长；较高学习率更快但不稳，该值兼顾收敛速度与稳定性。</li>
+<li><code>cutoff_len=8192</code>：单样本最大输入长度（token），与本实验长上下文目标对齐。</li>
+<li><code>val_size=0.05</code>：从训练数据划出 5% 作为验证集，用于监控训练趋势与泛化风险。</li>
+<li><code>per_device_train_batch_size=1</code>：每张卡每步处理 1 条样本，适配 8k 输入下的显存约束。</li>
+<li><code>gradient_accumulation_steps=8</code>：梯度累积 8 步形成等效更大 batch，稳定优化过程。</li>
+<li><code>num_train_epochs=5</code>：训练轮次，控制对数据的学习充分度与过拟合风险平衡。</li>
+<li><code>lr_scheduler_type='cosine'</code>：余弦学习率衰减，前期探索、后期平滑收敛。</li>
+<li><code>warmup_ratio=0.1</code>：前 10% 步数做学习率预热，减少训练初期震荡。</li>
+<li><code>save_steps=50</code>：每 50 步保存一次 checkpoint，便于回溯与中断恢复。</li>
+<li><code>logging_steps=10</code>：每 10 步记录一次日志，便于观察 loss 变化。</li>
+<li><code>save_strategy='steps'</code>：按训练步数而不是 epoch 保存模型。</li>
+<li><code>save_total_limit=5</code>：最多保留 5 个 checkpoint，控制磁盘占用。</li>
+<li><code>launcher=launchers.empty(ngpus=1)</code>：单卡训练启动方式，明确资源配置与执行入口。</li>
+</ul>
+<p>训练中的 Loss 曲线如下：</p>
+<p><img alt="Loss 曲线" src="../assets/training_loss.png" /></p>
+<p>这一训练段与前面数据流程是串联的：输入使用长上下文 SFT 数据，输出是 LoRA checkpoint，随后进入当前脚本定义的 eval 集上做对照验证。</p>
+<h3 id="56">5.6 效果评测<a class="headerlink" href="#56" title="Permanent link">&para;</a></h3>
+<p>评测在同一 eval 集上比较“基座 vs 微调”，并在多参考答案上取最优分。</p>
+<p>核心函数：多参考最优聚合。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_compute_metrics</span><span class="p">(</span><span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">preds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">total_rl</span> <span class="o">=</span> <span class="n">total_tf1</span> <span class="o">=</span> <span class="n">total_tp</span> <span class="o">=</span> <span class="n">total_tr</span> <span class="o">=</span> <span class="n">total_em</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">empty_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>        <span class="n">pred</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">pred</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pred</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>            <span class="n">empty_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>            <span class="k">continue</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>        <span class="n">gold_answers</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gold_answers&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">sample</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>        <span class="n">rl</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">tf1</span><span class="p">,</span> <span class="n">em</span> <span class="o">=</span> <span class="n">_best_scores</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">gold_answers</span><span class="p">)</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>        <span class="n">total_rl</span> <span class="o">+=</span> <span class="n">rl</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>        <span class="n">total_tf1</span> <span class="o">+=</span> <span class="n">tf1</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>        <span class="n">total_tp</span> <span class="o">+=</span> <span class="n">tp</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>        <span class="n">total_tr</span> <span class="o">+=</span> <span class="n">tr</span>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>        <span class="n">total_em</span> <span class="o">+=</span> <span class="n">em</span>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>    <span class="k">return</span> <span class="p">{</span>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>        <span class="s1">&#39;rouge_l&#39;</span><span class="p">:</span> <span class="n">total_rl</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>        <span class="s1">&#39;token_f1&#39;</span><span class="p">:</span> <span class="n">total_tf1</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>        <span class="s1">&#39;token_precision&#39;</span><span class="p">:</span> <span class="n">total_tp</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>        <span class="s1">&#39;token_recall&#39;</span><span class="p">:</span> <span class="n">total_tr</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>        <span class="s1">&#39;exact_match&#39;</span><span class="p">:</span> <span class="n">total_em</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>        <span class="s1">&#39;empty_pred_rate&#39;</span><span class="p">:</span> <span class="n">empty_count</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>        <span class="s1">&#39;num_samples&#39;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>    <span class="p">}</span>
+</span></code></pre></div>
+<p>先对每条样本在 <code>gold_answers</code> 上取最优，再做全局平均，更符合生成式 QA 的多参考评测惯例。</p>
+<p>假设第 <span class="arithmatex">\(i\)</span> 条样本预测为 <span class="arithmatex">\(\hat{y}_i\)</span>，参考答案集合为 <span class="arithmatex">\(\mathcal{G}_i\)</span>，样本数为 <span class="arithmatex">\(N\)</span>。设 <code>norm(·)</code> 表示归一化文本，<code>tok(·)</code> 表示 token 序列。</p>
+<p>（1）ROUGE-L</p>
+<div class="arithmatex">\[
+\text{ROUGE-L}=\frac{1}{N}\sum_{i=1}^N \max_{y\in\mathcal{G}_i} F_{LCS}(\hat{y}_i,y)
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(N\)</span>：评测样本总数。</li>
+<li><span class="arithmatex">\(\hat{y}_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本的模型预测答案。</li>
+<li><span class="arithmatex">\(\mathcal{G}_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本的参考答案集合（多参考）。</li>
+<li><span class="arithmatex">\(y\)</span>：<span class="arithmatex">\(\mathcal{G}_i\)</span> 中的某一个参考答案。</li>
+<li><span class="arithmatex">\(F_{LCS}(\hat{y}_i,y)\)</span>：基于最长公共子序列计算得到的 F1 分数。</li>
+</ul>
+<p>公式含义：对每条样本，先在多参考答案中取与预测文本最长公共子序列（LCS）F1 的最优值，再在全体样本上求平均，反映生成答案与参考答案的序列级重合程度。</p>
+<p>（2）Token Precision / Recall / F1</p>
+<div class="arithmatex">\[
+\text{Token-F1}=\frac{1}{N}\sum_{i=1}^N F1_i,\quad \text{Token-P}=\frac{1}{N}\sum_{i=1}^N P_i,\quad \text{Token-R}=\frac{1}{N}\sum_{i=1}^N R_i
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(P_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本的 token Precision。</li>
+<li><span class="arithmatex">\(R_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本的 token Recall。</li>
+<li><span class="arithmatex">\(F1_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本的 token F1。</li>
+<li><span class="arithmatex">\(N\)</span>：评测样本总数。</li>
+</ul>
+<p>公式含义：在 token 粒度比较预测与参考答案的重叠程度，其中 Precision 看“预测有多少是对的”，Recall 看“参考有多少被找回”，F1 综合两者。</p>
+<p>（3）Exact Match（EM）</p>
+<div class="arithmatex">\[
+EM_i =
+\begin{cases}
+1, &amp; \exists y\in\mathcal{G}_i,\ \text{norm}(\hat{y}_i)=\text{norm}(y) \\
+0, &amp; \text{otherwise}
+\end{cases}
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(EM_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本的严格匹配结果。</li>
+<li><span class="arithmatex">\(\hat{y}_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本的预测答案。</li>
+<li><span class="arithmatex">\(\mathcal{G}_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本参考答案集合。</li>
+<li><span class="arithmatex">\(\text{norm}(\cdot)\)</span>：文本归一化函数（如大小写、标点和多空白处理）。</li>
+</ul>
+<p>公式含义：如果预测答案与任一参考答案在归一化后完全一致，则该样本记为 1，否则记为 0；它衡量严格匹配能力。</p>
+<p>（4）Empty Prediction Rate</p>
+<div class="arithmatex">\[
+\text{EmptyRate}=\frac{1}{N}\sum_{i=1}^N \mathbf{1}\left[\hat{y}_i=\varnothing\right]
+\]</div>
+<p>变量说明：</p>
+<ul>
+<li><span class="arithmatex">\(N\)</span>：评测样本总数。</li>
+<li><span class="arithmatex">\(\hat{y}_i\)</span>：第 <span class="arithmatex">\(i\)</span> 条样本预测答案。</li>
+<li><span class="arithmatex">\(\varnothing\)</span>：空输出。</li>
+<li><span class="arithmatex">\(\mathbf{1}[\cdot]\)</span>：示性函数，条件为真取 1，否则取 0。</li>
+</ul>
+<p>公式含义：统计模型输出空答案的比例，反映模型在当前任务设置下的可用性与稳定性。</p>
+<p>下面给出评测指标计算的核心代码。这段代码对应“多参考取最优 + 全局平均”的实现逻辑：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_best_scores</span><span class="p">(</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="n">pred</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="n">gold_answers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="n">best_rl</span> <span class="o">=</span> <span class="n">best_tf1</span> <span class="o">=</span> <span class="n">best_em</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="n">best_tp</span> <span class="o">=</span> <span class="n">best_tr</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    <span class="k">for</span> <span class="n">gold</span> <span class="ow">in</span> <span class="n">gold_answers</span><span class="p">:</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>        <span class="n">rl</span> <span class="o">=</span> <span class="n">_rouge_l_f1</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">gold</span><span class="p">)</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>        <span class="n">tp</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">tf1</span> <span class="o">=</span> <span class="n">_token_f1_triplet</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">gold</span><span class="p">)</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>        <span class="n">em</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">_normalize</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span> <span class="o">==</span> <span class="n">_normalize</span><span class="p">(</span><span class="n">gold</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>        <span class="k">if</span> <span class="n">rl</span> <span class="o">&gt;</span> <span class="n">best_rl</span><span class="p">:</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>            <span class="n">best_rl</span> <span class="o">=</span> <span class="n">rl</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>        <span class="k">if</span> <span class="n">tf1</span> <span class="o">&gt;</span> <span class="n">best_tf1</span><span class="p">:</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>            <span class="n">best_tf1</span> <span class="o">=</span> <span class="n">tf1</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>            <span class="n">best_tp</span> <span class="o">=</span> <span class="n">tp</span>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>            <span class="n">best_tr</span> <span class="o">=</span> <span class="n">tr</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>        <span class="k">if</span> <span class="n">em</span> <span class="o">&gt;</span> <span class="n">best_em</span><span class="p">:</span>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>            <span class="n">best_em</span> <span class="o">=</span> <span class="n">em</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>    <span class="k">return</span> <span class="n">best_rl</span><span class="p">,</span> <span class="n">best_tp</span><span class="p">,</span> <span class="n">best_tr</span><span class="p">,</span> <span class="n">best_tf1</span><span class="p">,</span> <span class="n">best_em</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="k">def</span><span class="w"> </span><span class="nf">_compute_metrics</span><span class="p">(</span>
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>    <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>    <span class="n">preds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a>    <span class="n">total_rl</span> <span class="o">=</span> <span class="n">total_tf1</span> <span class="o">=</span> <span class="n">total_tp</span> <span class="o">=</span> <span class="n">total_tr</span> <span class="o">=</span> <span class="n">total_em</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a>    <span class="n">empty_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-14-29"><a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+</span><span id="__span-14-30"><a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a>        <span class="n">pred</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+</span><span id="__span-14-31"><a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">pred</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pred</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+</span><span id="__span-14-32"><a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a>            <span class="n">empty_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a>            <span class="k">continue</span>
+</span><span id="__span-14-34"><a id="__codelineno-14-34" name="__codelineno-14-34" href="#__codelineno-14-34"></a>        <span class="n">gold_answers</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gold_answers&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">sample</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+</span><span id="__span-14-35"><a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a>        <span class="n">rl</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">tf1</span><span class="p">,</span> <span class="n">em</span> <span class="o">=</span> <span class="n">_best_scores</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">gold_answers</span><span class="p">)</span>
+</span><span id="__span-14-36"><a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a>        <span class="n">total_rl</span> <span class="o">+=</span> <span class="n">rl</span>
+</span><span id="__span-14-37"><a id="__codelineno-14-37" name="__codelineno-14-37" href="#__codelineno-14-37"></a>        <span class="n">total_tf1</span> <span class="o">+=</span> <span class="n">tf1</span>
+</span><span id="__span-14-38"><a id="__codelineno-14-38" name="__codelineno-14-38" href="#__codelineno-14-38"></a>        <span class="n">total_tp</span> <span class="o">+=</span> <span class="n">tp</span>
+</span><span id="__span-14-39"><a id="__codelineno-14-39" name="__codelineno-14-39" href="#__codelineno-14-39"></a>        <span class="n">total_tr</span> <span class="o">+=</span> <span class="n">tr</span>
+</span><span id="__span-14-40"><a id="__codelineno-14-40" name="__codelineno-14-40" href="#__codelineno-14-40"></a>        <span class="n">total_em</span> <span class="o">+=</span> <span class="n">em</span>
+</span><span id="__span-14-41"><a id="__codelineno-14-41" name="__codelineno-14-41" href="#__codelineno-14-41"></a>    <span class="k">return</span> <span class="p">{</span>
+</span><span id="__span-14-42"><a id="__codelineno-14-42" name="__codelineno-14-42" href="#__codelineno-14-42"></a>        <span class="s1">&#39;rouge_l&#39;</span><span class="p">:</span> <span class="n">total_rl</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-14-43"><a id="__codelineno-14-43" name="__codelineno-14-43" href="#__codelineno-14-43"></a>        <span class="s1">&#39;token_f1&#39;</span><span class="p">:</span> <span class="n">total_tf1</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-14-44"><a id="__codelineno-14-44" name="__codelineno-14-44" href="#__codelineno-14-44"></a>        <span class="s1">&#39;token_precision&#39;</span><span class="p">:</span> <span class="n">total_tp</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-14-45"><a id="__codelineno-14-45" name="__codelineno-14-45" href="#__codelineno-14-45"></a>        <span class="s1">&#39;token_recall&#39;</span><span class="p">:</span> <span class="n">total_tr</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-14-46"><a id="__codelineno-14-46" name="__codelineno-14-46" href="#__codelineno-14-46"></a>        <span class="s1">&#39;exact_match&#39;</span><span class="p">:</span> <span class="n">total_em</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-14-47"><a id="__codelineno-14-47" name="__codelineno-14-47" href="#__codelineno-14-47"></a>        <span class="s1">&#39;empty_pred_rate&#39;</span><span class="p">:</span> <span class="n">empty_count</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-14-48"><a id="__codelineno-14-48" name="__codelineno-14-48" href="#__codelineno-14-48"></a>        <span class="s1">&#39;num_samples&#39;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span>
+</span><span id="__span-14-49"><a id="__codelineno-14-49" name="__codelineno-14-49" href="#__codelineno-14-49"></a>    <span class="p">}</span>
+</span></code></pre></div>
+<p>这段实现可以分成两层：第一层是 <code>_best_scores</code>，对每条样本在 <code>gold_answers</code> 上逐个打分并取最优；第二层是 <code>_compute_metrics</code>，把每条样本的最优分做全局平均，最终得到 ROUGE-L、Token-P/R/F1、EM 和 EmptyRate。</p>
+<h3 id="57">5.7 实验结果<a class="headerlink" href="#57" title="Permanent link">&para;</a></h3>
+<p>运行截图如下：</p>
+<p><img alt="运行截图" src="../assets/results.png" /></p>
+<p>运行的结果文件会自动保存在 <code>results/{timestamp}/eval_squad_ppl_metrics.json</code> 中。</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th style="text-align: right;">ROUGE-L</th>
+<th style="text-align: right;">Token-F1</th>
+<th style="text-align: right;">Token-P</th>
+<th style="text-align: right;">Token-R</th>
+<th style="text-align: right;">EM</th>
+<th style="text-align: right;">Empty</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基座模型</td>
+<td style="text-align: right;">0.2255</td>
+<td style="text-align: right;">0.2273</td>
+<td style="text-align: right;">0.1366</td>
+<td style="text-align: right;">0.9555</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>微调模型</td>
+<td style="text-align: right;">0.9266</td>
+<td style="text-align: right;">0.9272</td>
+<td style="text-align: right;">0.9337</td>
+<td style="text-align: right;">0.9423</td>
+<td style="text-align: right;">0.8250</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+</tbody>
+</table>
+<p>结果分析：从指标上看，微调模型相对基座仍是整体跃迁：ROUGE-L、Token-F1 与 EM 均大幅提高，说明在「抽取式问答 + 长上下文」设定下，监督微调显著增强了答案定位与表述质量。基座一侧 Token-R 偏高而 Token-P 偏低，往往对应生成片段偏长、与参考答案在 token 上有重叠但冗余较多；微调后 Token-P 与 Token-R 一并提升到约 0.93–0.94，F1 与之匹配，表明输出更紧凑、与标准答案对齐更好。EM 达到 0.825（200 条样本上的平均精确匹配率），说明多数样本可与参考答案完全一致或等价命中。Empty 仍为 0，无空输出，稳定性良好。</p>
+<p>需要注意的是，由于当前脚本中的 eval 集来自训练候选集内部，上述结果更适合用于说明流程有效，而不是作为最终泛化能力结论；若后续采用严格互斥切分，分数可能会与当前结果存在明显差异。</p>
+<hr />
+<p>如果把长上下文训练比作一次“文档寻宝”，那本章已经把藏宝图、工具箱和通关路线都交到你手里了：从数据构造到模型微调，再到指标验证，整条链路已经打通。接下来最值得做的事，就是亲手跑一遍脚本；当你看到模型真的能在长文本里稳稳找到答案时，前面那些看似抽象的概念会突然变得非常具体，甚至有点上瘾。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../chapter20/20/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第20课时：代码能力增强">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第20课时：代码能力增强
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../chapter22/22/" class="md-footer__link md-footer__link--next" aria-label="Next: 第22课时：结构化输出与格式对齐">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                第22课时：结构化输出与格式对齐
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/LazyAGI/LazyLLM" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "navigation.footer", "navigation.top", "search.highlight", "search.suggest", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

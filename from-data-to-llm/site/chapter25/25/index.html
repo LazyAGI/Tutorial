@@ -1,0 +1,3576 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="End-to-end LLM training and data engineering course built on LazyLLM.">
+      
+      
+        <meta name="author" content="LazyLLM Community">
+      
+      
+      
+        <link rel="prev" href="../../chapter24/24/">
+      
+      
+        <link rel="next" href="../../chapter26/26/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://img.icons8.com/?size=100&id=121346&format=png&color=000000">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第25课时：RAG 架构原理与数据处理 - From Data to LLM</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="data:text/css,.md-grid{max-width:90%25!important}">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#25rag" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="From Data to LLM" class="md-header__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            From Data to LLM
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第25课时：RAG 架构原理与数据处理
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  课程简介
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../outline/" class="md-tabs__link">
+          
+  
+  
+  课程内容
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="From Data to LLM" class="md-nav__button md-logo" aria-label="From Data to LLM" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    From Data to LLM
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LazyAGI/LazyLLM" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LazyAGI/LazyLLM
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程体系
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程内容
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程内容
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程大纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一部分：大模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第一部分：大模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter1/1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1课时：Transformer 核心与 Self-Attention 深度剖析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter2/2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2课时：LLM 训练范式与数据工程全景
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二部分：系统工程基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第二部分：系统工程基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter3/3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3课时：分布式训练技术概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter4/4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4课时：模型部署与推理加速
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter5/5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5课时：基于Agent的数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter6/6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6课时：基于 LazyLLM 的全流程实践
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三部分：预训练数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第三部分：预训练数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter7/7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7课时：预训练原理、策略与评测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter8/8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8课时：预训练数据构建全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter9/9/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9课时：基于 LazyLLM 的预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter10/10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10课时：多模态 LLM 架构与预训练实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四部分：微调数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第四部分：微调数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter11/11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11课时：指令微调原理与策略
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter12/12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12课时：通用指令数据构建、合成与蒸馏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter13/13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13课时：基于 LazyLLM 的微调实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter14/14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14课时：多模态指令微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五部分：对齐数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第五部分：对齐数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter15/15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15课时：对齐算法原理 (RLHF & GRPO)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter16/16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16课时：偏好数据构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter17/17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17课时：模型风险、合规与伦理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter18/18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18课时：基于 LazyLLM 的对齐实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六部分：特定能力数据
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第六部分：特定能力数据
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter19/19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19课时：推理与数学能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter20/20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20课时：代码能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter21/21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21课时：长上下文能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter22/22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22课时：结构化输出与格式对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter23/23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23课时：Agent 能力增强 (Tools & Planning)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter24/24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24课时：行业领域模型实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七部分：RAG 数据工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第七部分：RAG 数据工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25课时：RAG 架构原理与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. RAG 的核心范式：为什么需要它？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. RAG 的核心范式：为什么需要它？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 大模型的根本缺陷：幻觉与知识固化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 RAG 的核心思想：外挂可信知识源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-rag-vs-long-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 RAG vs Long Context：谁更优？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3 RAG vs Long Context：谁更优？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        对比维度：
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. RAG 架构拆解：检索 → 增强 → 生成
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. RAG 架构拆解：检索 → 增强 → 生成">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Retrieval（检索）：从海量文档中找“最相关”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 Retrieval（检索）：从海量文档中找“最相关”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 流程与公式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 当前主流技术栈
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.3 检索评估指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#214-lazyllmretriever" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.4 基于LazyLLM实现Retriever
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-augmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Augmentation（增强）：将检索结果“喂”给生成模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Augmentation（增强）：将检索结果“喂”给生成模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 基础增强
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.2 高级增强策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Generation（生成）：基于证据生成答案
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 数据处理：构建高质量 RAG 知识库
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 数据处理：构建高质量 RAG 知识库">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 传统分块的局限
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 基于 Agent 的智能文档处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 构建知识库
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-lazyllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 LazyLLM 知识库清洗
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 LazyLLM 知识库清洗">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.1 多源归一与格式转换
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#342" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.2 文本加载与分块
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#343-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.3 文档精炼（LLM 清洗）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#344-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.4 多跳 QA 生成与增强
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#345-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.5 QA 抽取与微调格式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-lazyllm-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 基于 LazyLLM 构建基础 RAG 知识库
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-raglazyllmrag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. RAG实战：基于LazyLLM实现基础RAG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 微调的必要性：为什么通用 Embedding 不够用？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 微调的必要性：为什么通用 Embedding 不够用？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 通用 Embedding 的领域错配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-reranker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 通用 Reranker 的语义盲区
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 为什么必须微调？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 为什么必须微调？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Embedding 微调的必要性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reranker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Reranker 微调的必要性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Embedding 微调：对齐任务语义空间
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 Embedding 微调：对齐任务语义空间">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#infonce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        损失函数（InfoNCE）：
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-reranker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Reranker 微调：精细化排序
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 总结：RAG 的工业级技术栈全景
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter26/26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26课时：Embedding 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter27/27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27课时：Reranker 模型微调与实战
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../chapter28/28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28课时：Agentict RAG能力增强
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. RAG 的核心范式：为什么需要它？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. RAG 的核心范式：为什么需要它？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 大模型的根本缺陷：幻觉与知识固化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 RAG 的核心思想：外挂可信知识源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-rag-vs-long-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 RAG vs Long Context：谁更优？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3 RAG vs Long Context：谁更优？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        对比维度：
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. RAG 架构拆解：检索 → 增强 → 生成
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. RAG 架构拆解：检索 → 增强 → 生成">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Retrieval（检索）：从海量文档中找“最相关”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 Retrieval（检索）：从海量文档中找“最相关”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 流程与公式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 当前主流技术栈
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.3 检索评估指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#214-lazyllmretriever" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.4 基于LazyLLM实现Retriever
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-augmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Augmentation（增强）：将检索结果“喂”给生成模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Augmentation（增强）：将检索结果“喂”给生成模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 基础增强
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.2 高级增强策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Generation（生成）：基于证据生成答案
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 数据处理：构建高质量 RAG 知识库
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 数据处理：构建高质量 RAG 知识库">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 传统分块的局限
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 基于 Agent 的智能文档处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 构建知识库
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-lazyllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 LazyLLM 知识库清洗
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 LazyLLM 知识库清洗">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.1 多源归一与格式转换
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#342" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.2 文本加载与分块
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#343-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.3 文档精炼（LLM 清洗）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#344-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.4 多跳 QA 生成与增强
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#345-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4.5 QA 抽取与微调格式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-lazyllm-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 基于 LazyLLM 构建基础 RAG 知识库
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-raglazyllmrag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. RAG实战：基于LazyLLM实现基础RAG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 微调的必要性：为什么通用 Embedding 不够用？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 微调的必要性：为什么通用 Embedding 不够用？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 通用 Embedding 的领域错配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-reranker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 通用 Reranker 的语义盲区
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 为什么必须微调？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 为什么必须微调？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Embedding 微调的必要性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reranker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Reranker 微调的必要性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Embedding 微调：对齐任务语义空间
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.4 Embedding 微调：对齐任务语义空间">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#infonce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        损失函数（InfoNCE）：
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-reranker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Reranker 微调：精细化排序
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 总结：RAG 的工业级技术栈全景
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考文献
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="25rag">第25课时：RAG 架构原理与数据处理<a class="headerlink" href="#25rag" title="Permanent link">&para;</a></h1>
+<p>在前面的课程中，我们系统学习了如何通过<strong>预训练</strong>和<strong>监督微调</strong>将通用大模型“专业化”。然而，即便经过精心微调，模型依然存在两个<strong>无法回避的根本局限</strong>：</p>
+<ol>
+<li><strong>知识固化</strong>：模型的知识截止于训练数据，无法回答 2024 年新政策、新药审批、最新财报等动态信息；  </li>
+<li><strong>幻觉风险</strong>：当问题超出训练分布（如“公司最新报销制度”），模型会“自信胡说”，而非诚实承认“我不知道”。</li>
+</ol>
+<blockquote>
+<p>💡 <strong>问题本质</strong>：微调让模型“<strong>记住</strong>”了知识，但无法让它“<strong>查资料</strong>”。</p>
+<p>✅ <strong>RAG</strong>（Retrieval-Augmented Generation，检索增强生成）正是解决这一问题的<strong>工业级标准方案</strong>。<br />
+它不依赖模型内部记忆，而是<strong>实时从外部知识库中检索最新、最相关的信息</strong>，再让模型基于这些“证据”生成答案。</p>
+</blockquote>
+<p>RAG 的核心思想是：<strong>让模型从“闭卷考试”变为“开卷答题”</strong>。</p>
+<p>但要让 RAG 真正可靠，仅靠“随便查点资料”远远不够。<br />
+<strong>通用 Embedding 和 Reranker 在专业领域会严重失效</strong>——<br />
+- 医疗查询“心梗治疗”可能召回“心肌炎”文档；<br />
+- 法律问题“违约赔偿”可能被“侵权责任”干扰。</p>
+<blockquote>
+<p>🔑 <strong>因此，构建高质量 RAG 系统必须微调两个关键组件</strong>：
+1. <strong>Embedding 模型</strong>：让检索理解“任务相关性”，而非仅“语义相似”；
+2. <strong>Reranker 模型</strong>：对初筛结果精细排序，确保高相关文档排在最前。</p>
+</blockquote>
+<p>本课将从<strong>理论原理出发</strong>，系统讲解：</p>
+<ol>
+<li><strong>RAG 的核心范式</strong>：为何能解决幻觉与时效性？RAG vs Long Context 谁更优？</li>
+<li><strong>RAG 三阶段架构</strong>：检索（Retrieval）、增强（Augmentation）、生成（Generation）；</li>
+<li><strong>数据处理实战</strong>：如何用 Agent 智能解析文档、生成摘要、注入元数据；以及 知识库清洗：多源归一、格式转换、分块、LLM 精炼与多跳 QA 生成；</li>
+<li><strong>微调的必要性</strong>：为何必须微调 Embedding 与 Reranker？如何构建训练数据？</li>
+</ol>
+<p>用<strong>通俗语言 + 公式 + 真实案例</strong>，带你掌握 RAG 从理论到落地的核心逻辑。</p>
+<hr />
+<h2 id="1-rag">1. RAG 的核心范式：为什么需要它？<a class="headerlink" href="#1-rag" title="Permanent link">&para;</a></h2>
+<h3 id="11">1.1 大模型的根本缺陷：幻觉与知识固化<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<p>大语言模型（LLM）通过在万亿级 token 上的预训练，学习了人类语言的统计规律。其生成过程可形式化为：
+$$
+y = \arg\max_{y_{1:T}} \prod_{t=1}^T p_\theta(y_t \mid y_{&lt;t}, x)
+$$</p>
+<ul>
+<li><span class="arithmatex">\(y = (y_1, y_2, ..., y_T)\)</span>：模型生成的完整输出序列（如一段回答）；</li>
+<li><span class="arithmatex">\(x\)</span>：用户输入的查询（prompt）；</li>
+<li><span class="arithmatex">\(y_{&lt;t} = (y_1, ..., y_{t-1})\)</span>：在生成第 <span class="arithmatex">\(t\)</span> 个 token 前已生成的部分；</li>
+<li><span class="arithmatex">\(p_\theta(\cdot \mid \cdot)\)</span>：由模型参数 <span class="arithmatex">\(\theta\)</span> 定义的条件概率分布；</li>
+<li><span class="arithmatex">\(\theta\)</span>：模型在<strong>训练截止日</strong>（如 2023 年 10 月）前的数据上学习到的参数。</li>
+</ul>
+<blockquote>
+<p>❌ <strong>问题</strong>：<br />
+- 若 <span class="arithmatex">\(x\)</span> 涉及新事件（如 2024 年政策），<span class="arithmatex">\(p_\theta(y \mid x)\)</span> 无真实依据 → 模型“合理推测” → <strong>幻觉</strong>；<br />
+- 即使知识存在，若训练数据稀疏，模型也可能记错 → <strong>事实错误</strong>；<br />
+- 模型无法区分“知道”和“不知道”，总是给出<strong>自信但错误</strong>的回答。</p>
+</blockquote>
+<h3 id="12-rag">1.2 RAG 的核心思想：外挂可信知识源<a class="headerlink" href="#12-rag" title="Permanent link">&para;</a></h3>
+<p>RAG（检索增强生成，Retrieval-Augmented Generation）是一种结合信息检索（Retrieval）和文本生成（Generation）的技术，旨在提高大型语言模型（大模型）的准确性和实用性。通过在生成文本前检索外部知识库中的相关信息，RAG 可以让大模型在回答问题时结合最新、最相关的数据，从而减少幻觉现象，并提升答案的专业性和时效性。 
+<img alt="alt text" src="../assets/2.png" /></p>
+<p>由 <a href="https://arxiv.org/abs/2005.11401">Lewis et al., 2020</a> 提出，其核心是将生成过程重构为：
+$$
+y = G\left(x, \mathcal{R}(x; \mathcal{D})\right)
+$$</p>
+<ul>
+<li><span class="arithmatex">\(x\)</span>：用户查询；</li>
+<li><span class="arithmatex">\(\mathcal{D} = \{d_1, d_2, ..., d_N\}\)</span>：外部知识库，包含 <span class="arithmatex">\(N\)</span> 个文档（如公司政策、医学指南、财报）；</li>
+<li><span class="arithmatex">\(\mathcal{R}(x; \mathcal{D}) = \{d_{i_1}, d_{i_2}, ..., d_{i_k}\}\)</span>：检索模块 <span class="arithmatex">\(\mathcal{R}\)</span> 根据查询 <span class="arithmatex">\(x\)</span> 从 <span class="arithmatex">\(\mathcal{D}\)</span> 中返回的 top-<span class="arithmatex">\(k\)</span> 最相关文档（通常 <span class="arithmatex">\(k=3\sim10\)</span>）；</li>
+<li><span class="arithmatex">\(G\)</span>：生成模型（如 LLaMA、GPT），<strong>仅基于检索到的上下文 <span class="arithmatex">\(\mathcal{R}(x; \mathcal{D})\)</span> 和查询 <span class="arithmatex">\(x\)</span> 生成答案 <span class="arithmatex">\(y\)</span></strong>。</li>
+</ul>
+<blockquote>
+<p>✅ <strong>优势</strong>：</p>
+<ul>
+<li><strong>知识可实时更新</strong>：只需更新 <span class="arithmatex">\(\mathcal{D}\)</span>，无需重训模型；</li>
+<li><strong>答案可溯源</strong>：附上参考文档，提升可信度；</li>
+<li><strong>幻觉率显著下降</strong>：实测可从 30%+ 降至 &lt;10%；</li>
+<li><strong>模型轻量化</strong>：可用小模型（如 LLaMA-3-8B） + 高质量知识库，替代大模型。</li>
+</ul>
+</blockquote>
+<h3 id="13-rag-vs-long-context">1.3 RAG vs Long Context：谁更优？<a class="headerlink" href="#13-rag-vs-long-context" title="Permanent link">&para;</a></h3>
+<p>随着 LLM 支持 128K+ 上下文（如 <strong>Claude 3.5 Sonnet</strong>、<strong>Qwen-Max</strong>、<strong>LLaMA-3-70B-Instruct</strong>），有人问：<strong>“既然能塞进所有文档，为何还要 RAG？”</strong></p>
+<h4 id="_1">对比维度：<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>RAG</th>
+<th>Long Context</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>知识时效性</strong></td>
+<td>✅ 实时更新</td>
+<td>❌ 训练后固定</td>
+</tr>
+<tr>
+<td><strong>计算效率</strong></td>
+<td>✅ 仅处理 top-<span class="arithmatex">\(k\)</span> 文档（<span class="arithmatex">\(O(k)\)</span>）</td>
+<td>❌ 全文档参与 attention（<span class="arithmatex">\(O(n^2)\)</span>）</td>
+</tr>
+<tr>
+<td><strong>注意力质量</strong></td>
+<td>✅ 聚焦高相关片段</td>
+<td>❌ 长文档中关键信息易被稀释</td>
+</tr>
+<tr>
+<td><strong>可解释性</strong></td>
+<td>✅ 可展示检索来源</td>
+<td>❌ 黑箱，无法追溯</td>
+</tr>
+<tr>
+<td><strong>部署成本</strong></td>
+<td>✅ 知识库与模型解耦，支持增量更新</td>
+<td>❌ 每次更新需重加载长上下文</td>
+</tr>
+<tr>
+<td><strong>硬件要求</strong></td>
+<td>✅ 可在消费级 GPU 运行</td>
+<td>❌ 需 A100/H100 支持长上下文</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>📊 <strong>实证研究</strong>（<a href="https://arxiv.org/abs/2307.03172">“Lost in the Middle”, 2023</a>）：</p>
+<ul>
+<li>LLM 对长上下文中<strong>开头和结尾</strong>的内容更敏感，<strong>中间信息召回率 &lt;40%</strong>；  </li>
+<li>即使上下文达 100K，关键事实若位于中间，仍易被忽略；  </li>
+<li>长上下文显著增加显存占用（128K 上下文需 40GB+）。</li>
+</ul>
+<p>✅ <strong>业界共识</strong>（Google、Meta、阿里云）：  </p>
+<ul>
+<li><strong>RAG 仍是生产系统首选</strong>，尤其适用于客服、法律、医疗等<strong>事实密集、需溯源</strong>的场景；  </li>
+<li><strong>Long Context 适合单篇长文档理解</strong>（如合同分析、论文阅读）。</li>
+</ul>
+</blockquote>
+<hr />
+<h2 id="2-rag">2. RAG 架构拆解：检索 → 增强 → 生成<a class="headerlink" href="#2-rag" title="Permanent link">&para;</a></h2>
+<p>RAG 系统由三大模块组成，每一模块均有<strong>工业级实现方案</strong>。</p>
+<h3 id="21-retrieval">2.1 Retrieval（检索）：从海量文档中找“最相关”<a class="headerlink" href="#21-retrieval" title="Permanent link">&para;</a></h3>
+<p>用户输入问题后，系统会基于该输入在外部知识库或向量数据库中检索相关内容。通常使用语义搜索（Semantic Search）或 BM25、Dense Retrieval（DPR）、Embedding-based Retrieval 等技术来匹配最相关的文档片段。</p>
+<h4 id="211">2.1.1 流程与公式<a class="headerlink" href="#211" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><strong>索引构建</strong>：将知识库 <span class="arithmatex">\(\mathcal{D}\)</span> 分块为 <span class="arithmatex">\(\{c_1, ..., c_M\}\)</span>，对每块 <span class="arithmatex">\(c_j\)</span> 计算 embedding：
+   $$
+   v_j = E_{\text{emb}}(c_j)
+   $$</p>
+<ul>
+<li><span class="arithmatex">\(c_j\)</span>：第 <span class="arithmatex">\(j\)</span> 个文本块（chunk）；</li>
+<li><span class="arithmatex">\(E_{\text{emb}}(\cdot)\)</span>：Embedding 模型（如 BGE）；</li>
+<li><span class="arithmatex">\(v_j \in \mathbb{R}^d\)</span>：<span class="arithmatex">\(c_j\)</span> 的 <span class="arithmatex">\(d\)</span> 维向量表示（如 <span class="arithmatex">\(d=1024\)</span>）。</li>
+</ul>
+</li>
+<li>
+<p><strong>查询编码</strong>：<span class="arithmatex">\(q = E_{\text{emb}}(x)\)</span>；</p>
+<ul>
+<li><span class="arithmatex">\(x\)</span>：用户查询；</li>
+<li><span class="arithmatex">\(q \in \mathbb{R}^d\)</span>：查询的向量表示。</li>
+</ul>
+</li>
+<li><strong>相似度搜索</strong>（近似最近邻，ANN）：
+   $$
+   \mathcal{R}_k(x) = \underset{j}{\text{top-}k} \ \frac{q^\top v_j}{|q| |v_j|}
+   $$<ul>
+<li><span class="arithmatex">\(q^\top v_j\)</span>：向量点积；</li>
+<li><span class="arithmatex">\(\|q\|, \|v_j\|\)</span>：向量的 L2 范数；</li>
+<li><span class="arithmatex">\(\frac{q^\top v_j}{\|q\| \|v_j\|}\)</span>：余弦相似度（范围 <span class="arithmatex">\([-1, 1]\)</span>）；</li>
+<li><span class="arithmatex">\(\text{top-}k\)</span>：返回相似度最高的 <span class="arithmatex">\(k\)</span> 个文档块。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>🔍 <strong>关键</strong>：检索质量直接决定 RAG 上限。</p>
+</blockquote>
+<h4 id="212">2.1.2 当前主流技术栈<a class="headerlink" href="#212" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>通用方案</th>
+<th>领域优化方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Embedding 模型</strong></td>
+<td>OpenAI <code>text-embedding-3-large</code><br>BAAI <code>bge-large-en-v1.5</code><br><code>voyage-lite-02-instruct</code></td>
+<td>微调 BGE（医疗/法律/金融）<br>Instruction-tuned embedding（如 <code>bge-large-1.5-instruct</code>）</td>
+</tr>
+<tr>
+<td><strong>向量数据库</strong></td>
+<td><strong>Pinecone</strong>（托管服务，易用）<br><strong>Milvus</strong>（开源，支持 GPU 加速）<br><strong>Qdrant</strong>（Rust 实现，低延迟）<br><strong>Chroma</strong>（轻量，适合本地）</td>
+<td><strong>Weaviate</strong>（支持属性过滤 + 图结构）<br><strong>Elasticsearch + Vector</strong>（混合搜索）</td>
+</tr>
+<tr>
+<td><strong>检索增强</strong></td>
+<td><strong>HyDE</strong>（Hypothetical Document Embeddings）<br><strong>Multi-query retrieval</strong>（生成多个查询）</td>
+<td><strong>Query2Doc</strong>（用 LLM 生成伪文档）<br><strong>Decomposed Retrieval</strong>（将复杂问题拆解）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>🌟 <strong>业界案例</strong>：</p>
+<ul>
+<li><strong>Notion AI</strong>：使用 BGE + Pinecone 构建企业知识库；</li>
+<li><strong>Glean</strong>：支持元数据过滤 + 权限控制的 RAG 系统；</li>
+<li><strong>LazyLLM</strong>：高度集成化，以极低的成本构建 RAG 系统。</li>
+</ul>
+</blockquote>
+<h4 id="213">2.1.3 检索评估指标<a class="headerlink" href="#213" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Recall@k</strong>：top-k 中是否包含相关文档；</li>
+<li><strong>MRR@k</strong>（Mean Reciprocal Rank）：相关文档的平均排名倒数；</li>
+<li><strong>Hit Rate</strong>：至少命中一个相关文档的比例。</li>
+</ul>
+<blockquote>
+<p>✅ <strong>目标</strong>：Recall@10 &gt; 80%，MRR@10 &gt; 0.6。</p>
+</blockquote>
+<h4 id="214-lazyllmretriever">2.1.4 基于LazyLLM实现Retriever<a class="headerlink" href="#214-lazyllmretriever" title="Permanent link">&para;</a></h4>
+<p>下面这行代码声明检索组件需要在 doc 这个文档中的 Coarse chunk 节点组利用 bm25_chinese 相似度进行检索，最终返回相似度最高的 3 个节点。
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lazyllm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Retriever</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># 传入绝对路径</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">doc</span> <span class="o">=</span> <span class="n">Document</span><span class="p">(</span><span class="s2">&quot;/path/to/content/docs/&quot;</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># 使用Retriever组件，传入文档doc，节点组名称这里采用内置切分策略&quot;CoarseChunk&quot;，相似度计算函数bm25_Chinese</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">retriever</span> <span class="o">=</span> <span class="n">Retriever</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">group_name</span><span class="o">=</span><span class="n">Document</span><span class="o">.</span><span class="n">CoarseChunk</span><span class="p">,</span> <span class="n">similarity</span><span class="o">=</span><span class="s2">&quot;bm25_chinese&quot;</span><span class="p">,</span> <span class="n">topk</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># 调用retriever组件，传入query</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">retriever_result</span> <span class="o">=</span> <span class="n">retriever</span><span class="p">(</span><span class="s2">&quot;your query&quot;</span><span class="p">)</span>      
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># 打印结果，用get_content()方法打印具体的内容</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nb">print</span><span class="p">(</span><span class="n">retriever_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_content</span><span class="p">())</span>
+</span></code></pre></div></p>
+<h3 id="22-augmentation">2.2 Augmentation（增强）：将检索结果“喂”给生成模型<a class="headerlink" href="#22-augmentation" title="Permanent link">&para;</a></h3>
+<p>检索到的文本内容会作为额外的上下文，与用户输入一起提供给 大模型。这一阶段涉及 Prompt 设计，确保大模型在生成回答时充分利用检索到的信息，而非仅依赖其内部知识。</p>
+<h4 id="221">2.2.1 基础增强<a class="headerlink" href="#221" title="Permanent link">&para;</a></h4>
+<p>将检索结果拼接为 prompt：
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>参考以下信息回答问题：
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>---
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>{d_{i1}}
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>{d_{i2}}
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>...
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>---
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>问题：{x}
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>回答：
+</span></code></pre></div></p>
+<blockquote>
+<p>✅ <strong>关键作用</strong>：为生成模型提供<strong>显式上下文证据</strong>，约束其输出范围。</p>
+</blockquote>
+<h4 id="222">2.2.2 高级增强策略<a class="headerlink" href="#222" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>重排序</strong>（Reranking）</td>
+<td>用 Cross-Encoder 对 top-100 结果精排</td>
+</tr>
+<tr>
+<td><strong>压缩</strong>（Compression）</td>
+<td>用 LLM 提取检索结果中的关键句</td>
+</tr>
+<tr>
+<td><strong>路由</strong>（Routing）</td>
+<td>根据问题类型选择不同知识库</td>
+</tr>
+<tr>
+<td><strong>元数据过滤</strong></td>
+<td>仅检索特定来源/类别的文档</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>📌 <strong>Reranker 公式</strong>：
+$$
+\text{score}(q, d) = \text{Reranker}([q; d])
+$$
+其中 <code>[q; d]</code> 表示拼接，Cross-Encoder 能建模<strong>细粒度交互</strong>，比双塔模型更准。</p>
+</blockquote>
+<h3 id="23-generation">2.3 Generation（生成）：基于证据生成答案<a class="headerlink" href="#23-generation" title="Permanent link">&para;</a></h3>
+<p><img alt="alt text" src="../assets/1.png" /></p>
+<p>该流程图展示了知识库问答的关键流程：知识库中共有10 个片段，Retrieval 阶段 召回 5 个 相关片段，重排序后筛选出 3 个，最终由大模型结合筛选内容生成回答。整体流程体现了检索增强生成（RAG）的核心思想，即先通过检索获取相关知识并融入Prompt，使大模型参考后生成更合理的回答。相比单纯依赖大模型，RAG 结合<code>“检索+生成”</code>，利用向量数据库高效召回知识，并通过大模型生成答案，从而降低幻觉风险，增强知识时效性，并减少微调需求，提升模型的适应能力。</p>
+<p>有了检索到的内容，结合我们提问的问题，将二者共同输入给生成组件，即可得我们想要的答案。这里的生成组件就是大模型,接下来我们将以线上大模型为例说明lazyllm是如何调用大模型的。</p>
+<p>LazyLLM 通过 OnlineChatModule 统一调用线上大模型接口，不管您使用的OpenAPI接口还是SenseNova接口，或者是其他平台提供的接口，LazyLLM均为您进行了规范的参数封装，您只需要根据自己的需求将平台和模型名称等参数传给对应的模块即可：
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">llm_prompt</span> <span class="o">=</span> <span class="s2">&quot;你是一只小猫，每次回答完问题都要加上喵喵喵&quot;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">OnlineChatModule</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;sensenova&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;SenseChat-5-1202&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="n">llm_prompt</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">llm</span><span class="p">(</span><span class="s2">&quot;早上好！&quot;</span><span class="p">))</span>
+</span></code></pre></div></p>
+<hr />
+<h2 id="3-rag">3. 数据处理：构建高质量 RAG 知识库<a class="headerlink" href="#3-rag" title="Permanent link">&para;</a></h2>
+<p>RAG 效果 = <strong>70% 数据质量 + 30% 模型能力</strong>。原始文档需经过<strong>智能处理</strong>才能入库。</p>
+<h3 id="31">3.1 传统分块的局限<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>直接按固定长度（如 512 字）切分会导致：</p>
+<ul>
+<li><strong>信息割裂</strong>：关键句被切断（如“EBITDA = 净利润 + 利息 + 税 + 折旧 + 摊销”被切成两段）；</li>
+<li><strong>噪声混入</strong>：页眉页脚、广告、页码等无关内容；</li>
+<li><strong>信息稀释</strong>：长段落中关键信息占比低，embedding 被平均。</li>
+</ul>
+<p>因此需要在<strong>分块前</strong>做多源归一与格式统一、在<strong>分块后</strong>做 LLM 精炼去噪与可选的多跳 QA 增强。LazyLLM 的 <strong>knowledge_cleaning</strong> 模块即针对上述环节提供了一整套可组合算子（见 3.4 节）。</p>
+<h3 id="32-agent">3.2 基于 Agent 的智能文档处理<a class="headerlink" href="#32-agent" title="Permanent link">&para;</a></h3>
+<p>使用 <strong>Agent 框架</strong>（如 <strong>LazyLLM</strong>、<strong>LlamaIndex</strong>、<strong>Unstructured.io</strong>）自动化以下流程：
+<img alt="alt text" src="../assets/3.png" /></p>
+<p>其中 <strong>LazyLLM</strong> 中提供了一整套<strong>知识库清洗（KBC, Knowledge Base Cleaning）</strong>算子，覆盖「多源归一 → 格式转换 → 分块 → 精炼 → 多跳 QA 生成 → QA 抽取」全流程，可与 RAG 检索、微调数据制备无缝衔接。下一小节将具体展开其能力与用法。</p>
+<h3 id="33">3.3 构建知识库<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>我们将从<a href="https://huggingface.co/datasets/hfl/cmrc2018">cmrc2018</a>原始数据集开始，为大家讲解如何基于此数据集构建我们的RAG知识库。</p>
+<p>CMRC 2018（Chinese Machine Reading Comprehension 2018）[1] 数据集是一个中文阅读理解数据集，用于中文机器阅读理解的跨度提取数据集，以增加该领域的语言多样性。数据集由人类专家在维基百科段落上注释的近20,000个真实问题组成。旨在推动中文机器阅读理解（MRC）任务的发展。其数据集的基本格式如下图所示：
+<img alt="alt text" src="../assets/4.png" /></p>
+<p>对于每条数据，包括<code>id</code>，<code>context</code>，<code>question</code>以及<code>answers</code>四个字段，其中id是当前数据的编号，context是一段文字性描述，涉及历史、新闻、小说等各领域，answer包括两部分，一部分是<code>answer_start</code>，标志答案从哪个<code>context</code>中的token开始，另一部分是text，代表了针对question给出的答案，此答案由人类专家给出，上图中有两个答案，代表人类专家1和人类专家2分别给出，以此来保证答案的准确性。</p>
+<p>我们仅使用<code>context</code>部分内容作为知识库，这样在后续评测RAG的效果时，我们就可以选择同一条数据当中<code>context</code>对应的<code>question</code>作为query输入，通过比较RAG中检索组件根据<code>question</code>召回的结果与RAG中生成组件与原本的<code>answers</code>，就可以对RAG系统的好坏做出评价。下面是相应的代码：
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_KB</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;基于测试集中的context字段创建一个知识库，每10条数据为一个txt，最后不足10条的也为一个txt&#39;&#39;&#39;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">Context</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        <span class="n">Context</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s1">&#39;context&#39;</span><span class="p">])</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">Context</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">Context</span><span class="p">))</span>  <span class="c1"># 去重后获得256个语料</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="c1"># 计算需要的文件数</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">total_files</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Context</span><span class="p">)</span> <span class="o">+</span> <span class="n">chunk_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">chunk_size</span>  <span class="c1"># 向上取整</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="c1"># 创建文件夹data_kb保存知识库语料</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">&quot;data_kb&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="c1"># 按 10 条数据一组写入多个文件</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_files</span><span class="p">):</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        <span class="n">chunk</span> <span class="o">=</span> <span class="n">Context</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">chunk_size</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chunk_size</span><span class="p">]</span>  <span class="c1"># 获取当前 10 条数据</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>        <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./data_kb/part_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">.txt&quot;</span>  <span class="c1"># 生成文件名</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span>  <span class="c1"># 以换行符分隔写入文件</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="c1"># 调用create_KB()创建知识库</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="n">create_KB</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">])</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="c1"># 展示其中一个txt文件中的内容</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data_kb/part_1.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span></code></pre></div>
+上述代码执行完成后，您的当前目录下将多出一个<code>data_kb</code>文件夹，里面包括若干个txt文件：</p>
+<p><img alt="image.png" src="../assets/5.png" /></p>
+<p>文件中的内容大致如下：</p>
+<p><img alt="image-2.png" src="../assets/6.png" /></p>
+<h3 id="34-lazyllm">3.4 LazyLLM 知识库清洗<a class="headerlink" href="#34-lazyllm" title="Permanent link">&para;</a></h3>
+<p>在构建 RAG 知识库时，原始文档往往包含大量噪声：多余 HTML 标签、页眉页脚、不一致的标点与格式、个人敏感信息等。<strong>LazyLLM 的 knowledge_cleaning 模块</strong>提供可组合的算子，对多源文档进行「归一 → 转 Markdown → 分块 → LLM 精炼 → 多跳 QA 增强」，产出高质量、可直接用于检索与微调的数据。</p>
+<h4 id="341">3.4.1 多源归一与格式转换<a class="headerlink" href="#341" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>算子</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FileOrURLNormalizer</strong></td>
+<td>统一输入来源：支持本地文件（PDF、HTML/XML、TXT/MD、图片）和 URL（网页链接、PDF 链接），输出 <code>_type</code>（pdf/html/text）、<code>_raw_path</code> 或 <code>_url</code>、以及目标 Markdown 路径 <code>_output_path</code>。</td>
+</tr>
+<tr>
+<td><strong>HTMLToMarkdownConverter</strong></td>
+<td>对 <code>_type=html</code> 的条目，用 <strong>trafilatura</strong> 抓取 URL 或解析本地 HTML/XML，提取正文并转为 Markdown，写入 <code>_output_path</code>。</td>
+</tr>
+<tr>
+<td><strong>PDFToMarkdownConverterAPI</strong></td>
+<td>对 <code>_type=pdf</code> 的条目，调用 <strong>MinerU</strong> 服务（支持 VLM 引擎）将 PDF 解析为 Markdown，便于后续分块与精炼。</td>
+</tr>
+</tbody>
+</table>
+<p>适用场景：企业内网文档、爬虫抓取的网页、上传的 PDF/Word 等，先归一为「路径 + 类型」，再按类型选择 HTML 或 PDF 转 Markdown，为后续分块和清洗提供统一输入。</p>
+<h4 id="342">3.4.2 文本加载与分块<a class="headerlink" href="#342" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>算子</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KBCLoadText</strong></td>
+<td>从 <code>text_path</code> 指定的 txt/md/xml/json/jsonl 文件加载文本，输出 <code>_text_content</code>；json/jsonl 支持从 <code>text</code>/<code>content</code>/<code>body</code> 等字段抽取。</td>
+</tr>
+<tr>
+<td><strong>KBCChunkText</strong></td>
+<td>按 <strong>token/sentence/semantic/recursive</strong> 等策略分块，可配置 <code>chunk_size</code>、<code>chunk_overlap</code>、<code>tokenizer_name</code>（如 <code>bert-base-uncased</code>），输出 <code>_chunks</code> 列表。</td>
+</tr>
+<tr>
+<td><strong>KBCSaveChunks</strong></td>
+<td>将 <code>_chunks</code> 保存为 JSON（每项为 <code>raw_chunk</code>），并回写 <code>chunk_path</code>。</td>
+</tr>
+<tr>
+<td><strong>KBCExpandChunks</strong></td>
+<td>将一条记录中的多个 chunk（<code>_chunks</code>）展开为多条记录，每条一个 <code>raw_chunk</code>，便于后续逐条送入 LLM 精炼。</td>
+</tr>
+</tbody>
+</table>
+<p>这样即可在「加载 → 分块 → 保存」或「分块 → 展开」两条流水线中灵活组合，与 3.3 节中「按 context 构建知识库」的思路一致，并支持更细粒度的 token/句子/段落级切分。</p>
+<h4 id="343-llm">3.4.3 文档精炼（LLM 清洗）<a class="headerlink" href="#343-llm" title="Permanent link">&para;</a></h4>
+<p>原始分块常含多余标签、乱码、不一致标点和敏感信息。<strong>DocRefinementPrompt + LLM</strong> 对每个 chunk 做「精炼」：</p>
+<ul>
+<li><strong>标签</strong>：删除无关 HTML/XML 标签，保留 <code>&lt;table&gt;</code>、<code>&lt;code&gt;</code>、<code>&lt;formula&gt;</code> 等语义标签。</li>
+<li><strong>字符与结构</strong>：统一引号、省略号、横线；保持段落/列表/代码缩进；控制空行。</li>
+<li><strong>引用</strong>：图片改为占位（如 <code>[Image: alt_text]</code>），签名改为 <code>[Signature]</code>。</li>
+<li><strong>事实与安全</strong>：不改写事实与数字；对 PII 脱敏，涉密/违法内容用占位替换（如 <code>〖SEC∶classified〗</code>）。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>算子</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KBCGenerateCleanedTextSingle</strong></td>
+<td>单条模式：对当前条目的 <code>raw_chunk</code> 调用 LLM，输出 <code>_cleaned_response</code>，配合后处理提取 <code>&lt;cleaned_start&gt;</code>～<code>&lt;cleaned_end&gt;</code> 间内容得到 <code>cleaned_chunk</code>。</td>
+</tr>
+<tr>
+<td><strong>KBCLoadRAWChunkFile</strong> + <strong>KBCGenerateCleanedText</strong> + <strong>KBCSaveCleaned</strong></td>
+<td>批量模式：从 JSON/JSONL 的 <code>chunk_path</code> 加载 <code>raw_chunk</code> 列表，逐条精炼后写回 <code>raw_chunk</code> + <code>cleaned_chunk</code> 的 JSON，并保存到 <code>cleaned_chunk_path</code>。</td>
+</tr>
+</tbody>
+</table>
+<p>精炼后的 <code>cleaned_chunk</code> 更适合做 Embedding 与检索，同时降低无关符号对语义的干扰。</p>
+<h4 id="344-qa">3.4.4 多跳 QA 生成与增强<a class="headerlink" href="#344-qa" title="Permanent link">&para;</a></h4>
+<p>在已清洗的 chunk 上，可进一步生成「多跳」问答对，用于 RAG 评测或检索/阅读模型微调：</p>
+<table>
+<thead>
+<tr>
+<th>算子</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KBCLoadChunkFile</strong></td>
+<td>从 <code>chunk_path</code> 加载 JSON/JSONL（需含 <code>cleaned_chunk</code> 等字段）。</td>
+</tr>
+<tr>
+<td><strong>KBCPreprocessText</strong></td>
+<td>按 <code>min_length</code>/<code>max_length</code> 过滤 chunk，避免过短或过长。</td>
+</tr>
+<tr>
+<td><strong>KBCExtractInfoPairs</strong></td>
+<td>按句切分（中/英文），抽取「前提 → 中间句 → 结论」三元组，作为多跳推理的上下文。</td>
+</tr>
+<tr>
+<td><strong>KBCGenerateMultiHopQA</strong></td>
+<td>使用 <strong>MultiHopQABuilderPrompt</strong> 与 LLM，基于三元组生成多跳问答对。</td>
+</tr>
+<tr>
+<td><strong>KBCSaveEnhanced</strong></td>
+<td>将生成的 QA 对与原始 chunk 合并，写回带 <code>qa_pairs</code> 的 enhanced 文件（如 <code>*_enhanced.json</code>）。</td>
+</tr>
+</tbody>
+</table>
+<p>得到的 enhanced 数据既可直接用于 RAG 的检索评估（query 用 question，标准答案用 answer），也可作为 SFT 数据参与微调。</p>
+<h4 id="345-qa">3.4.5 QA 抽取与微调格式<a class="headerlink" href="#345-qa" title="Permanent link">&para;</a></h4>
+<p>若数据中已含 QA（如 enhanced 文件中的 <code>QA_pairs</code>），可用以下算子转为模型训练格式：</p>
+<table>
+<thead>
+<tr>
+<th>算子</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KBCLoadQAData</strong></td>
+<td>从当前条目或 <code>enhanced_chunk_path</code>/<code>cleaned_chunk_path</code>/<code>chunk_path</code> 中读取 <code>QA_pairs</code>，输出 <code>_qa_data</code>。</td>
+</tr>
+<tr>
+<td><strong>KBCExtractQAPairs</strong></td>
+<td>将 <code>_qa_data</code> 中的每对 question/answer 转为指定键（如 <code>instruction</code>/<code>input</code>/<code>output</code>），便于接入 LazyLLM 的 SFT 或 RAG 微调流水线。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="35-lazyllm-rag">3.5 基于 LazyLLM 构建基础 RAG 知识库<a class="headerlink" href="#35-lazyllm-rag" title="Permanent link">&para;</a></h3>
+<p>在介绍完相关功能后，我们使用 LazyLLM 实际构建一个基础的 RAG 知识库，完整代码见 <a href="../code/rag_kb_build.py">rag_kb_build</a>。整体流程为：<strong>收集源文件 → 分块流水线 →（可选）LLM 清洗 → 导出为知识库目录 → 可选检索演示</strong>。</p>
+<p>首先我们从指定目录（默认 <code>sources_dir</code>）收集所有 <code>.txt</code> / <code>.md</code>，构造 <code>[{"text_path": path}, ...]</code>，交给 <strong>分块流水线</strong>。分块流水线对应 3.4.2 节的 KBCLoadText → KBCChunkText → KBCSaveChunks，将每个源文件切为多个 <code>raw_chunk</code> 并落盘为 JSON（如 <code>chunks/xxx_chunk.json</code>）。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">ppl</span> <span class="o">=</span> <span class="n">build_batch_chunk_generator_pipeline</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">input_key</span><span class="o">=</span><span class="s2">&quot;text_path&quot;</span><span class="p">,</span> <span class="n">output_key</span><span class="o">=</span><span class="s2">&quot;chunk_path&quot;</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">chunk_out</span><span class="p">),</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">chunk_overlap</span><span class="o">=</span><span class="n">chunk_overlap</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">split_method</span><span class="o">=</span><span class="s2">&quot;recursive&quot;</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="o">=</span><span class="s2">&quot;bert-base-uncased&quot;</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">data_list</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;text_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">text_paths</span><span class="p">]</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">results</span> <span class="o">=</span> <span class="n">ppl</span><span class="p">(</span><span class="n">data_list</span><span class="p">)</span>
+</span></code></pre></div>
+<p>接下来如果传入 <code>--do_clean</code>，那我们使用 <strong>批量清洗流水线</strong>（3.4.3 节）对数据进行清洗：从 JSON 加载 <code>raw_chunk</code>，经 LLM + DocRefinementPrompt 得到 <code>cleaned_chunk</code>，写回 <code>cleaned/</code> 下。未开启时直接使用原始分块结果。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">ppl</span> <span class="o">=</span> <span class="n">build_batch_kbc_pipeline</span><span class="p">(</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">input_key</span><span class="o">=</span><span class="s2">&quot;chunk_path&quot;</span><span class="p">,</span> <span class="n">output_key</span><span class="o">=</span><span class="s2">&quot;cleaned_chunk_path&quot;</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">lang</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">clean_out</span><span class="p">),</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">results</span> <span class="o">=</span> <span class="n">ppl</span><span class="p">([{</span><span class="s2">&quot;chunk_path&quot;</span><span class="p">:</span> <span class="n">p</span><span class="p">}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">chunk_paths</span><span class="p">])</span>
+</span></code></pre></div>
+<p>无论是仅分块还是清洗后的结果，都通过 <strong>导出函数</strong> 写回为 <code>kb_content/</code> 下的若干 <code>.txt</code> 文件：按源文件维度，把该文件对应的所有 chunk（<code>raw_chunk</code> 或 <code>cleaned_chunk</code>）用双换行拼接成一个 txt，便于 <code>Document(dataset_path=kb_content)</code> 按文件加载。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># 从每个 chunk 的 JSON 里取 raw_chunk 或 cleaned_chunk，按源文件合并为一份 txt</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">chunk_key</span><span class="p">)</span> <span class="ow">or</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;raw_chunk&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">if</span> <span class="o">...</span><span class="p">]</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">out_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunks</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>在导出完成后，用 LazyLLM 的 Document 指向 <code>kb_content</code> 目录，再构造 Retriever（如 <code>CoarseChunk</code> + <code>bm25_chinese</code>），对示例 query 做一次检索并打印首条摘要，用于验证知识库与检索链路是否正常。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">doc</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span><span class="n">dataset_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">kb_path</span><span class="p">))</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">retriever</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">Retriever</span><span class="p">(</span><span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">,</span> <span class="n">group_name</span><span class="o">=</span><span class="n">lazyllm</span><span class="o">.</span><span class="n">Document</span><span class="o">.</span><span class="n">CoarseChunk</span><span class="p">,</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>                              <span class="n">similarity</span><span class="o">=</span><span class="s1">&#39;bm25_chinese&#39;</span><span class="p">,</span> <span class="n">topk</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">demo_result</span> <span class="o">=</span> <span class="n">retriever</span><span class="p">(</span><span class="s1">&#39;玉山箭竹生长在哪里？&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>运行方式示例：<code>python rag_kb_build.py --output_dir ./rag_kb</code>（仅分块）；加 <code>--do_clean</code> 可启用 LLM 清洗（需配置好 LazyLLM 可用 LLM）。</p>
+<hr />
+<h2 id="4-raglazyllmrag">4. RAG实战：基于LazyLLM实现基础RAG<a class="headerlink" href="#4-raglazyllmrag" title="Permanent link">&para;</a></h2>
+<p>我们仅使用LazyLLM中三个组件Document，Retriever，大模型，即可简单快速的构建一个RAG系统。下面我们简单介绍一下这三个核心组件：</p>
+<ul>
+<li>Document 组件：负责文档加载与管理，使用时只需指定文档地址即可实现加载和存储文档。</li>
+<li>Retriever 组件：负责实现 RAG 系统的检索功能，使用时需要指定在哪个文档库进行检索，以何种方式进行检索以及返回多少条检索结果等。</li>
+<li>大模型（LLM）：负责根据检索到的文档进行答复，简单情况下只需输入用户查询和检索组件检索到的文档即可。LazyLLM 提供了 TrainableModule 和 OnlineChatModule 分别支持本地模型和在线模型的统一调用，用户无需关注内部细节，可以自由切换不同模型。</li>
+</ul>
+<p>将这三个组件的使用串联在一起，我们就得到了最简单的RAG，代码如下：</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">lazyllm</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># 文档加载</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">documents</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span><span class="n">dataset_path</span><span class="o">=</span><span class="s2">&quot;/content/docs&quot;</span><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="c1"># 检索组件定义</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="n">retriever</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">Retriever</span><span class="p">(</span><span class="n">doc</span><span class="o">=</span><span class="n">documents</span><span class="p">,</span> <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;CoarseChunk&quot;</span><span class="p">,</span> <span class="n">similarity</span><span class="o">=</span><span class="s2">&quot;bm25_chinese&quot;</span><span class="p">,</span> <span class="n">topk</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> 
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1"># 生成组件定义</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">lazyllm</span><span class="o">.</span><span class="n">OnlineChatModule</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;sensenova&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;SenseChat-5-1202&quot;</span><span class="p">)</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="c1"># prompt 设计</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="n">prompt</span> <span class="o">=</span> <span class="s1">&#39;You will act as an AI question-answering assistant and complete a dialogue task. In this task, you need to provide your answers based on the given context and questions.&#39;</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="n">llm</span><span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="n">lazyllm</span><span class="o">.</span><span class="n">ChatPrompter</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">extra_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;context_str&#39;</span><span class="p">]))</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="c1"># 推理</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;为我介绍下玉山箭竹&quot;</span>    
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="c1"># 将Retriever组件召回的节点全部存储到列表doc_node_list中</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="n">doc_node_list</span> <span class="o">=</span> <span class="n">retriever</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="c1"># 将query和召回节点中的内容组成dict，作为大模型的输入</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="n">res</span> <span class="o">=</span> <span class="n">llm</span><span class="p">({</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span> <span class="s2">&quot;context_str&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">node</span><span class="o">.</span><span class="n">get_content</span><span class="p">()</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">doc_node_list</span><span class="p">])})</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;With RAG Answer: </span><span class="si">{</span><span class="n">res</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+最终我们可以得到的结果如下
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>With RAG Answer： 玉山箭竹（学名：Fargesia yushanensis），属于禾本科箭竹属，是竹亚科中的一个种类。它主要分布在中国台湾地区，尤其是在玉山国家公园一带，因此得名。玉山箭竹是台湾高山地区特有的竹种之一，适应高海拔的寒冷环境，通常生长，
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>在海拔2500米至3500米之间的山区。
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>*形态特征：*
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>玉山箭竹是一种小型到中型的竹子，其茎秆直立，丛生，高度一般在1米到3米之间，直径约0.5厘米至1.5厘米。它的节间较短，节处略微隆起。叶片较小，星披针形，边缘有细小的锯齿。
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>料牛态习性：林
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>玉山箭竹耐寒性强，能在低温和积雪覆盖的环境中生存，它们通常形成密集的竹丛，为高山地区的土壤保持和水源涵养提供重要的生态功能。此外，玉山箭竹也是高山动物的重要食物来源之一。
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>料保护状况：*
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>由于玉山箭竹生长在特定的高山环境中，其分布范围有限，因此对于生态系统的平衡具有重要意义。然而，由于气候变化和人类活动的影响，玉山箭竹的生存环境面临着威胁、因此，保护玉山箭竹及其生态环境显得尤为重要。
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>*应用价值：*
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>虽然玉山箭竹在商业上的应用价值不高，但它在生态保护和科学研究方面具有重要的价值。
+</span></code></pre></div></p>
+<h2 id="5-embedding">5. 微调的必要性：为什么通用 Embedding 不够用？<a class="headerlink" href="#5-embedding" title="Permanent link">&para;</a></h2>
+<h3 id="51-embedding">5.1 通用 Embedding 的领域错配<a class="headerlink" href="#51-embedding" title="Permanent link">&para;</a></h3>
+<p>通用 embedding 模型在<strong>通用语料</strong>上训练，其语义空间满足：
+$$
+\text{sim}(E(a), E(b)) \approx \text{通用语境下的语义相似度}
+$$</p>
+<p>但在专业领域，<strong>任务相关性 ≠ 语义相似度</strong>。</p>
+<blockquote>
+<p>📌 <strong>例</strong>（金融领域）：</p>
+<ul>
+<li>查询：“如何计算 EBITDA？”</li>
+<li>通用 embedding 返回：“EBITDA 是一种盈利指标”（语义相关）</li>
+<li><strong>任务所需</strong>是：“EBITDA = 净利润 + 利息 + 税 + 折旧 + 摊销”（公式）</li>
+</ul>
+</blockquote>
+<p>二者在通用空间中距离较远，导致<strong>召回失败</strong>。</p>
+<h3 id="52-reranker">5.2 通用 Reranker 的语义盲区<a class="headerlink" href="#52-reranker" title="Permanent link">&para;</a></h3>
+<p>通用 Reranker（如 <code>bge-reranker-large</code>）在通用问答对（如 MS MARCO）上训练，擅长判断：</p>
+<blockquote>
+<p>“这篇文档是否回答了‘巴黎人口是多少？’”</p>
+</blockquote>
+<p>但<strong>无法理解专业逻辑</strong>：</p>
+<blockquote>
+<p>📌 <strong>例</strong>（医疗领域）：
+- <strong>查询</strong> <span class="arithmatex">\(q\)</span>：“阿司匹林是否用于心肌梗死？”
+- <strong>文档 A</strong>（正确）：“阿司匹林是 STEMI 的标准抗血小板药物。”
+- <strong>文档 B</strong>（干扰）：“阿司匹林不用于心肌炎。”</p>
+</blockquote>
+<p>通用 Reranker 可能给 B 更高分，因为：
+- “阿司匹林”“心肌”等词高度重叠；
+- 无法识别“心肌炎 ≠ 心肌梗死”；
+- 无法理解“不用于”是否定信号。</p>
+<blockquote>
+<p>❌ <strong>后果</strong>：<br />
+- 高相关文档被排后；<br />
+- LLM 优先看到错误信息；<br />
+- 最终答案错误。</p>
+</blockquote>
+<hr />
+<h3 id="53">5.3 为什么必须微调？<a class="headerlink" href="#53" title="Permanent link">&para;</a></h3>
+<h4 id="embedding">✅ Embedding 微调的必要性<a class="headerlink" href="#embedding" title="Permanent link">&para;</a></h4>
+<p><strong>目标</strong>：让模型学习<strong>任务相关性</strong>，而非<strong>通用语义相似度</strong>。</p>
+<ul>
+<li><strong>领域术语对齐</strong>：<br />
+  将“心肌梗死”与“PCI”“阿司匹林”拉近，与“心肌炎”推开。</li>
+<li><strong>公式/代码敏感</strong>：<br />
+  让“EBITDA = ...”比“EBITDA 是指标”更接近查询。</li>
+<li><strong>效果</strong>：<br />
+  在医疗/金融/法律数据集上，<strong>MRR@10 提升 15–25%</strong>，显著改善召回质量。</li>
+</ul>
+<h4 id="reranker">✅ Reranker 微调的必要性<a class="headerlink" href="#reranker" title="Permanent link">&para;</a></h4>
+<p><strong>目标</strong>：让模型理解<strong>专业语义边界</strong>与<strong>业务逻辑</strong>。</p>
+<ul>
+<li><strong>细粒度判别</strong>：<br />
+  区分“心肌梗死” vs “心肌炎”、“违约” vs “侵权”；</li>
+<li><strong>否定与约束识别</strong>：<br />
+  理解“禁用”“不推荐”“需排除”等关键信号；</li>
+<li><strong>效果</strong>：<br />
+  在专业 RAG 场景中，<strong>NDCG@5 提升 20–50%</strong>，确保 top-3 文档高度相关。</li>
+</ul>
+<hr />
+<h3 id="54-embedding">5.4 Embedding 微调：对齐任务语义空间<a class="headerlink" href="#54-embedding" title="Permanent link">&para;</a></h3>
+<p>通过<strong>对比学习</strong>（Contrastive Learning）微调 embedding 模型，使其在领域内满足：
+$$
+\text{sim}(E(q), E(d^+)) \gg \text{sim}(E(q), E(d^-))
+$$</p>
+<ul>
+<li><span class="arithmatex">\(q\)</span>：查询；</li>
+<li><span class="arithmatex">\(d^+\)</span>：与 <span class="arithmatex">\(q\)</span> <strong>任务相关</strong>的正样本文档；</li>
+<li><span class="arithmatex">\(d^-\)</span>：与 <span class="arithmatex">\(q\)</span> <strong>任务无关</strong>的负样本文档；</li>
+<li><span class="arithmatex">\(E(\cdot)\)</span>：微调后的 embedding 模型；</li>
+<li><span class="arithmatex">\(\text{sim}(a, b) = \frac{a^\top b}{\|a\| \|b\|}\)</span>：余弦相似度。</li>
+</ul>
+<h4 id="infonce">损失函数（InfoNCE）：<a class="headerlink" href="#infonce" title="Permanent link">&para;</a></h4>
+<div class="arithmatex">\[
+\mathcal{L} = -\log \frac{\exp(\text{sim}(q, d^+)/\tau)}{\sum_{d' \in \mathcal{D}^- \cup \{d^+\}} \exp(\text{sim}(q, d')/\tau)}
+\]</div>
+<ul>
+<li><span class="arithmatex">\(\tau &gt; 0\)</span>：温度系数（通常 0.01–0.1），控制分布 sharpness；</li>
+<li><span class="arithmatex">\(\mathcal{D}^- = \{d_1^-, ..., d_n^-\}\)</span>：负样本集合；</li>
+<li>分母为<strong>所有样本</strong>（1 个正 + <span class="arithmatex">\(n\)</span> 个负）的 softmax 归一化项。</li>
+</ul>
+<blockquote>
+<p>✅ <strong>工具</strong>：
+- <strong>Sentence-Transformers</strong>：支持 <code>MultipleNegativesRankingLoss</code>
+- <strong>FlagEmbedding</strong>：BGE 官方微调脚本</p>
+<p>🌟 <strong>效果</strong>：在医疗问答数据集上，微调 BGE 可使 <strong>MRR@10 提升 15–25%</strong>。</p>
+</blockquote>
+<h3 id="55-reranker">5.5 Reranker 微调：精细化排序<a class="headerlink" href="#55-reranker" title="Permanent link">&para;</a></h3>
+<p>Retriever 返回 top-100 后，用<strong>交叉编码器</strong>（Cross-Encoder）做精排：
+$$
+\text{score}(q, d) = \text{Reranker}([q; d])
+$$</p>
+<ul>
+<li><span class="arithmatex">\([q; d]\)</span>：拼接后的输入序列；</li>
+<li><span class="arithmatex">\(\text{Reranker}(\cdot)\)</span>：Cross-Encoder 模型；</li>
+<li><span class="arithmatex">\(\text{score}(q, d)\)</span>：标量相关性分数，用于排序。</li>
+</ul>
+<blockquote>
+<p>🌟 <strong>业界方案</strong></p>
+<ul>
+<li><strong>LazyLLM</strong>：覆盖从 EMBedding 到 RAG 全流程组件，可直接调用Embedding 与 Reranker 等模块实现相关功能；</li>
+<li><strong>Cohere Rerank</strong>：商业 reranker API，支持多语言；</li>
+<li><strong>LLM-based Reranker</strong>：用 LLM 判断“这段是否回答了问题？”（如 GPT-4）；</li>
+<li><strong>ColBERTv2</strong>：支持 late interaction，平衡效率与精度。</li>
+</ul>
+</blockquote>
+<hr />
+<h2 id="6-rag">6. 总结：RAG 的工业级技术栈全景<a class="headerlink" href="#6-rag" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>主流技术/模型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Embedding</strong></td>
+<td>BGE-v1.5, Voyage, text-embedding-3</td>
+<td>开源/商用 embedding 模型</td>
+</tr>
+<tr>
+<td><strong>向量数据库</strong></td>
+<td>Milvus, Pinecone, Qdrant</td>
+<td>支持亿级向量、GPU 加速</td>
+</tr>
+<tr>
+<td><strong>文档处理</strong></td>
+<td>Unstructured.io, LazyLLM，LlamaIndex</td>
+<td>智能分块 + 元数据增强</td>
+</tr>
+<tr>
+<td><strong>生成模型</strong></td>
+<td>LLaMA-3（via <code>llama.cpp</code>）, Claude 3.5, GPT-4o</td>
+<td>本地/云部署可选</td>
+</tr>
+<tr>
+<td><strong>Reranker</strong></td>
+<td>BGE-Reranker, Cohere Rerank</td>
+<td>精排提升准确率</td>
+</tr>
+<tr>
+<td><strong>框架</strong></td>
+<td>LazyLLM， LlamaIndex,  LangChain</td>
+<td>提供端到端 RAG 流水线</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>🌟 <strong>记住</strong>：<br />
+RAG 不是“把文档丢给模型”，而是<strong>构建一个可信、高效、可解释的知识检索-生成系统</strong>。<br />
+<strong>数据质量 &gt; 模型大小，任务对齐 &gt; 通用能力</strong>。</p>
+<p>下一课，我们将学习<strong>RAG 中Embedding模型的微调</strong>——  </p>
+</blockquote>
+<h2 id="_2">参考文献<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://medium.com/@jinglemind.dev/agentic-rag-turning-your-rag-pipeline-into-a-thinking-system-6a63ac776795">Agentic RAG: Turning Your RAG Pipeline Into a Thinking System</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../chapter24/24/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 第24课时：行业领域模型实战">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                第24课时：行业领域模型实战
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../chapter26/26/" class="md-footer__link md-footer__link--next" aria-label="Next: 第26课时：Embedding 模型微调与实战">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                第26课时：Embedding 模型微调与实战
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/LazyAGI/LazyLLM" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "navigation.footer", "navigation.top", "search.highlight", "search.suggest", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
