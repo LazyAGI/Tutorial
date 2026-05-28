@@ -741,23 +741,8 @@
             }
         }
 
+        // Apply initial theme sync (no ongoing observation needed for static theming)
         syncTheme();
-
-        // Defer MutationObserver setup to let RTD JS initialize first
-        requestAnimationFrame(() => {
-            try {
-                const observer = new MutationObserver(() => syncTheme());
-                const parentBody = window.parent.document.body;
-                if (parentBody) {
-                    observer.observe(parentBody, {
-                        attributes: true,
-                        attributeFilter: ["data-md-color-scheme", "class"]
-                    });
-                }
-            } catch (e) {
-                // Standalone mode
-            }
-        });
 
         // Scroll-triggered fade-in animation
         const fadeEls = document.querySelectorAll('.fade-in-up');
