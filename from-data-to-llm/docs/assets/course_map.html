@@ -170,9 +170,9 @@
         }
 
         .level-main-flow {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
             width: 100%;
         }
 
@@ -498,10 +498,11 @@
         <!-- ======== Level 2: Main Workflow ======== -->
         <div class="section-label">Stage 2 · 核心训练流程</div>
 
-        <!-- Main flow with inline horizontal arrows -->
-        <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; width: 100%; align-items: stretch;" class="main-flow-grid fade-in-up">
-            <!-- P3: Pre-training -->
-            <div class="card card-accent-pretrain">
+        <!-- Main flow: each Part takes full width, stacked vertically -->
+        <div style="display: flex; flex-direction: column; gap: 0; width: 100%;" class="main-flow-grid fade-in-up">
+
+            <!-- P3: Pre-training (full width) -->
+            <div class="card card-accent-pretrain" style="width: 100%;">
                 <div class="card-header">
                     <div class="card-icon icon-pretrain">🔥</div>
                     Part 3: 预训练
@@ -526,22 +527,22 @@
                 </div>
             </div>
 
-            <!-- Horizontal Arrow 1 -->
-            <div class="flow-arrow-wrapper">
-                <svg class="flow-arrow-svg" width="48" height="24" viewBox="0 0 48 24">
+            <!-- Vertical Arrow 1: Pretrain -> SFT -->
+            <div class="connector-area" style="height: 48px;">
+                <svg width="40" height="48" viewBox="0 0 40 48">
                     <defs>
-                        <linearGradient id="grad-h1" x1="0" y1="0" x2="1" y2="0">
+                        <linearGradient id="grad-down-p2p3" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stop-color="var(--color-pretrain)" stop-opacity="0.7"/>
                             <stop offset="100%" stop-color="var(--color-sft)" stop-opacity="0.9"/>
                         </linearGradient>
                     </defs>
-                    <line x1="2" y1="12" x2="34" y2="12" stroke="url(#grad-h1)" stroke-width="2.5" stroke-linecap="round"/>
-                    <polygon points="32,6 44,12 32,18" fill="url(#grad-h1)"/>
+                    <line x1="20" y1="0" x2="20" y2="36" stroke="url(#grad-down-p2p3)" stroke-width="2.5" stroke-linecap="round"/>
+                    <polygon points="13,28 20,42 27,28" fill="url(#grad-down-p2p3)"/>
                 </svg>
             </div>
 
-            <!-- P4: SFT -->
-            <div class="card card-accent-sft">
+            <!-- P4: SFT (full width) -->
+            <div class="card card-accent-sft" style="width: 100%;">
                 <div class="card-header">
                     <div class="card-icon icon-sft">🎯</div>
                     Part 4: 指令微调
@@ -566,22 +567,22 @@
                 </div>
             </div>
 
-            <!-- Horizontal Arrow 2 -->
-            <div class="flow-arrow-wrapper">
-                <svg class="flow-arrow-svg" width="48" height="24" viewBox="0 0 48 24">
+            <!-- Vertical Arrow 2: SFT -> Alignment -->
+            <div class="connector-area" style="height: 48px;">
+                <svg width="40" height="48" viewBox="0 0 40 48">
                     <defs>
-                        <linearGradient id="grad-h2" x1="0" y1="0" x2="1" y2="0">
+                        <linearGradient id="grad-down-p3p4" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stop-color="var(--color-sft)" stop-opacity="0.7"/>
                             <stop offset="100%" stop-color="var(--color-align)" stop-opacity="0.9"/>
                         </linearGradient>
                     </defs>
-                    <line x1="2" y1="12" x2="34" y2="12" stroke="url(#grad-h2)" stroke-width="2.5" stroke-linecap="round"/>
-                    <polygon points="32,6 44,12 32,18" fill="url(#grad-h2)"/>
+                    <line x1="20" y1="0" x2="20" y2="36" stroke="url(#grad-down-p3p4)" stroke-width="2.5" stroke-linecap="round"/>
+                    <polygon points="13,28 20,42 27,28" fill="url(#grad-down-p3p4)"/>
                 </svg>
             </div>
 
-            <!-- P5: Alignment -->
-            <div class="card card-accent-align">
+            <!-- P5: Alignment (full width) -->
+            <div class="card card-accent-align" style="width: 100%;">
                 <div class="card-header">
                     <div class="card-icon icon-align">⚖️</div>
                     Part 5: 价值对齐
@@ -605,11 +606,6 @@
                     </a>
                 </div>
             </div>
-        </div>
-
-        <!-- Mobile vertical arrows for main flow -->
-        <div class="mobile-arrow">
-            <svg width="24" height="32" viewBox="0 0 24 32"><line x1="12" y1="2" x2="12" y2="22" stroke="var(--arrow-color)" stroke-width="2" stroke-linecap="round"/><polygon points="6,20 12,30 18,20" fill="var(--arrow-color)"/></svg>
         </div>
 
         <!-- Connector: Level 2 -> Level 3 (fork arrow: center splits to left & right) -->
