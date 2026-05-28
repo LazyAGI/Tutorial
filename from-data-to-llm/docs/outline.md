@@ -5,7 +5,7 @@
 
 课程不仅涵盖了纯文本、多模态、Embedding 等多维度的技术原理，更引入了**系统工程**视角，详解分布式训练、高效部署与模型合规。特别值得一提的是，本课程贯穿了 **LazyLLM** 全流程实战与 **Agent（智能体）** 的双重应用：既教授如何构建具备 Agent 能力的模型，也演示如何利用 Agent 自动化流水线来清洗和合成高质量数据，助力企业构建闭环的"数据飞轮"。
 
-<iframe src="assets/course_map.html" width="100%" style="border:none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 600px;" onload="this.style.height = this.contentWindow.document.documentElement.scrollHeight + 'px'" scrolling="no"></iframe>
+<iframe src="assets/course_map.html" width="100%" style="border:none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 800px;" onload="this.style.height = this.contentWindow.document.documentElement.scrollHeight + 'px'" scrolling="no"></iframe>
 
 ## 课程大纲
 
