@@ -261,11 +261,11 @@
         }
 
         .lesson-item {
-            padding: 5px 8px;
+            padding: 4px 6px;
             border-radius: 6px;
             background: var(--item-bg);
             border: 1px solid transparent;
-            font-size: 11px;
+            font-size: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -284,8 +284,10 @@
 
         .lesson-item span {
             flex: 1;
-            margin-right: 8px;
+            margin-right: 6px;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* ========== Tags ========== */
@@ -726,10 +728,11 @@
             }
         });
 
-        // Theme sync with MkDocs parent
+        // Theme sync with MkDocs parent - defer to avoid interfering with RTD init
         function syncTheme() {
             try {
                 const parentBody = window.parent.document.body;
+                if (!parentBody) return;
                 const scheme = parentBody.getAttribute("data-md-color-scheme");
                 const theme = scheme === "slate" ? "dark" : "light";
                 document.documentElement.setAttribute("data-theme", theme);
@@ -740,15 +743,21 @@
 
         syncTheme();
 
-        try {
-            const observer = new MutationObserver(() => syncTheme());
-            observer.observe(window.parent.document.body || document.body, {
-                attributes: true,
-                attributeFilter: ["data-md-color-scheme", "class"]
-            });
-        } catch (e) {
-            // Standalone mode
-        }
+        // Defer MutationObserver setup to let RTD JS initialize first
+        requestAnimationFrame(() => {
+            try {
+                const observer = new MutationObserver(() => syncTheme());
+                const parentBody = window.parent.document.body;
+                if (parentBody) {
+                    observer.observe(parentBody, {
+                        attributes: true,
+                        attributeFilter: ["data-md-color-scheme", "class"]
+                    });
+                }
+            } catch (e) {
+                // Standalone mode
+            }
+        });
 
         // Scroll-triggered fade-in animation
         const fadeEls = document.querySelectorAll('.fade-in-up');
