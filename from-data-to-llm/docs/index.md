@@ -1,0 +1,1 @@
+<iframe src="assets/course_map.html" width="100%" style="border:none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 600px; zoom: 0.5;" onload="this.style.height = this.contentWindow.document.documentElement.scrollHeight + 'px'" scrolling="no"></iframe>
