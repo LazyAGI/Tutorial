@@ -728,21 +728,36 @@
             }
         });
 
-        // Theme sync with MkDocs parent - defer to avoid interfering with RTD init
+        let lastTheme = null;
+
+        // Theme sync with MkDocs parent
         function syncTheme() {
             try {
                 const parentBody = window.parent.document.body;
                 if (!parentBody) return;
                 const scheme = parentBody.getAttribute("data-md-color-scheme");
                 const theme = scheme === "slate" ? "dark" : "light";
+                if (theme === lastTheme) return;
+                lastTheme = theme;
                 document.documentElement.setAttribute("data-theme", theme);
             } catch (e) {
                 // Cross-origin or standalone - no action needed
             }
         }
 
-        // Apply initial theme sync (no ongoing observation needed for static theming)
         syncTheme();
+        try {
+            const parentBody = window.parent.document.body;
+            if (parentBody && "MutationObserver" in window) {
+                new MutationObserver(syncTheme).observe(parentBody, {
+                    attributes: true,
+                    attributeFilter: ["data-md-color-scheme"],
+                });
+            }
+        } catch (e) {
+            // Cross-origin or standalone - no action needed
+        }
+        setInterval(syncTheme, 1000);
 
         // Scroll-triggered fade-in animation
         const fadeEls = document.querySelectorAll('.fade-in-up');
