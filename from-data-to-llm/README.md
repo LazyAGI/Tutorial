@@ -7,7 +7,7 @@
 
 课程不仅涵盖了纯文本、多模态、Embedding 等多维度的技术原理，更引入了**系统工程**视角，详解分布式训练、高效部署与模型合规。特别值得一提的是，本课程贯穿了 **LazyLLM** 全流程实战与 **Agent（智能体）** 的双重应用：既教授如何构建具备 Agent 能力的模型，也演示如何利用 Agent 自动化流水线来清洗和合成高质量数据，助力企业构建闭环的"数据飞轮"。
 
-<iframe src="docs/assets/course_map.html" width="100%" style="border:none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 600px; zoom: 0.5;" onload="this.style.height = this.contentWindow.document.documentElement.scrollHeight + 'px'" scrolling="no"></iframe>
+[查看课程知识图谱](docs/assets/course_map.html)（交互式图谱请在 MkDocs 站点中浏览。）
 
 ## 课程大纲
 
@@ -22,7 +22,7 @@
 -   **第2课时：LLM 训练范式与数据工程全景**
     -   **训练范式全流程**：Pre-training（自回归 NLL 目标）→ SFT（指令-响应条件建模）→ 对齐训练，三阶段数学目标函数详解。
     -   **对齐方法演进**：RLHF+PPO（奖励模型+强化学习）→ DPO（偏好对直接优化）→ GRPO（组级相对优势）的脉络与差异。
-    -   **Chinchilla 法则**：参数规模 $N$、数据规模 $D$ 与算力预算 $C$ 的三角关系，$D \approx kN$ 的工程意义与对训练策略的影响。
+    -   **Chinchilla 法则**：参数规模 `N`、数据规模 `D` 与算力预算 `C` 的三角关系，D ≈ kN 的工程意义与对训练策略的影响。
     -   **Data-Centric AI**：从"以模型为中心"到"以数据为中心"的范式转变，数据质量对大模型能力上限的决定性作用。
     -   **数据工程全生命周期**：采集 → 清洗 → 过滤 → 去重 → 扩展/合成 → 质量评估 → 配比 → 课程学习（Curriculum Learning）。
 
